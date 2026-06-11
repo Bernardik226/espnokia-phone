@@ -66,11 +66,13 @@ estável sob pico de WiFi TX; senão, módulo carga+proteção+boost dedicado.
 Push-to-talk: **segurar OK** dentro do app Claude. Navegação em lista
 vertical (up/down), OK entra, C volta — exatamente o idioma do 3310.
 
-## Pinagem (v4 — definitiva para protoboard)
+## Pinagem (v5 — definitiva para protoboard)
 
 Regras aplicadas: ADC só no ADC1 (ADC2 morre com WiFi); strapping pins
 (0, 2, 12, 15) evitados em sinais críticos; botões em pinos com pull-up
 interno (34–39 não têm); GPIO 6–11 intocáveis (flash); 1/3 livres (UART0).
+Botões agrupados na fileira superior do DevKit de 30 pinos (ergonomia de
+protoboard) — display fica inteiro na fileira inferior.
 
 | Função | GPIO | Nota |
 |---|---|---|
@@ -83,14 +85,14 @@ interno (34–39 não têm); GPIO 6–11 intocáveis (flash); 1/3 livres (UART0)
 | Mic SCK | 33 | I2S |
 | Mic WS | 32 | I2S |
 | Mic SD | 35 | input-only, perfeito p/ data-in |
-| Botão UP | 19 | INPUT_PULLUP, ativo-baixo |
-| Botão DOWN | 21 | idem |
-| Botão OK | 22 | idem (push-to-talk no app Claude) |
+| Botão UP | 13 | INPUT_PULLUP, ativo-baixo |
+| Botão DOWN | 14 | idem |
+| Botão OK | 27 | idem (push-to-talk no app Claude) |
 | Botão C | 26 | idem (voltar/cancelar) |
 | Buzzer | 25 | LEDC (tom variável) |
 | VBAT sense | 36 | input-only ADC1, divisor de tensão |
 
-Livres para futuro: 0 (boot), 2, 12, 13, 14, 15, 27, 34, 39.
+Livres para futuro: 0 (boot), 2, 12, 15, 19, 21, 22, 34, 39.
 
 Notas elétricas: 5110 é 3.3V nativo (sem level shifter); resistor ~330Ω no
 backlight; INMP441 com L/R em GND (canal esquerdo).
