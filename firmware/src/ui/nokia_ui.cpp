@@ -15,5 +15,12 @@ void text_bold_center(U8G2& g, int y, const char* s) {
   g.drawStr(42 - (int)g.getStrWidth(s) / 2, y, s);
   if (prev) g.setFont(prev);
 }
+int bold_width(U8G2& g, const char* s) {
+  const uint8_t* prev = g.getU8g2()->font;
+  g.setFont(u8g2_font_3310_small_bold);
+  int w = (int)g.getStrWidth(s);
+  if (prev) g.setFont(prev);
+  return w;
+}
 void softkey(U8G2& g, const char* label) { text_bold_center(g, 47, label); }
 }  // namespace nokia_ui

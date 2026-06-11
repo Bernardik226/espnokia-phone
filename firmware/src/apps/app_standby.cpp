@@ -13,11 +13,18 @@ static void render(void* gfx) {
   U8G2& g = *(U8G2*)gfx;
   char hhmm[6]; bool colon;
   clock_format(millis(), hhmm, &colon);
-  if (!colon) hhmm[2] = ' ';
 
   g.setFont(u8g2_font_3310_small);
-  // hora bold no topo direito (como no 3310)
-  nokia_ui::text_bold(g, 82 - (int)g.getStrWidth(hhmm), 8, hhmm);
+  // hora bold no topo direito (como no 3310); posicao fixa medida na bold
+  // pra nao pular quando o colon pisca: desenha "HH:MM" e apaga so o ':'
+  int tx = 82 - nokia_ui::bold_width(g, hhmm);
+  nokia_ui::text_bold(g, tx, 8, hhmm);
+  if (!colon) {
+    char hh[3] = {hhmm[0], hhmm[1], '\0'};
+    g.setDrawColor(0);
+    g.drawBox(tx + nokia_ui::bold_width(g, hh), 0, nokia_ui::bold_width(g, ":"), 9);
+    g.setDrawColor(1);
+  }
   // marca do projeto no lugar do nome da operadora: emblema eN + wordmark
   g.drawXBMP(24, 9, ESPNOKIA_EMBLEM_W, ESPNOKIA_EMBLEM_H, espnokia_emblem_bits);
   g.drawXBMP(2, 31, ESPNOKIA_LOGO_W, ESPNOKIA_LOGO_H, espnokia_logo_bits);
