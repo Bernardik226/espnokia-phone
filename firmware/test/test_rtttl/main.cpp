@@ -29,11 +29,23 @@ void test_nokia_tune_parses_all_13_notes() {
   while (r.next(n)) count++;
   TEST_ASSERT_EQUAL_INT(13, count);
 }
+void test_malformed_input_fails_safely() {
+  Rtttl r; RtttlNote n;
+  TEST_ASSERT_FALSE(r.begin("semicolon nenhum"));        // sem ':'
+  TEST_ASSERT_FALSE(r.begin("x:d=,o=5,b=120:a"));        // d= sem dígito
+  TEST_ASSERT_FALSE(r.begin("x:d=4,o=5,b=:a"));          // b= sem dígito
+  r.begin("x:d=4,o=5,b=120:a9");                          // oitava fora da faixa
+  TEST_ASSERT_FALSE(r.next(n));
+  r.begin("x:d=4,o=5,b=120:p#");                          // p# vira pausa normal
+  TEST_ASSERT_TRUE(r.next(n));
+  TEST_ASSERT_EQUAL_UINT16(0, n.freq_hz);
+}
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_header_and_quarter_note);
   RUN_TEST(test_explicit_duration_and_octave);
   RUN_TEST(test_sharp_pause_dotted);
   RUN_TEST(test_nokia_tune_parses_all_13_notes);
+  RUN_TEST(test_malformed_input_fails_safely);
   return UNITY_END();
 }
