@@ -55,9 +55,10 @@ estável sob pico de WiFi TX; senão, módulo carga+proteção+boost dedicado.
         │  ┌────────────────┐  │
         │  │   NOKIA 5110   │  │
         │  └────────────────┘  │
-        │          ↑           │
-        │   (C)   (OK)         │   ← C = voltar/cancelar
-        │          ↓           │
+        │                   ↑  │
+        │   (C)   (OK)    ↓    │   ← C = voltar/cancelar
+        │                      │
+        │                      │
         │   (mic)    (buzzer)  │
         └──────────────────────┘
 ```
