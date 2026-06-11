@@ -1,0 +1,59 @@
+{
+ "name": "World Cup 2026",
+ "matches": [
+  {
+   "round": "Matchday 1",
+   "date": "2026-06-11",
+   "time": "13:00 UTC-6",
+   "team1": "Mexico",
+   "team2": "South Africa",
+   "group": "Group A",
+   "ground": "Mexico City"
+  },
+  {
+   "round": "Matchday 3",
+   "date": "2026-06-13",
+   "time": "18:00 UTC-4",
+   "team1": "Brazil",
+   "team2": "Morocco",
+   "group": "Group C",
+   "ground": "New York/New Jersey (East Rutherford)"
+  },
+  {
+   "round": "Matchday 9",
+   "date": "2026-06-19",
+   "time": "20:30 UTC-4",
+   "team1": "Brazil",
+   "team2": "Haiti",
+   "group": "Group C",
+   "ground": "Philadelphia"
+  },
+  {
+   "round": "Matchday 14",
+   "date": "2026-06-24",
+   "time": "18:00 UTC-4",
+   "team1": "Scotland",
+   "team2": "Brazil",
+   "group": "Group C",
+   "ground": "Miami (Miami Gardens)"
+  },
+  {
+   "round": "Round of 32",
+   "num": 73,
+   "date": "2026-06-28",
+   "time": "12:00 UTC-7",
+   "team1": "2A",
+   "team2": "2B",
+   "ground": "Los Angeles (Inglewood)"
+  },
+  {
+   "round": "Round of 32",
+   "num": 74,
+   "date": "2026-06-29",
+   "time": "16:30 UTC-4",
+   "team1": "1E",
+   "team2": "3A/B/C/D/F",
+   "ground": "Boston (Foxborough)"
+  }
+ ]
+}
