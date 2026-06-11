@@ -1,7 +1,6 @@
 .pio/
 .vscode/
-firmware/src/config.h
-firmware/include/config.h
+firmware/include/espnokia_config.h
 __pycache__/
 .pytest_cache/
 .venv/

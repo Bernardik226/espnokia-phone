@@ -6,6 +6,7 @@
 #include "drivers/buzzer.h"
 #include "drivers/buttons.h"
 #include "drivers/rtc.h"
+#include "net/wifi.h"
 #include "ui/boot_anim.h"
 #include "ui/menu_view.h"
 #include "apps/app_standby.h"
@@ -33,6 +34,7 @@ void setup() {
   } else {
     Serial.println("[rtc] DS3231 ausente — relogio de videocassete");
   }
+  wifi::init();                      // nao-bloqueante; conecta enquanto a animacao roda
   boot_anim_play(u8g2);              // logo NOKIA + maos + startup chime (segura ate o fim)
   shell.init(&app_standby, kApps, sizeof(kApps) / sizeof(kApps[0]));
 }
@@ -47,6 +49,7 @@ void loop() {
   }
   shell.tick(now);
   buzzer::tick(now);
+  wifi::tick(now);
 
   static uint32_t last_render = 0;
   if (now - last_render >= 50) {                // ~20 fps
