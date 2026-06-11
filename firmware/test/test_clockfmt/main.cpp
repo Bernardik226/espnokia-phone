@@ -34,6 +34,21 @@ void test_hhmm_format_pads_zeros() {
   hhmm_format(0, 0, s);
   TEST_ASSERT_EQUAL_STRING("00:00", s);
 }
+void test_days_in_month_handles_leap_years() {
+  TEST_ASSERT_EQUAL_UINT8(31, days_in_month(2026, 1));
+  TEST_ASSERT_EQUAL_UINT8(28, days_in_month(2026, 2));
+  TEST_ASSERT_EQUAL_UINT8(29, days_in_month(2028, 2));   // bissexto comum
+  TEST_ASSERT_EQUAL_UINT8(28, days_in_month(2100, 2));   // secular nao bissexto
+  TEST_ASSERT_EQUAL_UINT8(29, days_in_month(2000, 2));   // multiplo de 400
+  TEST_ASSERT_EQUAL_UINT8(30, days_in_month(2026, 6));
+  TEST_ASSERT_EQUAL_UINT8(31, days_in_month(2026, 12));
+}
+void test_date_weekday_known_dates() {
+  TEST_ASSERT_EQUAL_UINT8(4, date_weekday(2026, 6, 11));  // quinta
+  TEST_ASSERT_EQUAL_UINT8(0, date_weekday(2026, 6, 14));  // domingo
+  TEST_ASSERT_EQUAL_UINT8(6, date_weekday(2000, 1, 1));   // sabado
+  TEST_ASSERT_EQUAL_UINT8(2, date_weekday(2029, 2, 27));  // terca (m<3)
+}
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_boot_shows_noon);
@@ -41,5 +56,7 @@ int main() {
   RUN_TEST(test_wraps_past_midnight);
   RUN_TEST(test_colon_blinks_each_second);
   RUN_TEST(test_hhmm_format_pads_zeros);
+  RUN_TEST(test_days_in_month_handles_leap_years);
+  RUN_TEST(test_date_weekday_known_dates);
   return UNITY_END();
 }
