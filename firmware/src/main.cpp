@@ -2,6 +2,7 @@
 #include <U8g2lib.h>
 #include "pins.h"
 #include "drivers/buzzer.h"
+#include "drivers/buttons.h"
 
 static const char* kNokiaTune =
     "Nokia:d=4,o=5,b=225:8e6,8d6,f#,g#,8c#6,8b,d,e,8b,8a,c#,e,2a";
@@ -9,6 +10,7 @@ static const char* kNokiaTune =
 U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R0, PIN_LCD_CE, PIN_LCD_DC, PIN_LCD_RST);
 
 void setup() {
+  Serial.begin(115200);
   pinMode(PIN_LCD_BL, OUTPUT);
   digitalWrite(PIN_LCD_BL, HIGH);
   u8g2.begin();
@@ -19,9 +21,16 @@ void setup() {
   u8g2.drawFrame(0, 0, 84, 48);
   u8g2.sendBuffer();
   buzzer::init();
+  buttons::init();
   buzzer::play(kNokiaTune);
 }
 void loop() {
+  Button b; BtnEvent e;
+  if (buttons::poll(millis(), b, e) && e == EV_PRESS) {
+    static const char* kNames[] = {"UP", "DOWN", "OK", "C"};
+    Serial.println(kNames[b]);
+    buzzer::beep(1250, 40);  // keypad click
+  }
   buzzer::tick(millis());
   delay(2);
 }
