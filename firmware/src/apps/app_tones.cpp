@@ -2,6 +2,7 @@
 #include <U8g2lib.h>
 #include "drivers/buzzer.h"
 #include "ui/assets.h"
+#include "ui/fonts3310.h"
 #include "ui/nokia_ui.h"
 
 // toques originais de fabrica da Nokia (era 3310/1100), transcricoes RTTTL
@@ -60,7 +61,7 @@ static bool input(Button b, BtnEvent e) {
 static void on_exit() { buzzer::stop(); }
 static void render(void* gfx) {
   U8G2& g = *(U8G2*)gfx;
-  g.setFont(u8g2_font_nokiafc22_tr);
+  g.setFont(u8g2_font_3310_small);
   nokia_ui::text_bold_center(g, 8, "Toques");
   for (uint8_t row = 0; row < kVisible && top + row < kCount; row++) {
     uint8_t i = top + row;                          // lista com barra invertida (3310)
