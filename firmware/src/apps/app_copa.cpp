@@ -104,10 +104,10 @@ static void render(void* gfx) {
         if (i == cur) {
           g.drawBox(0, y, 84, 9);
           g.setDrawColor(0);
-          g.drawStr(3, y + 7, kAbas[i]);
+          g.drawStr(3, y + 8, kAbas[i]);
           g.setDrawColor(1);
         } else {
-          g.drawStr(3, y + 7, kAbas[i]);
+          g.drawStr(3, y + 8, kAbas[i]);
         }
       }
       nokia_ui::softkey(g, "Selecionar");
@@ -139,8 +139,8 @@ static void render(void* gfx) {
           g.drawBox(0, y, 84, 9);
           g.setDrawColor(0);
         }
-        g.drawStr(3, y + 7, linha);
-        if (j.live) g.drawStr(78, y + 7, "*");  // bolinha de "ao vivo"
+        g.drawStr(3, y + 8, linha);
+        if (j.live) g.drawStr(78, y + 8, "*");  // bolinha de "ao vivo"
         g.setDrawColor(1);
       }
       nokia_ui::softkey(g, "Abrir");

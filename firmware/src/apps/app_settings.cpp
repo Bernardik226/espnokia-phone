@@ -158,10 +158,10 @@ static void draw_list(U8G2& g, const char* title, const char* const* items,
     if (top + i == sel) {
       g.drawBox(0, y, 84, 9);
       g.setDrawColor(0);
-      g.drawStr(3, y + 7, items[top + i]);
+      g.drawStr(3, y + 8, items[top + i]);
       g.setDrawColor(1);
     } else {
-      g.drawStr(3, y + 7, items[top + i]);
+      g.drawStr(3, y + 8, items[top + i]);
     }
   }
 }
@@ -196,12 +196,12 @@ static void render(void* gfx) {
         int y = 11 + i * 9;
         bool sel = (cur == i);
         if (sel) { g.drawBox(0, y, 84, 9); g.setDrawColor(0); }
-        g.drawStr(3, y + 7, items[i]);
+        g.drawStr(3, y + 8, items[i]);
         if (i == 0) {  // checkbox do toggle, a direita
-          g.drawFrame(73, y + 1, 7, 7);
+          g.drawFrame(73, y + 2, 7, 7);
           if (ntp_sync_) {
-            g.drawLine(74, y + 4, 75, y + 6);
-            g.drawLine(75, y + 6, 78, y + 2);
+            g.drawLine(74, y + 5, 75, y + 7);
+            g.drawLine(75, y + 7, 78, y + 3);
           }
         }
         if (sel) g.setDrawColor(1);
