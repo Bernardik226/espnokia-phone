@@ -6,6 +6,7 @@
 #include "version.h"
 #include "drivers/backlight.h"
 #include "drivers/rtc.h"
+#include "net/wifi.h"
 #include "ui/assets.h"
 #include "ui/fonts3310.h"
 #include "ui/nokia_ui.h"
@@ -14,8 +15,10 @@
 // backlight com preview ao vivo (so persiste no OK); V_DATETIME tem o toggle
 // de sincronizacao via internet (NVS) e o acerto manual do RTC (V_DT_EDIT:
 // UP/DOWN muda o campo invertido, OK avanca, C volta — como no 3310);
-// V_WIFI e placeholder; V_ABOUT tem 3 paginas (UP/DOWN navega).
-enum View : uint8_t { V_ROOT, V_DISPLAY, V_DATETIME, V_DT_EDIT, V_WIFI, V_ABOUT };
+// V_WIFI mostra rede/IP (ou o AP do modo config) e abre V_WIFI_MENU com
+// Esquecer/Trocar rede (ambos reiniciam); V_ABOUT tem 3 paginas (UP/DOWN).
+enum View : uint8_t { V_ROOT, V_DISPLAY, V_DATETIME, V_DT_EDIT, V_WIFI,
+                      V_WIFI_MENU, V_ABOUT };
 static const uint8_t kAboutPages = 3;
 static View view = V_ROOT;
 static uint8_t cur = 0;         // cursor da lista corrente
@@ -135,7 +138,17 @@ static bool input(Button b, BtnEvent e) {
       else { view = V_DATETIME; cur = 1; }
       return true;
     case V_WIFI:
-      view = V_ROOT; cur = 2;  // qualquer tecla volta
+      if (b == BTN_OK && !wifi::provisioning()) { view = V_WIFI_MENU; cur = 0; return true; }
+      view = V_ROOT; cur = 2;  // C (ou OK no modo config) volta
+      return true;
+    case V_WIFI_MENU:
+      if (b == BTN_UP || b == BTN_DOWN) { cur ^= 1; return true; }  // 2 itens
+      if (b == BTN_OK) {
+        if (cur == 0) wifi::forget();   // ambos reiniciam o aparelho
+        else wifi::reconfigure();       // (nunca retornam)
+        return true;
+      }
+      view = V_WIFI;  // C volta pro status
       return true;
     case V_ABOUT:
       if (b == BTN_UP) { about_page = (about_page + kAboutPages - 1) % kAboutPages; return true; }
@@ -242,12 +255,31 @@ static void render(void* gfx) {
       nokia_ui::softkey(g, dt_field_ < 4 ? "OK" : "Salvar");
       break;
     }
-    case V_WIFI:
+    case V_WIFI: {
       nokia_ui::text_bold_center(g, 8, "Wifi");
-      g.drawStr(2, 19, "Status: offline");
-      g.drawStr(2, 28, "Config em breve");
-      nokia_ui::softkey(g, "Voltar");
+      char ip[16], buf2[20];
+      wifi::ip_str(ip, sizeof(ip));
+      if (wifi::provisioning()) {  // AP de configuracao no ar
+        g.drawStr(2, 19, "Modo config");
+        snprintf(buf2, sizeof(buf2), "%.18s", wifi::ssid());
+        g.drawStr(2, 28, buf2);
+        g.drawStr(2, 37, ip);
+        nokia_ui::softkey(g, "Voltar");
+      } else {
+        snprintf(buf2, sizeof(buf2), "%.18s", wifi::ssid());
+        g.drawStr(2, 19, buf2);
+        if (wifi::connected()) g.drawStr(2, 28, ip);
+        else g.drawStr(2, 28, "conectando...");
+        nokia_ui::softkey(g, "Opcoes");
+      }
       break;
+    }
+    case V_WIFI_MENU: {
+      const char* items[] = {"Esquecer rede", "Trocar rede"};
+      draw_list(g, "Wifi", items, 2, cur);
+      nokia_ui::softkey(g, "OK");
+      break;
+    }
     case V_ABOUT: {
       char buf[20];
       if (about_page == 0) {  // marca: emblema eN + wordmark
