@@ -5,7 +5,7 @@
 #include "drivers/buzzer.h"
 #include "drivers/buttons.h"
 #include "ui/boot_anim.h"
-#include "ui/launcher_view.h"
+#include "ui/menu_view.h"
 #include "apps/app_standby.h"
 #include "apps/app_clock.h"
 #include "apps/app_tones.h"
@@ -42,7 +42,7 @@ void loop() {
   if (now - last_render >= 50) {                // ~20 fps
     last_render = now;
     u8g2.clearBuffer();
-    if (shell.screen() == Shell::LAUNCHER) launcher_view_draw(u8g2, shell);
+    if (shell.screen() == Shell::LAUNCHER) menu_view_draw(u8g2, shell);
     else if (shell.active() && shell.active()->on_render)
       shell.active()->on_render(&u8g2);
     u8g2.sendBuffer();
