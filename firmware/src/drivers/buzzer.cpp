@@ -5,6 +5,10 @@
 
 namespace buzzer {
 static const uint8_t kCh = 0;
+// volume = energia do pulso: 50% de duty e o maximo audivel do piezo;
+// duties menores soam mais baixo sem mudar o timbre (10 bits de resolucao)
+static const uint16_t kDuty[] = {12, 96, 512};
+static uint8_t vol_ = 2;
 static Rtttl rtttl_;
 static bool playing_ = false;       // tune em andamento
 static uint32_t tone_end_ = 0;      // fim do som da nota (90% — gap audível)
@@ -20,11 +24,13 @@ void init() {
   ledcWriteTone(kCh, 0);
 }
 static void tone_for(uint16_t f, uint16_t tone_ms, uint16_t note_ms, uint32_t now) {
-  ledcWriteTone(kCh, f);
+  ledcWriteTone(kCh, f);                 // reseta o duty pra 50%...
+  if (f) ledcWrite(kCh, kDuty[vol_]);    // ...entao o volume reaplica por nota
   tone_on_ = true;
   tone_end_ = now + tone_ms;
   note_end_ = now + note_ms;
 }
+void set_volume(uint8_t lvl) { vol_ = lvl > 2 ? 2 : lvl; }
 // um piezo, um canal: o tune tem prioridade (fiel ao 3310 — tecla muda durante toque)
 void beep(uint16_t f, uint16_t ms) {
   if (playing_) return;

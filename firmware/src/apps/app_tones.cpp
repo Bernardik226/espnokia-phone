@@ -1,7 +1,9 @@
 #include "app_tones.h"
+#include <Arduino.h>
 #include <U8g2lib.h>
 #include "drivers/buzzer.h"
 #include "i18n.h"
+#include "sound.h"
 #include "ui/assets.h"
 #include "ui/fonts3310.h"
 #include "ui/nokia_ui.h"
@@ -42,22 +44,37 @@ static const Tone kTones[] = {
 static const uint8_t kCount = sizeof(kTones) / sizeof(kTones[0]);
 static const uint8_t kVisible = 3;  // linhas na janela (header + 3 + softkey)
 static uint8_t cur = 0, top = 0;
+static uint32_t preview_at_ = 0;  // 0 = nenhum preview agendado
 
 static void clamp_window() {
   if (cur < top) top = cur;
   if (cur >= top + kVisible) top = cur - (kVisible - 1);
 }
 
+// UX do 3310 em "Toque de chamada": navegar da o preview do toque (com um
+// respiro pra rolagem rapida nao tocar tudo), OK define como padrao do sistema
 static bool input(Button b, BtnEvent e) {
   if (e != EV_PRESS) return false;
-  if (b == BTN_UP) { cur = (cur + kCount - 1) % kCount; clamp_window(); return true; }
-  if (b == BTN_DOWN) { cur = (cur + 1) % kCount; clamp_window(); return true; }
-  if (b == BTN_OK) {  // toggle: tocando para, parado toca (tune_busy ignora o beep de tecla)
-    if (buzzer::tune_busy()) buzzer::stop();
-    else buzzer::play(kTones[cur].rtttl);
+  if (b == BTN_UP) { cur = (cur + kCount - 1) % kCount; clamp_window(); }
+  else if (b == BTN_DOWN) { cur = (cur + 1) % kCount; clamp_window(); }
+  else if (b == BTN_OK) {
+    sound::set_ringtone(cur);
+    sound::play(sound::SND_CONFIRM);  // tambem cala o preview
+    preview_at_ = 0;
     return true;
+  } else {
+    return false;  // C nao consumido → shell volta pro menu
   }
-  return false;  // C nao consumido → shell volta pro menu
+  buzzer::stop();
+  preview_at_ = millis() + 500;
+  return true;
+}
+static void on_enter() { preview_at_ = 0; }
+static void tick(uint32_t now) {
+  if (preview_at_ && (int32_t)(now - preview_at_) >= 0) {
+    preview_at_ = 0;
+    buzzer::play(kTones[cur].rtttl);
+  }
 }
 static void on_exit() { buzzer::stop(); }
 static void render(void* gfx) {
@@ -67,21 +84,23 @@ static void render(void* gfx) {
   for (uint8_t row = 0; row < kVisible && top + row < kCount; row++) {
     uint8_t i = top + row;                          // lista com barra invertida (3310)
     int y = 11 + row * 9;
-    if (i == cur) {
-      g.drawBox(0, y, 80, 9);
-      g.setDrawColor(0);
-      g.drawStr(3, y + 8, kTones[i].name);
-      g.setDrawColor(1);
-    } else {
-      g.drawStr(3, y + 8, kTones[i].name);
+    bool sel = (i == cur);
+    if (sel) { g.drawBox(0, y, 80, 9); g.setDrawColor(0); }
+    g.drawStr(3, y + 8, kTones[i].name);
+    if (i == sound::ringtone_idx()) {               // check no toque padrao
+      g.drawLine(72, y + 5, 73, y + 7);
+      g.drawLine(73, y + 7, 76, y + 3);
     }
+    if (sel) g.setDrawColor(1);
   }
   g.drawVLine(82, 11, 27);                          // scrollbar como no menu
   int th = 27 * kVisible / kCount;
   g.drawBox(81, 11 + (27 - th) * top / (kCount - kVisible), 3, th);
-  nokia_ui::softkey(g, tr(buzzer::tune_busy() ? STR_STOP : STR_PLAY));
+  nokia_ui::softkey(g, tr(STR_SELECT));
 }
-const char* tones_nokia_tune() { return kTones[0].rtttl; }
+uint8_t tones_count() { return kCount; }
+const char* tones_name(uint8_t i) { return kTones[i % kCount].name; }
+const char* tones_rtttl(uint8_t i) { return kTones[i % kCount].rtttl; }
 
-const App app_tones = {STR_APP_TONES, nullptr, nullptr, input, on_exit, render,
+const App app_tones = {STR_APP_TONES, on_enter, tick, input, on_exit, render,
                        icon_tones_bits};
