@@ -24,6 +24,7 @@ static const App* kApps[] = {&app_clock, &app_copa, &app_weather, &app_tones, &a
 
 void setup() {
   Serial.begin(115200);
+  settings_load_lang();  // idioma salvo na NVS, antes do primeiro render
   backlight::init();  // PWM + nivel salvo na NVS
   u8g2.begin();
   u8g2.setContrast(140);

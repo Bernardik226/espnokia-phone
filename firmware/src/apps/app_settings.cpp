@@ -3,6 +3,7 @@
 #include <Preferences.h>
 #include <U8g2lib.h>
 #include "clockfmt.h"
+#include "i18n.h"
 #include "version.h"
 #include "drivers/backlight.h"
 #include "drivers/rtc.h"
@@ -16,15 +17,17 @@
 // de sincronizacao via internet (NVS) e o acerto manual do RTC (V_DT_EDIT:
 // UP/DOWN muda o campo invertido, OK avanca, C volta — como no 3310);
 // V_WIFI mostra rede/IP (ou o AP do modo config) e abre V_WIFI_MENU com
-// Esquecer/Trocar rede (ambos reiniciam); V_ABOUT tem 3 paginas (UP/DOWN).
+// Esquecer/Trocar rede (ambos reiniciam); V_LANG troca o idioma do sistema
+// (vale na hora e persiste); V_ABOUT tem 3 paginas (UP/DOWN).
 enum View : uint8_t { V_ROOT, V_DISPLAY, V_DATETIME, V_DT_EDIT, V_WIFI,
-                      V_WIFI_MENU, V_ABOUT };
+                      V_WIFI_MENU, V_LANG, V_ABOUT };
 static const uint8_t kAboutPages = 3;
 static View view = V_ROOT;
 static uint8_t cur = 0;         // cursor da lista corrente
 static uint8_t about_page = 0;  // 0..kAboutPages-1
 
-static const char* kRoot[] = {"Display", "Data e hora", "Wifi", "Sobre"};
+static const StrId kRoot[] = {STR_DISPLAY, STR_DATETIME, STR_WIFI,
+                              STR_LANGUAGE, STR_ABOUT};
 static const uint8_t kRootCount = sizeof(kRoot) / sizeof(kRoot[0]);
 
 // toggle "Sincronizar" persistido na NVS; a F2 le pra decidir NTP no boot.
@@ -47,13 +50,19 @@ static void ntp_sync_set(bool v) {
   ntp_sync_ = v;
   prefs_.putBool("ntp", v);
 }
+void settings_load_lang() {
+  prefs_ensure();
+  i18n_set((Lang)prefs_.getUChar("lang", LANG_PT));
+}
+static void lang_save(Lang l) {
+  prefs_ensure();
+  i18n_set(l);
+  prefs_.putUChar("lang", (uint8_t)l);
+}
 
 // editor de data/hora: buffer proprio, so grava no RTC no Salvar
 static rtc::DateTime edit_;
 static uint8_t dt_field_ = 0;  // 0=hora 1=min 2=dia 3=mes 4=ano
-static const char* kDows[] = {"Domingo", "Segunda", "Terca",  "Quarta",
-                              "Quinta",  "Sexta",   "Sabado"};
-
 static void dt_edit_open() {
   if (!rtc::now(edit_)) return;  // sem RTC nao ha o que acertar
   dt_field_ = 0;
@@ -93,6 +102,7 @@ static bool input(Button b, BtnEvent e) {
         if (cur == 0) { view = V_DISPLAY; cur = backlight::level(); }
         else if (cur == 1) { view = V_DATETIME; cur = 0; }
         else if (cur == 2) { view = V_WIFI; }
+        else if (cur == 3) { view = V_LANG; cur = (uint8_t)i18n_lang(); }
         else { view = V_ABOUT; about_page = 0; }
         return true;
       }
@@ -150,10 +160,16 @@ static bool input(Button b, BtnEvent e) {
       }
       view = V_WIFI;  // C volta pro status
       return true;
+    case V_LANG:
+      if (b == BTN_UP) { cur = (cur + LANG_COUNT - 1) % LANG_COUNT; return true; }
+      if (b == BTN_DOWN) { cur = (cur + 1) % LANG_COUNT; return true; }
+      if (b == BTN_OK) { lang_save((Lang)cur); view = V_ROOT; cur = 3; return true; }
+      view = V_ROOT; cur = 3;  // C cancela
+      return true;
     case V_ABOUT:
       if (b == BTN_UP) { about_page = (about_page + kAboutPages - 1) % kAboutPages; return true; }
       if (b == BTN_DOWN) { about_page = (about_page + 1) % kAboutPages; return true; }
-      view = V_ROOT; cur = 3;
+      view = V_ROOT; cur = 4;
       return true;
   }
   return false;
@@ -171,10 +187,10 @@ static void draw_list(U8G2& g, const char* title, const char* const* items,
     if (top + i == sel) {
       g.drawBox(0, y, 84, 9);
       g.setDrawColor(0);
-      g.drawStr(3, y + 8, items[top + i]);
+      g.drawUTF8(3, y + 8, items[top + i]);
       g.setDrawColor(1);
     } else {
-      g.drawStr(3, y + 8, items[top + i]);
+      g.drawUTF8(3, y + 8, items[top + i]);
     }
   }
 }
@@ -191,25 +207,28 @@ static void render(void* gfx) {
   U8G2& g = *(U8G2*)gfx;
   g.setFont(u8g2_font_3310_small);
   switch (view) {
-    case V_ROOT:
-      draw_list(g, "Config", kRoot, kRootCount, cur);
-      nokia_ui::softkey(g, "Selecionar");
+    case V_ROOT: {
+      const char* items[kRootCount];
+      for (uint8_t i = 0; i < kRootCount; i++) items[i] = tr(kRoot[i]);
+      draw_list(g, tr(STR_APP_SETTINGS), items, kRootCount, cur);
+      nokia_ui::softkey(g, tr(STR_SELECT));
       break;
+    }
     case V_DISPLAY: {
       const char* names[backlight::kLevels];
       for (uint8_t i = 0; i < backlight::kLevels; i++) names[i] = backlight::name(i);
-      draw_list(g, "Luz do visor", names, backlight::kLevels, cur);
-      nokia_ui::softkey(g, "OK");
+      draw_list(g, tr(STR_BACKLIGHT), names, backlight::kLevels, cur);
+      nokia_ui::softkey(g, tr(STR_OK));
       break;
     }
     case V_DATETIME: {
-      nokia_ui::text_bold_center(g, 8, "Data e hora");
-      const char* items[] = {"Sincronizar", "Acertar agora"};
+      nokia_ui::text_bold_center(g, 8, tr(STR_DATETIME));
+      const char* items[] = {tr(STR_SYNC), tr(STR_SET_NOW)};
       for (uint8_t i = 0; i < 2; i++) {
         int y = 11 + i * 9;
         bool sel = (cur == i);
         if (sel) { g.drawBox(0, y, 84, 9); g.setDrawColor(0); }
-        g.drawStr(3, y + 8, items[i]);
+        g.drawUTF8(3, y + 8, items[i]);
         if (i == 0) {  // checkbox do toggle, a direita
           g.drawFrame(73, y + 2, 7, 7);
           if (ntp_sync_) {
@@ -219,12 +238,12 @@ static void render(void* gfx) {
         }
         if (sel) g.setDrawColor(1);
       }
-      if (!rtc::present()) g.drawStr(3, 38, "RTC ausente");
-      nokia_ui::softkey(g, cur == 0 ? "Mudar" : "Selecionar");
+      if (!rtc::present()) g.drawUTF8(3, 38, tr(STR_NO_RTC));
+      nokia_ui::softkey(g, tr(cur == 0 ? STR_CHANGE : STR_SELECT));
       break;
     }
     case V_DT_EDIT: {
-      nokia_ui::text_bold_center(g, 8, "Acertar");
+      nokia_ui::text_bold_center(g, 8, tr(STR_SET_NOW));
       char hh[3], mi[3], dd[3], mo[3], yr[5];
       snprintf(hh, sizeof(hh), "%02u", edit_.hour);
       snprintf(mi, sizeof(mi), "%02u", edit_.min);
@@ -239,8 +258,8 @@ static void render(void* gfx) {
       g.drawStr(tx, 19, tline);
       g.drawStr(dx, 30, dline);
       // dia da semana derivado da data, so leitura
-      const char* dow = kDows[date_weekday(edit_.year, edit_.month, edit_.day)];
-      g.drawStr(42 - (int)g.getStrWidth(dow) / 2, 38, dow);
+      const char* dow = day_name(date_weekday(edit_.year, edit_.month, edit_.day));
+      g.drawUTF8(42 - (int)g.getUTF8Width(dow) / 2, 38, dow);
       // campo em edicao por cima, invertido
       int sep_t = (int)g.getStrWidth(":"), sep_d = (int)g.getStrWidth("/");
       switch (dt_field_) {
@@ -252,34 +271,41 @@ static void render(void* gfx) {
           inv_str(g, dx + (int)g.getStrWidth(dd) + (int)g.getStrWidth(mo) + 2 * sep_d, 30, yr);
           break;
       }
-      nokia_ui::softkey(g, dt_field_ < 4 ? "OK" : "Salvar");
+      nokia_ui::softkey(g, tr(dt_field_ < 4 ? STR_OK : STR_SAVE));
       break;
     }
     case V_WIFI: {
       char ip[16], buf2[20];
       wifi::ip_str(ip, sizeof(ip));
       if (wifi::provisioning()) {  // AP de configuracao no ar
-        nokia_ui::text_bold_center(g, 8, "Modo config");
+        nokia_ui::text_bold_center(g, 8, tr(STR_CONFIG_MODE));
         snprintf(buf2, sizeof(buf2), "%.18s", wifi::ssid());
-        g.drawStr(2, 19, buf2);
-        snprintf(buf2, sizeof(buf2), "senha %s", wifi::ap_pass());
-        g.drawStr(2, 28, buf2);
+        g.drawUTF8(2, 19, buf2);
+        snprintf(buf2, sizeof(buf2), tr(STR_PASS_FMT), wifi::ap_pass());
+        g.drawUTF8(2, 28, buf2);
         g.drawStr(2, 37, ip);
-        nokia_ui::softkey(g, "Voltar");
+        nokia_ui::softkey(g, tr(STR_BACK));
       } else {
-        nokia_ui::text_bold_center(g, 8, "Wifi");
+        nokia_ui::text_bold_center(g, 8, tr(STR_WIFI));
         snprintf(buf2, sizeof(buf2), "%.18s", wifi::ssid());
-        g.drawStr(2, 19, buf2);
+        g.drawUTF8(2, 19, buf2);
         if (wifi::connected()) g.drawStr(2, 28, ip);
-        else g.drawStr(2, 28, "conectando...");
-        nokia_ui::softkey(g, "Opcoes");
+        else g.drawUTF8(2, 28, tr(STR_CONNECTING));
+        nokia_ui::softkey(g, tr(STR_OPTIONS));
       }
       break;
     }
     case V_WIFI_MENU: {
-      const char* items[] = {"Esquecer rede", "Trocar rede"};
-      draw_list(g, "Wifi", items, 2, cur);
-      nokia_ui::softkey(g, "OK");
+      const char* items[] = {tr(STR_FORGET_NET), tr(STR_SWITCH_NET)};
+      draw_list(g, tr(STR_WIFI), items, 2, cur);
+      nokia_ui::softkey(g, tr(STR_OK));
+      break;
+    }
+    case V_LANG: {
+      const char* items[LANG_COUNT];
+      for (uint8_t i = 0; i < LANG_COUNT; i++) items[i] = lang_name((Lang)i);
+      draw_list(g, tr(STR_LANGUAGE), items, LANG_COUNT, cur);
+      nokia_ui::softkey(g, tr(STR_OK));
       break;
     }
     case V_ABOUT: {
@@ -288,24 +314,24 @@ static void render(void* gfx) {
         g.drawXBMP(24, 0, ESPNOKIA_EMBLEM_W, ESPNOKIA_EMBLEM_H, espnokia_emblem_bits);
         g.drawXBMP(2, 22, ESPNOKIA_LOGO_W, ESPNOKIA_LOGO_H, espnokia_logo_bits);
       } else if (about_page == 1) {  // descricao
-        nokia_ui::text_bold_center(g, 8, "Sobre");
+        nokia_ui::text_bold_center(g, 8, tr(STR_ABOUT));
         g.drawStr(2, 19, "Nokia OS fake");
         g.drawStr(2, 28, "ESP32 + 5110");
       } else {  // specs do sistema
-        nokia_ui::text_bold_center(g, 8, "Sistema");
+        nokia_ui::text_bold_center(g, 8, tr(STR_SYSTEM));
         snprintf(buf, sizeof(buf), "fw %s", ESPNOKIA_FW_VERSION);
         g.drawStr(2, 19, buf);
-        snprintf(buf, sizeof(buf), "RAM livre %uKB", (unsigned)(ESP.getFreeHeap() / 1024));
-        g.drawStr(2, 28, buf);
+        snprintf(buf, sizeof(buf), tr(STR_RAM_FREE_FMT), (unsigned)(ESP.getFreeHeap() / 1024));
+        g.drawUTF8(2, 28, buf);
         g.drawStr(2, 37, "CPU 240MHz");
       }
       snprintf(buf, sizeof(buf), "%u/%u", about_page + 1, kAboutPages);
       g.drawStr(82 - (int)g.getStrWidth(buf), 37, buf);
-      nokia_ui::softkey(g, "Voltar");
+      nokia_ui::softkey(g, tr(STR_BACK));
       break;
     }
   }
 }
 
-const App app_settings = {"Config", on_enter, nullptr, input, nullptr, render,
+const App app_settings = {STR_APP_SETTINGS, on_enter, nullptr, input, nullptr, render,
                           icon_settings_bits};

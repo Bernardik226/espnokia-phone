@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include <U8g2lib.h>
 #include "drivers/rtc.h"
+#include "i18n.h"
 #include "ui/assets.h"
 #include "ui/fonts3310.h"
 #include "ui/nokia_ui.h"
@@ -20,7 +21,7 @@ static void on_enter() {
 static void render(void* gfx) {
   U8G2& g = *(U8G2*)gfx;
   g.setFont(u8g2_font_3310_small);
-  nokia_ui::text_bold_center(g, 8, "Clima");
+  nokia_ui::text_bold_center(g, 8, tr(STR_APP_WEATHER));
   if (rtc::present()) {
     uint32_t ms = millis();
     if (ms - last_read_ >= 5000) {  // o DS3231 so converte a cada ~64s
@@ -36,13 +37,13 @@ static void render(void* gfx) {
     g.drawCircle(x + w + 4, 16, 2);   // simbolo de grau (fonte nao tem)
     g.setFont(u8g2_font_3310_small);
     nokia_ui::text_bold(g, x + w + 8, 23, "C");
-    const char* sub = "Sensor interno";
-    g.drawStr(42 - (int)g.getStrWidth(sub) / 2, 40, sub);
+    const char* sub = tr(STR_INT_SENSOR);
+    g.drawUTF8(42 - (int)g.getUTF8Width(sub) / 2, 40, sub);
   } else {
-    g.drawStr(2, 24, "Sem sensor");
+    g.drawUTF8(2, 24, tr(STR_NO_SENSOR));
   }
-  nokia_ui::softkey(g, "Voltar");
+  nokia_ui::softkey(g, tr(STR_BACK));
 }
 
-const App app_weather = {"Clima", on_enter, nullptr, nullptr, nullptr, render,
+const App app_weather = {STR_APP_WEATHER, on_enter, nullptr, nullptr, nullptr, render,
                          icon_weather_bits};

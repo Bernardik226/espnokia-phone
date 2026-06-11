@@ -1,6 +1,7 @@
 #include "app_tones.h"
 #include <U8g2lib.h>
 #include "drivers/buzzer.h"
+#include "i18n.h"
 #include "ui/assets.h"
 #include "ui/fonts3310.h"
 #include "ui/nokia_ui.h"
@@ -62,7 +63,7 @@ static void on_exit() { buzzer::stop(); }
 static void render(void* gfx) {
   U8G2& g = *(U8G2*)gfx;
   g.setFont(u8g2_font_3310_small);
-  nokia_ui::text_bold_center(g, 8, "Toques");
+  nokia_ui::text_bold_center(g, 8, tr(STR_APP_TONES));
   for (uint8_t row = 0; row < kVisible && top + row < kCount; row++) {
     uint8_t i = top + row;                          // lista com barra invertida (3310)
     int y = 11 + row * 9;
@@ -78,9 +79,9 @@ static void render(void* gfx) {
   g.drawVLine(82, 11, 27);                          // scrollbar como no menu
   int th = 27 * kVisible / kCount;
   g.drawBox(81, 11 + (27 - th) * top / (kCount - kVisible), 3, th);
-  nokia_ui::softkey(g, buzzer::tune_busy() ? "Parar" : "Tocar");
+  nokia_ui::softkey(g, tr(buzzer::tune_busy() ? STR_STOP : STR_PLAY));
 }
 const char* tones_nokia_tune() { return kTones[0].rtttl; }
 
-const App app_tones = {"Toques", nullptr, nullptr, input, on_exit, render,
+const App app_tones = {STR_APP_TONES, nullptr, nullptr, input, on_exit, render,
                        icon_tones_bits};
