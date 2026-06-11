@@ -10,12 +10,13 @@
 #include "ui/menu_view.h"
 #include "apps/app_standby.h"
 #include "apps/app_clock.h"
+#include "apps/app_weather.h"
 #include "apps/app_tones.h"
 #include "apps/app_settings.h"
 
 static U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R0, PIN_LCD_CE, PIN_LCD_DC, PIN_LCD_RST);
 static Shell shell;
-static const App* kApps[] = {&app_clock, &app_tones, &app_settings};
+static const App* kApps[] = {&app_clock, &app_weather, &app_tones, &app_settings};
 
 void setup() {
   Serial.begin(115200);
