@@ -1,4 +1,5 @@
 #include "nokia_ui.h"
+#include "assets.h"
 #include "fonts3310.h"
 
 namespace nokia_ui {
@@ -23,4 +24,9 @@ int bold_width(U8G2& g, const char* s) {
   return w;
 }
 void softkey(U8G2& g, const char* label) { text_bold_center(g, 47, label); }
+void no_network(U8G2& g) {
+  g.drawXBMP((84 - ICON_NOWIFI_W) / 2, 11, ICON_NOWIFI_W, ICON_NOWIFI_H,
+             icon_nowifi_bits);
+  g.drawStr(42 - (int)g.getStrWidth("Conecte o WiFi") / 2, 38, "Conecte o WiFi");
+}
 }  // namespace nokia_ui
