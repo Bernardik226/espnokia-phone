@@ -4,6 +4,8 @@
 
 // Contrato de app do NokiaOS. on_render recebe void* para manter o core puro
 // (o glue passa U8G2*). Callbacks podem ser nullptr.
+// icon: XBM 24x24 (convencao fixa do menu) ou nullptr; fica por ultimo para
+// que apps sem icone nem precisem declara-lo (value-init = nullptr).
 struct App {
   const char* name;
   void (*on_enter)();
@@ -11,4 +13,5 @@ struct App {
   bool (*on_input)(Button b, BtnEvent e);  // true = consumiu o evento
   void (*on_exit)();
   void (*on_render)(void* gfx);
+  const unsigned char* icon;
 };
