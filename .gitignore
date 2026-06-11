@@ -1,0 +1,5 @@
+.pio/
+.vscode/
+firmware/src/config.h
+__pycache__/
+.env
