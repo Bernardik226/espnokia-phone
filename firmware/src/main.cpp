@@ -1,3 +1,21 @@
 #include <Arduino.h>
-void setup() { Serial.begin(115200); Serial.println("espnokia-phone boot"); }
-void loop() { delay(1000); }
+#include <U8g2lib.h>
+#include "pins.h"
+
+U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R0, PIN_LCD_CE, PIN_LCD_DC, PIN_LCD_RST);
+
+void setup() {
+  pinMode(PIN_LCD_BL, OUTPUT);
+  digitalWrite(PIN_LCD_BL, HIGH);
+  u8g2.begin();
+  u8g2.setContrast(140);  // ajustar 120-160 conforme o módulo
+  u8g2.clearBuffer();
+  u8g2.setFont(u8g2_font_profont12_tr);
+  u8g2.drawStr(8, 20, "espnokia");
+  u8g2.drawFrame(0, 0, 84, 48);
+  u8g2.sendBuffer();
+}
+void loop() {
+  digitalWrite(PIN_LCD_BL, !digitalRead(PIN_LCD_BL));  // backlight piscando = BL ok
+  delay(1000);
+}
