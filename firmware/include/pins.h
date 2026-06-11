@@ -1,5 +1,5 @@
 #pragma once
-// espnokia-phone — pinagem v5 (docs/superpowers/specs/2026-06-10-espnokia-phone-design.md)
+// espnokia-phone — pinagem v5 (única fonte da verdade; tabela em docs/INSTALL.md)
 #define PIN_LCD_CLK  18  // VSPI SCK
 #define PIN_LCD_DIN  23  // VSPI MOSI
 #define PIN_LCD_DC   17
