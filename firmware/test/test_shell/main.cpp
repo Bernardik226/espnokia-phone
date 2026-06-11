@@ -7,9 +7,10 @@ static void f_enter() { enters++; }
 static void f_exit() { exits++; }
 static void f_tick(uint32_t) { ticks++; }
 static bool f_input(Button, BtnEvent) { return consume_input; }
+static const unsigned char fake_icon[] = {0x01};
 static const App home_app = {"Relogio", f_enter, f_tick, nullptr, f_exit, nullptr};
 static const App a1 = {"Toques", f_enter, f_tick, f_input, f_exit, nullptr};
-static const App a2 = {"Sobre", f_enter, nullptr, nullptr, f_exit, nullptr};
+static const App a2 = {"Sobre", f_enter, nullptr, nullptr, f_exit, nullptr, fake_icon};
 static const App* apps[] = {&a1, &a2};
 
 static Shell make() {
@@ -72,6 +73,11 @@ void test_tick_reaches_active_app_only() {
   s.tick(200);
   TEST_ASSERT_EQUAL_INT(t0 + 1, ticks);
 }
+void test_app_exposes_icon() {
+  Shell s = make();
+  TEST_ASSERT_NULL(s.app_at(0)->icon);                  // a1 sem icon → nullptr
+  TEST_ASSERT_EQUAL_PTR(fake_icon, s.app_at(1)->icon);  // a2 com icon
+}
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_starts_at_home_and_enters_home_app);
@@ -80,5 +86,6 @@ int main() {
   RUN_TEST(test_ok_enters_app_and_c_exits_to_launcher);
   RUN_TEST(test_app_consuming_input_blocks_navigation);
   RUN_TEST(test_tick_reaches_active_app_only);
+  RUN_TEST(test_app_exposes_icon);
   return UNITY_END();
 }
