@@ -26,9 +26,11 @@ Réplica **fiel** da UI do Nokia 3310 — não "inspirado em". O 3310 usa o mesm
 display 84×48 (PCD8544) do 5110, então a réplica é pixel a pixel.
 
 - **Boot:** logo NOKIA em pixel + animação das mãos se encontrando
-  (procedural: 1 XBM por mão, posições convergindo) + Nokia tune.
-  (Decisão consciente: o 3310 real não toca o tune no boot, mas o tune
-  na ligada é mais impactante pra demo.)
+  (procedural: 1 XBM por mão, posições convergindo) + **startup chime** —
+  o jingle de entrada que os Nokia posteriores tocavam com as mãos
+  (arpejo ascendente em Lá maior; aproximação monofônica, afinada de
+  ouvido na bancada). O Nokia tune completo NÃO toca no boot — fica como
+  ringtone no app Toques, como no original.
 - **Standby (home):** hora em bold no topo direito; "espnokia" centrado
   (no lugar do nome da operadora); lateral esquerda com ícone WiFi +
   barras de sinal verticais (nível via RSSI — substitui o sinal celular);
