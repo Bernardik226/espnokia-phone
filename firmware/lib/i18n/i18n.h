@@ -29,6 +29,8 @@ enum StrId : uint8_t {
   STR_INT_SENSOR, STR_NO_SENSOR,
   // rede
   STR_CONNECT_WIFI,
+  // som
+  STR_VOLUME, STR_VOL_LOW, STR_VOL_MED, STR_VOL_HIGH,
   STR_COUNT
 };
 

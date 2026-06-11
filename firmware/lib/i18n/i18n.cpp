@@ -86,6 +86,12 @@ static const char* const kStr[STR_COUNT][LANG_COUNT] = {
                      "Aucun capteur", "Kein Sensor", "Ei anturia"},
   /* CONNECT_WIFI*/ {"Conecte o WiFi", "Connect WiFi", "Conecta el WiFi",
                      "Connectez WiFi", "WLAN verbinden", "Yhdistä WiFi"},
+  /* VOLUME      */ {"Volume", "Volume", "Volumen", "Volume", "Lautstärke",
+                     "Äänenvoim."},
+  /* VOL_LOW     */ {"Baixo", "Low", "Bajo", "Faible", "Leise", "Hiljainen"},
+  /* VOL_MED     */ {"Médio", "Medium", "Medio", "Moyen", "Mittel",
+                     "Keskitaso"},
+  /* VOL_HIGH    */ {"Alto", "High", "Alto", "Fort", "Laut", "Kova"},
 };
 
 static const char* const kDay[LANG_COUNT][7] = {
