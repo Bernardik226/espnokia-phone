@@ -1,0 +1,117 @@
+#include "i18n.h"
+
+// Uma linha por string, uma coluna por idioma (PT EN ES FR DE FI).
+// Tela de 84px na fonte small comporta ~16 caracteres: traducoes longas
+// (de/fi) sao abreviadas a moda dos celulares da epoca.
+static const char* const kStr[STR_COUNT][LANG_COUNT] = {
+  /* NONE        */ {"", "", "", "", "", ""},
+  /* APP_CLOCK   */ {"Relógio", "Clock", "Reloj", "Horloge", "Uhr", "Kello"},
+  /* APP_WEATHER */ {"Clima", "Weather", "Clima", "Météo", "Wetter", "Sää"},
+  /* APP_TONES   */ {"Toques", "Tones", "Tonos", "Sonneries", "Töne", "Äänet"},
+  /* APP_SETTINGS*/ {"Config", "Settings", "Ajustes", "Réglages",
+                     "Einstellungen", "Asetukset"},
+  /* APP_COPA    */ {"Copa 2026", "World Cup 26", "Mundial 2026",
+                     "Mondial 2026", "WM 2026", "MM-kisat 26"},
+  /* MENU        */ {"Menu", "Menu", "Menú", "Menu", "Menü", "Valikko"},
+  /* BACK        */ {"Voltar", "Back", "Volver", "Retour", "Zurück",
+                     "Takaisin"},
+  /* OK          */ {"OK", "OK", "OK", "OK", "OK", "OK"},
+  /* SELECT      */ {"Selecionar", "Select", "Elegir", "Choisir", "Wählen",
+                     "Valitse"},
+  /* OPEN        */ {"Abrir", "Open", "Abrir", "Ouvrir", "Öffnen", "Avaa"},
+  /* SAVE        */ {"Salvar", "Save", "Guardar", "Enregistrer", "Speichern",
+                     "Tallenna"},
+  /* CHANGE      */ {"Mudar", "Change", "Cambiar", "Modifier", "Ändern",
+                     "Muuta"},
+  /* PLAY        */ {"Tocar", "Play", "Tocar", "Jouer", "Spielen", "Soita"},
+  /* STOP        */ {"Parar", "Stop", "Parar", "Stop", "Stopp", "Seis"},
+  /* OPTIONS     */ {"Opções", "Options", "Opciones", "Options", "Optionen",
+                     "Valinnat"},
+  /* DISPLAY     */ {"Visor", "Display", "Pantalla", "Écran", "Anzeige",
+                     "Näyttö"},
+  /* BACKLIGHT   */ {"Luz do visor", "Backlight", "Luz pantalla",
+                     "Rétroéclair.", "Beleuchtung", "Taustavalo"},
+  /* DATETIME    */ {"Data e hora", "Date & time", "Fecha y hora",
+                     "Date et heure", "Datum & Zeit", "Aika & pvm"},
+  /* WIFI        */ {"Wifi", "Wifi", "Wifi", "Wifi", "Wifi", "Wifi"},
+  /* LANGUAGE    */ {"Idioma", "Language", "Idioma", "Langue", "Sprache",
+                     "Kieli"},
+  /* ABOUT       */ {"Sobre", "About", "Acerca de", "À propos", "Über",
+                     "Tietoja"},
+  /* SYSTEM      */ {"Sistema", "System", "Sistema", "Système", "System",
+                     "Järjestelmä"},
+  /* CONFIG_MODE */ {"Modo config", "Config mode", "Modo config",
+                     "Mode config", "Konfig-Modus", "Konfig-tila"},
+  /* PASS_FMT    */ {"senha %s", "pass %s", "clave %s", "mdp %s",
+                     "Kennwort %s", "salasana %s"},
+  /* CONNECTING  */ {"conectando...", "connecting...", "conectando...",
+                     "connexion...", "verbinde...", "yhdistetään..."},
+  /* FORGET_NET  */ {"Esquecer rede", "Forget network", "Olvidar red",
+                     "Oublier réseau", "Netz vergessen", "Unohda verkko"},
+  /* SWITCH_NET  */ {"Trocar rede", "Change network", "Cambiar red",
+                     "Changer réseau", "Netz wechseln", "Vaihda verkko"},
+  /* SET_NOW     */ {"Acertar agora", "Set now", "Ajustar ahora", "Régler",
+                     "Jetzt stellen", "Aseta nyt"},
+  /* SYNC        */ {"Sincronizar", "Sync", "Sincronizar", "Synchro", "Sync",
+                     "Synkkaa"},
+  /* NO_RTC      */ {"RTC ausente", "No RTC", "Sin RTC", "Pas de RTC",
+                     "Kein RTC", "Ei RTC"},
+  /* RAM_FREE    */ {"RAM livre %uKB", "Free RAM %uKB", "RAM libre %uKB",
+                     "RAM libre %uKB", "RAM frei %uKB", "RAM vapaa %uKB"},
+  /* NEXT_GAMES  */ {"Próximos", "Upcoming", "Próximos", "À venir",
+                     "Demnächst", "Tulevat"},
+  /* BRAZIL      */ {"Brasil", "Brazil", "Brasil", "Brésil", "Brasilien",
+                     "Brasilia"},
+  /* LIVE_TAB    */ {"Ao vivo", "Live", "En vivo", "En direct", "Live",
+                     "Live"},
+  /* SEARCHING   */ {"Buscando...", "Loading...", "Buscando...",
+                     "Recherche...", "Lade...", "Haetaan..."},
+  /* NET_BUSY    */ {"REDE OCUPADA", "NETWORK BUSY", "RED OCUPADA",
+                     "RÉSEAU OCCUPÉ", "NETZ BELEGT", "VERKKO VARATTU"},
+  /* NO_GAMES    */ {"Nenhum jogo", "No games", "Sin partidos",
+                     "Aucun match", "Keine Spiele", "Ei pelejä"},
+  /* LIVE_BIG    */ {"AO VIVO", "LIVE", "EN VIVO", "EN DIRECT", "LIVE",
+                     "LIVE"},
+  /* NOTIFY      */ {"Avisar", "Notify", "Avisar", "Prévenir", "Melden",
+                     "Ilmoita"},
+  /* NOTIFY_OFF  */ {"Tirar aviso", "Mute alert", "Quitar aviso",
+                     "Sans alerte", "Stumm", "Hiljennä"},
+  /* NOTIFY_ON   */ {"Aviso ON", "Alert ON", "Aviso ON", "Alerte ON",
+                     "Alarm AN", "Ilmoitus ON"},
+  /* GAME_NOW    */ {"JOGO AGORA", "GAME TIME", "¡PARTIDO YA!", "MATCH !",
+                     "SPIEL JETZT", "PELI NYT"},
+  /* INT_SENSOR  */ {"Sensor interno", "Internal sensor", "Sensor interno",
+                     "Capteur interne", "Interner Sensor", "Sisäanturi"},
+  /* NO_SENSOR   */ {"Sem sensor", "No sensor", "Sin sensor",
+                     "Aucun capteur", "Kein Sensor", "Ei anturia"},
+  /* CONNECT_WIFI*/ {"Conecte o WiFi", "Connect WiFi", "Conecta el WiFi",
+                     "Connectez WiFi", "WLAN verbinden", "Yhdistä WiFi"},
+};
+
+static const char* const kDay[LANG_COUNT][7] = {
+  {"Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"},
+  {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
+   "Saturday"},
+  {"Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"},
+  {"Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"},
+  {"Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag",
+   "Samstag"},
+  {"Sunnuntai", "Maanantai", "Tiistai", "Keskiviikko", "Torstai",
+   "Perjantai", "Lauantai"},
+};
+
+static const char* const kLangName[LANG_COUNT] = {
+  "Português", "English", "Español", "Français", "Deutsch", "Suomi"};
+
+static Lang lang_ = LANG_PT;
+
+const char* tr(StrId id) {
+  if (id >= STR_COUNT) return "";
+  return kStr[id][lang_];
+}
+const char* day_name(uint8_t dow) { return kDay[lang_][dow % 7]; }
+const char* lang_name(Lang l) {
+  return l < LANG_COUNT ? kLangName[l] : kLangName[LANG_PT];
+}
+void i18n_set(Lang l) { lang_ = l < LANG_COUNT ? l : LANG_PT; }
+Lang i18n_lang() { return lang_; }

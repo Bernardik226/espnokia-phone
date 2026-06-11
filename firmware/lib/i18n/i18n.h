@@ -1,0 +1,39 @@
+#pragma once
+#include <stdint.h>
+
+// Idiomas do sistema. Tabelas const em flash; tr() resolve pelo idioma
+// corrente. A lib e pura (sem Arduino): a persistencia do idioma escolhido
+// fica no glue (main carrega da NVS no boot, settings salva ao trocar).
+// Strings com acento sao UTF-8: renderizar com drawUTF8, nunca drawStr.
+enum Lang : uint8_t { LANG_PT, LANG_EN, LANG_ES, LANG_FR, LANG_DE, LANG_FI,
+                      LANG_COUNT };
+
+enum StrId : uint8_t {
+  STR_NONE,  // string vazia (apps que nao aparecem no launcher)
+  // nomes de app (App.name_id)
+  STR_APP_CLOCK, STR_APP_WEATHER, STR_APP_TONES, STR_APP_SETTINGS,
+  STR_APP_COPA,
+  // softkeys e acoes comuns
+  STR_MENU, STR_BACK, STR_OK, STR_SELECT, STR_OPEN, STR_SAVE, STR_CHANGE,
+  STR_PLAY, STR_STOP, STR_OPTIONS,
+  // configuracoes
+  STR_DISPLAY, STR_BACKLIGHT, STR_DATETIME, STR_WIFI, STR_LANGUAGE,
+  STR_ABOUT, STR_SYSTEM, STR_CONFIG_MODE, STR_PASS_FMT, STR_CONNECTING,
+  STR_FORGET_NET, STR_SWITCH_NET, STR_SET_NOW, STR_SYNC, STR_NO_RTC,
+  STR_RAM_FREE_FMT,
+  // copa
+  STR_NEXT_GAMES, STR_BRAZIL, STR_LIVE_TAB, STR_SEARCHING, STR_NET_BUSY,
+  STR_NO_GAMES, STR_LIVE_BIG, STR_NOTIFY, STR_NOTIFY_OFF, STR_NOTIFY_ON,
+  STR_GAME_NOW,
+  // clima
+  STR_INT_SENSOR, STR_NO_SENSOR,
+  // rede
+  STR_CONNECT_WIFI,
+  STR_COUNT
+};
+
+const char* tr(StrId id);            // string no idioma corrente
+const char* day_name(uint8_t dow);   // 0 = domingo
+const char* lang_name(Lang l);       // nome do idioma, no proprio idioma
+void i18n_set(Lang l);               // fora do range vira LANG_PT
+Lang i18n_lang();
