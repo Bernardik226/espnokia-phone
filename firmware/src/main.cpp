@@ -7,6 +7,7 @@
 #include "drivers/buttons.h"
 #include "drivers/rtc.h"
 #include "net/wifi.h"
+#include "net/ntp.h"
 #include "ui/boot_anim.h"
 #include "ui/menu_view.h"
 #include "apps/app_standby.h"
@@ -50,6 +51,7 @@ void loop() {
   shell.tick(now);
   buzzer::tick(now);
   wifi::tick(now);
+  ntp::tick(now);
 
   static uint32_t last_render = 0;
   if (now - last_render >= 50) {                // ~20 fps
