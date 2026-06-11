@@ -4,8 +4,10 @@
 #include <U8g2lib.h>
 #include "clockfmt.h"
 #include "i18n.h"
+#include "sound.h"
 #include "version.h"
 #include "drivers/backlight.h"
+#include "drivers/buzzer.h"
 #include "drivers/rtc.h"
 #include "net/wifi.h"
 #include "ui/assets.h"
@@ -17,16 +19,17 @@
 // de sincronizacao via internet (NVS) e o acerto manual do RTC (V_DT_EDIT:
 // UP/DOWN muda o campo invertido, OK avanca, C volta — como no 3310);
 // V_WIFI mostra rede/IP (ou o AP do modo config) e abre V_WIFI_MENU com
-// Esquecer/Trocar rede (ambos reiniciam); V_LANG troca o idioma do sistema
-// (vale na hora e persiste); V_ABOUT tem 3 paginas (UP/DOWN).
+// Esquecer/Trocar rede (ambos reiniciam); V_VOL ajusta o volume com demo ao
+// vivo (so persiste no OK, como o backlight); V_LANG troca o idioma do
+// sistema (vale na hora e persiste); V_ABOUT tem 3 paginas (UP/DOWN).
 enum View : uint8_t { V_ROOT, V_DISPLAY, V_DATETIME, V_DT_EDIT, V_WIFI,
-                      V_WIFI_MENU, V_LANG, V_ABOUT };
+                      V_WIFI_MENU, V_VOL, V_LANG, V_ABOUT };
 static const uint8_t kAboutPages = 3;
 static View view = V_ROOT;
 static uint8_t cur = 0;         // cursor da lista corrente
 static uint8_t about_page = 0;  // 0..kAboutPages-1
 
-static const StrId kRoot[] = {STR_DISPLAY, STR_DATETIME, STR_WIFI,
+static const StrId kRoot[] = {STR_DISPLAY, STR_DATETIME, STR_WIFI, STR_VOLUME,
                               STR_LANGUAGE, STR_ABOUT};
 static const uint8_t kRootCount = sizeof(kRoot) / sizeof(kRoot[0]);
 
@@ -102,7 +105,8 @@ static bool input(Button b, BtnEvent e) {
         if (cur == 0) { view = V_DISPLAY; cur = backlight::level(); }
         else if (cur == 1) { view = V_DATETIME; cur = 0; }
         else if (cur == 2) { view = V_WIFI; }
-        else if (cur == 3) { view = V_LANG; cur = (uint8_t)i18n_lang(); }
+        else if (cur == 3) { view = V_VOL; cur = sound::volume(); }
+        else if (cur == 4) { view = V_LANG; cur = (uint8_t)i18n_lang(); }
         else { view = V_ABOUT; about_page = 0; }
         return true;
       }
@@ -160,16 +164,28 @@ static bool input(Button b, BtnEvent e) {
       }
       view = V_WIFI;  // C volta pro status
       return true;
+    case V_VOL:
+      if (b == BTN_UP || b == BTN_DOWN) {  // demo ao vivo, nao persiste
+        cur = (b == BTN_UP) ? (cur + 2) % 3 : (cur + 1) % 3;
+        buzzer::set_volume(cur);
+        sound::play(sound::SND_KEY);  // ouve o nivel na hora
+        return true;
+      }
+      if (b == BTN_OK) { sound::set_volume(cur); view = V_ROOT; cur = 3; return true; }
+      // C cancela: reverte pro volume persistido
+      buzzer::set_volume(sound::volume());
+      view = V_ROOT; cur = 3;
+      return true;
     case V_LANG:
       if (b == BTN_UP) { cur = (cur + LANG_COUNT - 1) % LANG_COUNT; return true; }
       if (b == BTN_DOWN) { cur = (cur + 1) % LANG_COUNT; return true; }
-      if (b == BTN_OK) { lang_save((Lang)cur); view = V_ROOT; cur = 3; return true; }
-      view = V_ROOT; cur = 3;  // C cancela
+      if (b == BTN_OK) { lang_save((Lang)cur); view = V_ROOT; cur = 4; return true; }
+      view = V_ROOT; cur = 4;  // C cancela
       return true;
     case V_ABOUT:
       if (b == BTN_UP) { about_page = (about_page + kAboutPages - 1) % kAboutPages; return true; }
       if (b == BTN_DOWN) { about_page = (about_page + 1) % kAboutPages; return true; }
-      view = V_ROOT; cur = 4;
+      view = V_ROOT; cur = 5;
       return true;
   }
   return false;
@@ -298,6 +314,12 @@ static void render(void* gfx) {
     case V_WIFI_MENU: {
       const char* items[] = {tr(STR_FORGET_NET), tr(STR_SWITCH_NET)};
       draw_list(g, tr(STR_WIFI), items, 2, cur);
+      nokia_ui::softkey(g, tr(STR_OK));
+      break;
+    }
+    case V_VOL: {
+      const char* items[] = {tr(STR_VOL_LOW), tr(STR_VOL_MED), tr(STR_VOL_HIGH)};
+      draw_list(g, tr(STR_VOLUME), items, 3, cur);
       nokia_ui::softkey(g, tr(STR_OK));
       break;
     }

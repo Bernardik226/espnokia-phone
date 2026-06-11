@@ -3,6 +3,7 @@
 #include "alarm.h"
 #include "pins.h"
 #include "shell.h"
+#include "sound.h"
 #include "drivers/backlight.h"
 #include "drivers/buzzer.h"
 #include "drivers/buttons.h"
@@ -29,6 +30,7 @@ void setup() {
   u8g2.begin();
   u8g2.setContrast(140);
   buzzer::init();
+  sound::init();  // volume + toque padrao salvos na NVS
   buttons::init();
   if (rtc::init()) {
     rtc::DateTime dt;
@@ -49,7 +51,7 @@ void loop() {
 
   Button b; BtnEvent e;
   if (buttons::poll(now, b, e)) {
-    if (e == EV_PRESS) buzzer::beep(900, 90);  // keypad beep DCT3: ~900 Hz / ~90ms medidos de 3310 real
+    if (e == EV_PRESS) sound::play(sound::SND_KEY);
     if (!alarme::input(b, e)) shell.input(b, e);  // overlay de alarme engole teclas
   }
   shell.tick(now);
