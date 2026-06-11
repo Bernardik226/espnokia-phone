@@ -69,10 +69,10 @@ static void render(void* gfx) {
     if (i == cur) {
       g.drawBox(0, y, 80, 9);
       g.setDrawColor(0);
-      g.drawStr(3, y + 7, kTones[i].name);
+      g.drawStr(3, y + 8, kTones[i].name);
       g.setDrawColor(1);
     } else {
-      g.drawStr(3, y + 7, kTones[i].name);
+      g.drawStr(3, y + 8, kTones[i].name);
     }
   }
   g.drawVLine(82, 11, 27);                          // scrollbar como no menu
