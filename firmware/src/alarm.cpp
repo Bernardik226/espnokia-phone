@@ -4,6 +4,7 @@
 #include <U8g2lib.h>
 #include "apps/app_tones.h"
 #include "drivers/buzzer.h"
+#include "i18n.h"
 #include "drivers/rtc.h"
 #include "ui/fonts3310.h"
 #include "ui/nokia_ui.h"
@@ -94,9 +95,9 @@ void render(void* gfx) {
   g.setDrawColor(1);
   g.setFont(u8g2_font_3310_small);
   bool pisca = ((millis() / 400) % 2) == 0;  // urgencia, estilo alarme 3310
-  if (pisca) nokia_ui::text_bold_center(g, 14, "JOGO AGORA");
+  if (pisca) nokia_ui::text_bold_center(g, 14, tr(STR_GAME_NOW));
   g.drawStr(42 - (int)g.getStrWidth(label_) / 2, 27, label_);
-  nokia_ui::softkey(g, "OK");
+  nokia_ui::softkey(g, tr(STR_OK));
 }
 
 }  // namespace alarme

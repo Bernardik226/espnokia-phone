@@ -4,6 +4,7 @@
 #include "alarm.h"
 #include "copamodel.h"
 #include "drivers/buzzer.h"
+#include "i18n.h"
 #include "net/http.h"
 #include "net/wifi.h"
 #include "ui/assets.h"
@@ -18,7 +19,7 @@ enum View : uint8_t { V_MENU, V_LIST, V_DETAIL };
 enum Fetch : uint8_t { FETCH_IDLE, FETCH_PENDING, FETCH_OK, FETCH_ERR,
                        FETCH_NONET };
 
-static const char* kAbas[] = {"Proximos", "Brasil", "Ao vivo"};
+static const StrId kAbas[] = {STR_NEXT_GAMES, STR_BRAZIL, STR_LIVE_TAB};
 static const char* kPaths[] = {"/copa/proximos?n=8", "/copa/brasil", "/copa/live"};
 static const uint8_t kAbaCount = 3;
 static const uint8_t kMaxJogos = 8;
@@ -101,39 +102,39 @@ static void render(void* gfx) {
   g.setFont(u8g2_font_3310_small);
   switch (view) {
     case V_MENU:
-      nokia_ui::text_bold_center(g, 8, "Copa 2026");
+      nokia_ui::text_bold_center(g, 8, tr(STR_APP_COPA));
       for (uint8_t i = 0; i < kAbaCount; i++) {
         int y = 11 + i * 9;
         if (i == cur) {
           g.drawBox(0, y, 84, 9);
           g.setDrawColor(0);
-          g.drawStr(3, y + 8, kAbas[i]);
+          g.drawUTF8(3, y + 8, tr(kAbas[i]));
           g.setDrawColor(1);
         } else {
-          g.drawStr(3, y + 8, kAbas[i]);
+          g.drawUTF8(3, y + 8, tr(kAbas[i]));
         }
       }
-      nokia_ui::softkey(g, "Selecionar");
+      nokia_ui::softkey(g, tr(STR_SELECT));
       break;
     case V_LIST: {
-      nokia_ui::text_bold_center(g, 8, kAbas[aba_]);
+      nokia_ui::text_bold_center(g, 8, tr(kAbas[aba_]));
       if (fetch_ == FETCH_PENDING) {
-        g.drawStr(2, 24, "Buscando...");
+        g.drawUTF8(2, 24, tr(STR_SEARCHING));
         break;
       }
       if (fetch_ == FETCH_NONET) {
         nokia_ui::no_network(g);
-        nokia_ui::softkey(g, "Voltar");
+        nokia_ui::softkey(g, tr(STR_BACK));
         break;
       }
       if (fetch_ == FETCH_ERR) {
-        nokia_ui::text_bold_center(g, 24, "REDE OCUPADA");
-        nokia_ui::softkey(g, "Voltar");
+        nokia_ui::text_bold_center(g, 24, tr(STR_NET_BUSY));
+        nokia_ui::softkey(g, tr(STR_BACK));
         break;
       }
       if (n_jogos_ == 0) {
-        g.drawStr(2, 24, "Nenhum jogo");
-        nokia_ui::softkey(g, "Voltar");
+        g.drawUTF8(2, 24, tr(STR_NO_GAMES));
+        nokia_ui::softkey(g, tr(STR_BACK));
         break;
       }
       const uint8_t kVis = 3;
@@ -151,7 +152,7 @@ static void render(void* gfx) {
         if (j.live) g.drawStr(78, y + 8, "*");  // bolinha de "ao vivo"
         g.setDrawColor(1);
       }
-      nokia_ui::softkey(g, "Abrir");
+      nokia_ui::softkey(g, tr(STR_OPEN));
       break;
     }
     case V_DETAIL: {
@@ -168,13 +169,13 @@ static void render(void* gfx) {
       }
       g.drawStr(42 - (int)g.getStrWidth(j.info) / 2, 30, j.info);
       bool tem_aviso = alarme::armed(j.dia, j.mes, j.h, j.m);
-      if (j.live) nokia_ui::text_bold_center(g, 39, "AO VIVO");
-      else if (tem_aviso) g.drawStr(42 - (int)g.getStrWidth("Aviso ON") / 2, 39, "Aviso ON");
-      nokia_ui::softkey(g, tem_aviso ? "Tirar aviso" : "Avisar");
+      if (j.live) nokia_ui::text_bold_center(g, 39, tr(STR_LIVE_BIG));
+      else if (tem_aviso) g.drawUTF8(42 - (int)g.getUTF8Width(tr(STR_NOTIFY_ON)) / 2, 39, tr(STR_NOTIFY_ON));
+      nokia_ui::softkey(g, tr(tem_aviso ? STR_NOTIFY_OFF : STR_NOTIFY));
       break;
     }
   }
 }
 
-const App app_copa = {"Copa 2026", on_enter, tick, input, nullptr, render,
+const App app_copa = {STR_APP_COPA, on_enter, tick, input, nullptr, render,
                       icon_copa_bits};

@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include <U8g2lib.h>
 #include "clockfmt.h"
+#include "i18n.h"
 #include "drivers/rtc.h"
 #include "ui/assets.h"
 #include "ui/nokia_ui.h"
@@ -27,7 +28,7 @@ static void render(void* gfx) {
     g.drawBox(x + (int)g.getStrWidth(hh), 12, (int)g.getStrWidth(":"), 20);
     g.setDrawColor(1);
   }
-  nokia_ui::softkey(g, "Voltar");
+  nokia_ui::softkey(g, tr(STR_BACK));
 }
-const App app_clock = {"Relogio", nullptr, nullptr, nullptr, nullptr, render,
+const App app_clock = {STR_APP_CLOCK, nullptr, nullptr, nullptr, nullptr, render,
                        icon_clock_bits};

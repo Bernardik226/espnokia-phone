@@ -3,6 +3,7 @@
 #include <U8g2lib.h>
 #include "clockfmt.h"
 #include "drivers/rtc.h"
+#include "i18n.h"
 #include "net/wifi.h"
 #include "ui/assets.h"
 #include "ui/fonts3310.h"
@@ -41,7 +42,7 @@ static void render(void* gfx) {
     for (uint8_t i = 0; i < wifi_level(); i++)          // i=0 e a barra de baixo
       g.drawBox(0, 38 - i * 7, 3 + i, 5);               // largura cresce pra cima
   }
-  nokia_ui::softkey(g, "Menu");
+  nokia_ui::softkey(g, tr(STR_MENU));
 }
 
-const App app_standby = {"Standby", nullptr, nullptr, nullptr, nullptr, render, nullptr};
+const App app_standby = {STR_NONE, nullptr, nullptr, nullptr, nullptr, render, nullptr};

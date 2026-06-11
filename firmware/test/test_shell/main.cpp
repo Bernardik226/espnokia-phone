@@ -8,9 +8,9 @@ static void f_exit() { exits++; }
 static void f_tick(uint32_t) { ticks++; }
 static bool f_input(Button, BtnEvent) { return consume_input; }
 static const unsigned char fake_icon[] = {0x01};
-static const App home_app = {"Relogio", f_enter, f_tick, nullptr, f_exit, nullptr};
-static const App a1 = {"Toques", f_enter, f_tick, f_input, f_exit, nullptr};
-static const App a2 = {"Sobre", f_enter, nullptr, nullptr, f_exit, nullptr, fake_icon};
+static const App home_app = {1, f_enter, f_tick, nullptr, f_exit, nullptr};
+static const App a1 = {2, f_enter, f_tick, f_input, f_exit, nullptr};
+static const App a2 = {3, f_enter, nullptr, nullptr, f_exit, nullptr, fake_icon};
 static const App* apps[] = {&a1, &a2};
 
 static Shell make() {
