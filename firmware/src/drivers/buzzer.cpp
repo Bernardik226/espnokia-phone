@@ -25,7 +25,11 @@ static void tone_for(uint16_t f, uint16_t tone_ms, uint16_t note_ms, uint32_t no
   tone_end_ = now + tone_ms;
   note_end_ = now + note_ms;
 }
-void beep(uint16_t f, uint16_t ms) { playing_ = false; tone_for(f, ms, ms, millis()); }
+// um piezo, um canal: o tune tem prioridade (fiel ao 3310 — tecla muda durante toque)
+void beep(uint16_t f, uint16_t ms) {
+  if (playing_) return;
+  tone_for(f, ms, ms, millis());
+}
 void play(const char* tune) {
   stop();
   playing_ = rtttl_.begin(tune);
@@ -33,6 +37,7 @@ void play(const char* tune) {
 }
 void stop() { playing_ = false; tone_on_ = false; ledcWriteTone(kCh, 0); }
 bool busy() { return playing_ || tone_on_; }
+bool tune_busy() { return playing_; }
 
 void tick(uint32_t now) {
   if (tone_on_ && reached(now, tone_end_)) { ledcWriteTone(kCh, 0); tone_on_ = false; }
