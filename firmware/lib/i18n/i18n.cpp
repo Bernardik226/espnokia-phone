@@ -92,6 +92,15 @@ static const char* const kStr[STR_COUNT][LANG_COUNT] = {
   /* VOL_MED     */ {"Médio", "Medium", "Medio", "Moyen", "Mittel",
                      "Keskitaso"},
   /* VOL_HIGH    */ {"Alto", "High", "Alto", "Fort", "Laut", "Kova"},
+  /* ALARM       */ {"Alarme", "Alarm", "Alarma", "Alarme", "Wecker",
+                     "Herätys"},
+  /* TIMER       */ {"Timer", "Timer", "Temporizador", "Minuteur", "Timer",
+                     "Ajastin"},
+  /* TIME_UP     */ {"TEMPO!", "TIME'S UP!", "¡TIEMPO!", "TEMPS !",
+                     "ZEIT UM!", "AIKA!"},
+  /* TURN_OFF    */ {"Desligar", "Turn off", "Apagar", "Désactiver",
+                     "Ausschalten", "Sammuta"},
+  /* GOAL        */ {"GOL!", "GOAL!", "¡GOL!", "BUT !", "TOR!", "MAALI!"},
 };
 
 static const char* const kDay[LANG_COUNT][7] = {
