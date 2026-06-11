@@ -31,6 +31,8 @@ enum StrId : uint8_t {
   STR_CONNECT_WIFI,
   // som
   STR_VOLUME, STR_VOL_LOW, STR_VOL_MED, STR_VOL_HIGH,
+  // relogio (alarme/timer) e avisos
+  STR_ALARM, STR_TIMER, STR_TIME_UP, STR_TURN_OFF, STR_GOAL,
   STR_COUNT
 };
 
