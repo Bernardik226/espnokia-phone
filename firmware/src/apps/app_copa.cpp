@@ -5,6 +5,7 @@
 #include "copamodel.h"
 #include "drivers/buzzer.h"
 #include "net/http.h"
+#include "net/wifi.h"
 #include "ui/assets.h"
 #include "ui/fonts3310.h"
 #include "ui/nokia_ui.h"
@@ -14,7 +15,8 @@
 // (~ate 5 s), entao fica 1 frame em FETCH_PENDING pra tela "Buscando..."
 // aparecer antes — o 3310 tambem "pensava" com a ampulheta na tela.
 enum View : uint8_t { V_MENU, V_LIST, V_DETAIL };
-enum Fetch : uint8_t { FETCH_IDLE, FETCH_PENDING, FETCH_OK, FETCH_ERR };
+enum Fetch : uint8_t { FETCH_IDLE, FETCH_PENDING, FETCH_OK, FETCH_ERR,
+                       FETCH_NONET };
 
 static const char* kAbas[] = {"Proximos", "Brasil", "Ao vivo"};
 static const char* kPaths[] = {"/copa/proximos?n=8", "/copa/brasil", "/copa/live"};
@@ -34,7 +36,8 @@ static char buf_[2048];        // payload do server (8 jogos ~1.2 KB)
 static void abre_lista(uint8_t aba) {
   aba_ = aba;
   cur = 0;
-  fetch_ = FETCH_PENDING;
+  // sem WiFi nem tenta o GET: mostra a tela padrao de sem conexao
+  fetch_ = wifi::connected() ? FETCH_PENDING : FETCH_NONET;
   pending_ms_ = millis();
   view = V_LIST;
 }
@@ -116,6 +119,11 @@ static void render(void* gfx) {
       nokia_ui::text_bold_center(g, 8, kAbas[aba_]);
       if (fetch_ == FETCH_PENDING) {
         g.drawStr(2, 24, "Buscando...");
+        break;
+      }
+      if (fetch_ == FETCH_NONET) {
+        nokia_ui::no_network(g);
+        nokia_ui::softkey(g, "Voltar");
         break;
       }
       if (fetch_ == FETCH_ERR) {

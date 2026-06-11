@@ -12,4 +12,7 @@ void text_bold_center(U8G2& g, int y, const char* s);
 int bold_width(U8G2& g, const char* s);
 // label de softkey centrado na base (negrito 3310, baseline 47)
 void softkey(U8G2& g, const char* label);
+// tela padrao dos apps com internet sem rede: wifi cortado + instrucao
+// (titulo e softkey ficam por conta do app)
+void no_network(U8G2& g);
 }  // namespace nokia_ui
