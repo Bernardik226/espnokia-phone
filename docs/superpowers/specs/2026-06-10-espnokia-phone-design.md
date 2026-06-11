@@ -22,10 +22,32 @@ componentes, guia breve de configuração) + vídeo + post.
 
 ## Identidade
 
-- Estética Nokia anos 90: menu monocromático em lista vertical, fontes pixel,
-  navegação up/down/OK/C — fiel ao 3310 (sem teclado numérico).
-- Toques de modernidade na status bar: ícone de WiFi, bateria, hora.
-  (Bluetooth descartado — sem uso real no sistema.)
+Réplica **fiel** da UI do Nokia 3310 — não "inspirado em". O 3310 usa o mesmo
+display 84×48 (PCD8544) do 5110, então a réplica é pixel a pixel.
+
+- **Boot:** logo NOKIA em pixel + animação das mãos se encontrando
+  (procedural: 1 XBM por mão, posições convergindo) + Nokia tune.
+  (Decisão consciente: o 3310 real não toca o tune no boot, mas o tune
+  na ligada é mais impactante pra demo.)
+- **Standby (home):** hora em bold no topo direito; "espnokia" centrado
+  (no lugar do nome da operadora); lateral esquerda com ícone WiFi +
+  barras de sinal verticais (nível via RSSI — substitui o sinal celular);
+  **sem indicador de bateria**; label **"Menu"** centrado na base
+  (idioma de softkey do 3310).
+- **Menu principal:** carrossel um-item-por-tela do 3310 — nome do app no
+  header, ícone grande central (~24×24), scrollbar proporcional na lateral
+  direita, label "Selecionar" na base. UP/DOWN navega com wrap, OK entra,
+  C volta pro standby.
+- **Submenus/apps:** header com o nome no topo, listas com seleção em barra
+  invertida — padrão das telas internas do 3310.
+- **Ícones:** originais do projeto, desenhados no estilo dos do 3310 —
+  um por app (Relógio, Toques, Sobre; depois Copa e Claude).
+- **Fonte:** `u8g2_font_nokiafc22` (conversão da "Nokia Cellphone FC",
+  nativa no U8g2) em toda a UI; bold simulado com draw duplo deslocado 1px.
+- **App Relógio:** estilo Clock (Menu 11) do 3310 — hora grande; futuro:
+  alarme/cronômetro. A hora pequena fica no standby, como no original.
+- **Keypad beep estilo DCT3** (~1kHz, curto; ajuste fino de ouvido na
+  bancada). Bluetooth descartado — sem uso real no sistema.
 - Som 100% buzzer piezo — historicamente fiel (monofônico). Ringtones em
   **RTTTL** (formato do Nokia Composer — toca os toques originais).
 - A "voz" do Claude é **beep-speech** (estilo Undertale/Animal Crossing):
