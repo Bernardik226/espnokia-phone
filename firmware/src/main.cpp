@@ -32,7 +32,7 @@ void loop() {
 
   Button b; BtnEvent e;
   if (buttons::poll(now, b, e)) {
-    if (e == EV_PRESS) buzzer::beep(1000, 60);  // keypad beep estilo DCT3 (ajuste fino na bancada)
+    if (e == EV_PRESS) buzzer::beep(900, 90);  // keypad beep DCT3: ~900 Hz / ~90ms medidos de 3310 real
     shell.input(b, e);
   }
   shell.tick(now);
