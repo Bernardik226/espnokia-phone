@@ -8,4 +8,5 @@ namespace provision {
 void start();
 void tick(uint32_t now_ms);
 const char* ap_name();   // SSID do AP (espnokia-XXXX)
+const char* ap_pass();   // senha WPA2 do AP: 8 digitos sorteados a cada boot
 }  // namespace provision

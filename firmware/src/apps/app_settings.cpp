@@ -256,16 +256,18 @@ static void render(void* gfx) {
       break;
     }
     case V_WIFI: {
-      nokia_ui::text_bold_center(g, 8, "Wifi");
       char ip[16], buf2[20];
       wifi::ip_str(ip, sizeof(ip));
       if (wifi::provisioning()) {  // AP de configuracao no ar
-        g.drawStr(2, 19, "Modo config");
+        nokia_ui::text_bold_center(g, 8, "Modo config");
         snprintf(buf2, sizeof(buf2), "%.18s", wifi::ssid());
+        g.drawStr(2, 19, buf2);
+        snprintf(buf2, sizeof(buf2), "senha %s", wifi::ap_pass());
         g.drawStr(2, 28, buf2);
         g.drawStr(2, 37, ip);
         nokia_ui::softkey(g, "Voltar");
       } else {
+        nokia_ui::text_bold_center(g, 8, "Wifi");
         snprintf(buf2, sizeof(buf2), "%.18s", wifi::ssid());
         g.drawStr(2, 19, buf2);
         if (wifi::connected()) g.drawStr(2, 28, ip);

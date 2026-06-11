@@ -11,6 +11,7 @@ namespace provision {
 static WebServer server_(80);
 static DNSServer dns_;
 static char ap_name_[20];
+static char ap_pass_[9];          // 8 digitos novos a cada modo config
 static uint32_t reboot_ms_ = 0;   // agendado apos salvar
 static String opts_;              // cache do scan de redes
 static uint32_t scan_ms_ = 0;
@@ -90,6 +91,7 @@ static const char kLogoPath[] PROGMEM =
     " 7h8v1h-8zM55 7h2v1h-2zM60 7h3v1h-3zM65 7h2v1h-2zM68 7h2v1h-2zM76 7h2v1h-2z";
 
 const char* ap_name() { return ap_name_; }
+const char* ap_pass() { return ap_pass_; }
 
 // so o final do MAC de quem conectou no AP, pro usuario se reconhecer
 static String cliente_mac() {
@@ -152,15 +154,19 @@ static void captive() {  // qualquer URL desconhecida cai na pagina
 void start() {
   uint64_t mac = ESP.getEfuseMac();
   snprintf(ap_name_, sizeof(ap_name_), "espnokia-%04X", (uint16_t)(mac >> 32));
+  // senha WPA2 de 8 digitos sorteada agora (HW RNG): o dono le na tela do
+  // aparelho (Config > Wifi); vizinho nao entra no AP nem ve a pagina
+  for (uint8_t i = 0; i < 8; i++) ap_pass_[i] = '0' + (esp_random() % 10);
+  ap_pass_[8] = '\0';
   WiFi.mode(WIFI_AP_STA);  // STA junto pro scan de redes funcionar
-  WiFi.softAP(ap_name_, nullptr, 1, 0, 1);  // aberto, canal 1, SO 1 cliente
-  dns_.start(53, "*", WiFi.softAPIP());     // captive: todo DNS aponta pra ca
+  WiFi.softAP(ap_name_, ap_pass_, 1, 0, 1);  // WPA2, canal 1, SO 1 cliente
+  dns_.start(53, "*", WiFi.softAPIP());      // captive: todo DNS aponta pra ca
   server_.on("/", raiz);
   server_.on("/salvar", HTTP_POST, salvar);
   server_.onNotFound(captive);
   server_.begin();
-  Serial.printf("[prov] modo config: AP %s em %s\n", ap_name_,
-                WiFi.softAPIP().toString().c_str());
+  Serial.printf("[prov] modo config: AP %s senha %s em %s\n", ap_name_,
+                ap_pass_, WiFi.softAPIP().toString().c_str());
 }
 
 void tick(uint32_t) {

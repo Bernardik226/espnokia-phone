@@ -30,6 +30,8 @@ bool provisioning() { return prov_; }
 
 const char* ssid() { return prov_ ? provision::ap_name() : ssid_; }
 
+const char* ap_pass() { return prov_ ? provision::ap_pass() : ""; }
+
 void ip_str(char* buf, size_t len) {
   IPAddress ip = prov_ ? WiFi.softAPIP() : WiFi.localIP();
   snprintf(buf, len, "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
