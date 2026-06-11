@@ -46,7 +46,7 @@ void loop() {
 
   Button b; BtnEvent e;
   if (buttons::poll(now, b, e)) {
-    if (e == EV_PRESS) buzzer::beep(1250, 30);  // keypad click
+    if (e == EV_PRESS) buzzer::beep(1000, 60);  // keypad beep estilo DCT3 (ajuste fino na bancada)
     shell.input(b, e);
   }
   shell.tick(now);
