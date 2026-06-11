@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include <U8g2lib.h>
 #include "clockfmt.h"
+#include "drivers/rtc.h"
 #include "ui/assets.h"
 #include "ui/fonts3310.h"
 #include "ui/nokia_ui.h"
@@ -11,8 +12,12 @@ static uint8_t wifi_level() { return 0; }
 
 static void render(void* gfx) {
   U8G2& g = *(U8G2*)gfx;
-  char hhmm[6]; bool colon;
-  clock_format(millis(), hhmm, &colon);
+  // hora do RTC quando presente; sem ele, relogio de videocassete
+  char hhmm[6];
+  bool colon = ((millis() / 1000) % 2) == 0;
+  rtc::DateTime dt;
+  if (rtc::now(dt)) hhmm_format(dt.hour, dt.min, hhmm);
+  else clock_format(millis(), hhmm, &colon);
 
   g.setFont(u8g2_font_3310_small);
   // hora bold no topo direito (como no 3310); posicao fixa medida na bold
