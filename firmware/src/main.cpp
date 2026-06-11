@@ -6,6 +6,7 @@
 #include "drivers/buzzer.h"
 #include "drivers/buttons.h"
 #include "ui/statusbar.h"
+#include "ui/boot_anim.h"
 #include "ui/launcher_view.h"
 #include "apps/app_clock.h"
 #include "apps/app_tones.h"
@@ -14,17 +15,6 @@
 static U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R0, PIN_LCD_CE, PIN_LCD_DC, PIN_LCD_RST);
 static Shell shell;
 static const App* kApps[] = {&app_tones, &app_about};
-static const char* kNokiaTune =
-    "Nokia:d=4,o=5,b=225:8e6,8d6,f#,g#,8c#6,8b,d,e,8b,8a,c#,e,2a";
-
-static void splash() {
-  u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_profont12_tr);
-  u8g2.drawStr(42 - (int)u8g2.getStrWidth("espnokia") / 2, 22, "espnokia");
-  u8g2.setFont(u8g2_font_4x6_tr);
-  u8g2.drawStr(42 - (int)u8g2.getStrWidth("phone") / 2, 32, "phone");
-  u8g2.sendBuffer();
-}
 
 void setup() {
   Serial.begin(115200);
@@ -34,10 +24,7 @@ void setup() {
   u8g2.setContrast(140);
   buzzer::init();
   buttons::init();
-  splash();
-  buzzer::play(kNokiaTune);          // não-bloqueante: splash fica até o fim
-  uint32_t t0 = millis();
-  while (buzzer::busy() && millis() - t0 < 4000) { buzzer::tick(millis()); delay(2); }
+  boot_anim_play(u8g2);              // logo NOKIA + maos + startup chime (segura ate o fim)
   shell.init(&app_clock, kApps, sizeof(kApps) / sizeof(kApps[0]));
 }
 
