@@ -23,6 +23,7 @@ bool Rtttl::begin(const char* tune) {
     else p++;
   }
   if (*p != ':') return false;
+  if (def_dur_ == 0 || bpm_ == 0) return false;  // header malformado (d=/b= sem dígito)
   p_ = p + 1;
   return true;
 }
@@ -40,7 +41,7 @@ bool Rtttl::next(RtttlNote& out) {
   if (c >= 'a' && c <= 'g') { semi = kIdx[c - 'a']; p_++; }
   else if (c == 'p') { p_++; }
   else return false;
-  if (*p_ == '#') { semi++; p_++; }
+  if (*p_ == '#') { if (semi >= 0 && semi < 11) semi++; p_++; }  // b#/p# não estouram a tabela
 
   bool dotted = false;
   if (*p_ == '.') { dotted = true; p_++; }       // ponto antes ou depois da oitava
@@ -51,6 +52,7 @@ bool Rtttl::next(RtttlNote& out) {
   uint32_t ms = (60000UL * 4 / bpm_) / dur;
   if (dotted) ms += ms / 2;
 
+  if (semi >= 0 && (oct < 4 || oct > 7)) return false;  // oitava fora de 4-7: shift inválido
   out.freq_hz = (semi < 0) ? 0 : (uint16_t)(kOct4[semi] << (oct - 4));
   out.dur_ms = (uint16_t)ms;
   return true;
