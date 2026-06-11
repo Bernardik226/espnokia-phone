@@ -3,12 +3,13 @@
 #include <U8g2lib.h>
 #include "clockfmt.h"
 #include "drivers/rtc.h"
+#include "net/wifi.h"
 #include "ui/assets.h"
 #include "ui/fonts3310.h"
 #include "ui/nokia_ui.h"
 
-// nivel de sinal 0..4 — fixo em 0 ate a F2 ligar o WiFi (vira RSSI real)
-static uint8_t wifi_level() { return 0; }
+// nivel de sinal 0..4 vindo do RSSI real
+static uint8_t wifi_level() { return wifi::level(); }
 
 static void render(void* gfx) {
   U8G2& g = *(U8G2*)gfx;
