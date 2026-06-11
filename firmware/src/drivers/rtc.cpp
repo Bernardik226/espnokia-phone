@@ -1,6 +1,7 @@
 #include "rtc.h"
 #include <Arduino.h>
 #include <Wire.h>
+#include "clockfmt.h"
 #include "pins.h"
 
 namespace rtc {
@@ -39,13 +40,6 @@ static bool lost_power() {
   return read_regs(0x0F, &st, 1) && (st & 0x80);  // OSF: oscilador parou
 }
 
-// dia da semana por Sakamoto (0=domingo)
-static uint8_t weekday(uint16_t y, uint8_t m, uint8_t d) {
-  static const uint8_t t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
-  if (m < 3) y--;
-  return (uint8_t)((y + y / 4 - y / 100 + y / 400 + t[m - 1] + d) % 7);
-}
-
 // hora de compilacao como semente quando a bateria zerou
 static DateTime build_time() {
   static const char* kMonths = "JanFebMarAprMayJunJulAugSepOctNovDec";
@@ -57,7 +51,7 @@ static DateTime build_time() {
   dt.hour = (uint8_t)atoi(__TIME__);
   dt.min = (uint8_t)atoi(__TIME__ + 3);
   dt.sec = (uint8_t)atoi(__TIME__ + 6);
-  dt.dow = weekday(dt.year, dt.month, dt.day);
+  dt.dow = date_weekday(dt.year, dt.month, dt.day);
   return dt;
 }
 
