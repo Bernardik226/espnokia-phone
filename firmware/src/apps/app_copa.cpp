@@ -1,6 +1,7 @@
 #include "app_copa.h"
 #include <Arduino.h>
 #include <U8g2lib.h>
+#include "alarm.h"
 #include "copamodel.h"
 #include "drivers/buzzer.h"
 #include "net/http.h"
@@ -73,9 +74,21 @@ static bool input(Button b, BtnEvent e) {
       if (b == BTN_OK) { view = V_DETAIL; return true; }
       view = V_MENU; cur = aba_;  // C volta
       return true;
-    case V_DETAIL:
-      view = V_LIST;  // qualquer tecla volta pra lista
+    case V_DETAIL: {
+      const CopaJogo& j = jogos_[cur];
+      if (b == BTN_OK) {  // OK alterna o aviso de inicio do jogo
+        if (alarme::armed(j.dia, j.mes, j.h, j.m)) {
+          alarme::clear();
+        } else {
+          char lbl[16];
+          snprintf(lbl, sizeof(lbl), "%s x %s", j.t1, j.t2);
+          alarme::set(j.dia, j.mes, j.h, j.m, lbl);
+        }
+        return true;
+      }
+      view = V_LIST;  // C/UP/DOWN volta pra lista
       return true;
+    }
   }
   return false;
 }
@@ -146,8 +159,10 @@ static void render(void* gfx) {
         g.drawStr(42 - (int)g.getStrWidth(l2) / 2, 20, l2);
       }
       g.drawStr(42 - (int)g.getStrWidth(j.info) / 2, 30, j.info);
+      bool tem_aviso = alarme::armed(j.dia, j.mes, j.h, j.m);
       if (j.live) nokia_ui::text_bold_center(g, 39, "AO VIVO");
-      nokia_ui::softkey(g, "Voltar");
+      else if (tem_aviso) g.drawStr(42 - (int)g.getStrWidth("Aviso ON") / 2, 39, "Aviso ON");
+      nokia_ui::softkey(g, tem_aviso ? "Tirar aviso" : "Avisar");
       break;
     }
   }
