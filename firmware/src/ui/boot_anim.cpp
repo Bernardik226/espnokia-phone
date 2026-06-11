@@ -3,10 +3,10 @@
 #include "assets.h"
 #include "drivers/buzzer.h"
 
-// startup chime dos Nokia com as maos: arpejo ascendente de La maior
-// terminando em A sustentado (aproximacao monofonica — afinar na bancada)
+// startup chime dos Nokia mono (1100/2300): as 5 notas finais do Nokia tune,
+// B-A-C#-E-A em La maior, nota final pontuada e sustentada (~880 Hz no piezo)
 static const char* kStartupChime =
-    "Startup:d=8,o=5,b=140:e,a,c#6,e6,2a6";
+    "Startup:d=4,o=5,b=125:8b,8a,c#,e,2a.";
 
 // espera dur_ms mantendo o chime andando
 static void wait_ticking(uint32_t dur_ms) {
@@ -16,17 +16,17 @@ static void wait_ticking(uint32_t dur_ms) {
 
 void boot_anim_play(U8G2& g) {
   buzzer::play(kStartupChime);
-  // maos entram pelas laterais e convergem; a de cima (right) com dedos pra
-  // esquerda, a de baixo (left) com dedos pra direita, pontas se cruzando
+  // tela de boot do 1100: mao adulta a esquerda, mao de bebe a direita,
+  // logo NOKIA embaixo; as maos entram pelas laterais e convergem
   const int kFrames = 12;
-  const int lx0 = -HAND_LEFT_W, lx1 = 18;   // mao de baixo: entra pela esquerda
-  const int rx0 = 84, rx1 = 38;             // mao de cima: entra pela direita
+  const int lx0 = -HAND_LEFT_W, lx1 = 0;    // mao adulta: entra pela esquerda
+  const int rx0 = 84, rx1 = 51;             // mao de bebe: entra pela direita
   for (int f = 0; f <= kFrames; f++) {
     g.clearBuffer();
-    g.drawXBMP(19, 6, NOKIA_LOGO_W, NOKIA_LOGO_H, nokia_logo_bits);
-    g.drawXBMP(rx0 + (rx1 - rx0) * f / kFrames, 18, HAND_RIGHT_W, HAND_RIGHT_H,
+    g.drawXBMP(6, 39, NOKIA_LOGO_W, NOKIA_LOGO_H, nokia_logo_bits);
+    g.drawXBMP(rx0 + (rx1 - rx0) * f / kFrames, 17, HAND_RIGHT_W, HAND_RIGHT_H,
                hand_right_bits);
-    g.drawXBMP(lx0 + (lx1 - lx0) * f / kFrames, 30, HAND_LEFT_W, HAND_LEFT_H,
+    g.drawXBMP(lx0 + (lx1 - lx0) * f / kFrames, 0, HAND_LEFT_W, HAND_LEFT_H,
                hand_left_bits);
     g.sendBuffer();
     wait_ticking(70);
