@@ -5,6 +5,7 @@
 #include "drivers/backlight.h"
 #include "drivers/buzzer.h"
 #include "drivers/buttons.h"
+#include "drivers/rtc.h"
 #include "ui/boot_anim.h"
 #include "ui/menu_view.h"
 #include "apps/app_standby.h"
@@ -23,6 +24,14 @@ void setup() {
   u8g2.setContrast(140);
   buzzer::init();
   buttons::init();
+  if (rtc::init()) {
+    rtc::DateTime dt;
+    rtc::now(dt);
+    Serial.printf("[rtc] %04u-%02u-%02u %02u:%02u:%02u  %.2fC\n", dt.year,
+                  dt.month, dt.day, dt.hour, dt.min, dt.sec, rtc::temperature());
+  } else {
+    Serial.println("[rtc] DS3231 ausente — relogio de videocassete");
+  }
   boot_anim_play(u8g2);              // logo NOKIA + maos + startup chime (segura ate o fim)
   shell.init(&app_standby, kApps, sizeof(kApps) / sizeof(kApps[0]));
 }

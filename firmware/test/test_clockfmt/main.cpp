@@ -25,11 +25,21 @@ void test_colon_blinks_each_second() {
   clock_format(2000, s, &c);
   TEST_ASSERT_TRUE(c);
 }
+void test_hhmm_format_pads_zeros() {
+  char s[6];
+  hhmm_format(7, 5, s);
+  TEST_ASSERT_EQUAL_STRING("07:05", s);
+  hhmm_format(23, 59, s);
+  TEST_ASSERT_EQUAL_STRING("23:59", s);
+  hhmm_format(0, 0, s);
+  TEST_ASSERT_EQUAL_STRING("00:00", s);
+}
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_boot_shows_noon);
   RUN_TEST(test_minutes_and_hours_advance);
   RUN_TEST(test_wraps_past_midnight);
   RUN_TEST(test_colon_blinks_each_second);
+  RUN_TEST(test_hhmm_format_pads_zeros);
   return UNITY_END();
 }
