@@ -1,6 +1,8 @@
 #include "app_tones.h"
 #include <U8g2lib.h>
 #include "drivers/buzzer.h"
+#include "ui/assets.h"
+#include "ui/nokia_ui.h"
 
 struct Tone { const char* name; const char* rtttl; };
 static const Tone kTones[] = {
@@ -15,19 +17,30 @@ static bool input(Button b, BtnEvent e) {
   if (e != EV_PRESS) return false;
   if (b == BTN_UP) { cur = (cur + kCount - 1) % kCount; return true; }
   if (b == BTN_DOWN) { cur = (cur + 1) % kCount; return true; }
-  if (b == BTN_OK) { buzzer::play(kTones[cur].rtttl); return true; }
-  return false;  // C não consumido → shell volta pro launcher
+  if (b == BTN_OK) {  // toggle: tocando para, parado toca (tune_busy ignora o beep de tecla)
+    if (buzzer::tune_busy()) buzzer::stop();
+    else buzzer::play(kTones[cur].rtttl);
+    return true;
+  }
+  return false;  // C nao consumido → shell volta pro menu
 }
 static void on_exit() { buzzer::stop(); }
 static void render(void* gfx) {
   U8G2& g = *(U8G2*)gfx;
-  g.setFont(u8g2_font_profont11_tr);
-  g.drawStr(3, 18, "Toque:");
-  g.drawBox(0, 22, 84, 11);
-  g.setDrawColor(0);
-  g.drawStr(6, 31, kTones[cur].name);
-  g.setDrawColor(1);
-  g.setFont(u8g2_font_4x6_tr);
-  g.drawStr(3, 45, buzzer::busy() ? "tocando..." : "OK toca  C volta");
+  g.setFont(u8g2_font_nokiafc22_tr);
+  nokia_ui::text_bold_center(g, 8, "Toques");
+  for (uint8_t i = 0; i < kCount; i++) {            // lista com barra invertida (3310)
+    int y = 11 + i * 9;
+    if (i == cur) {
+      g.drawBox(0, y, 84, 9);
+      g.setDrawColor(0);
+      g.drawStr(3, y + 7, kTones[i].name);
+      g.setDrawColor(1);
+    } else {
+      g.drawStr(3, y + 7, kTones[i].name);
+    }
+  }
+  nokia_ui::softkey(g, buzzer::tune_busy() ? "Parar" : "Tocar");
 }
-const App app_tones = {"Toques", nullptr, nullptr, input, on_exit, render};
+const App app_tones = {"Toques", nullptr, nullptr, input, on_exit, render,
+                       icon_tones_bits};
