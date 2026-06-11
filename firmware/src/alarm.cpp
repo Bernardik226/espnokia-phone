@@ -2,9 +2,9 @@
 #include <Arduino.h>
 #include <Preferences.h>
 #include <U8g2lib.h>
-#include "apps/app_tones.h"
 #include "drivers/buzzer.h"
 #include "i18n.h"
+#include "sound.h"
 #include "drivers/rtc.h"
 #include "ui/fonts3310.h"
 #include "ui/nokia_ui.h"
@@ -65,7 +65,7 @@ static int32_t minuto(uint8_t mes, uint8_t dia, uint8_t h, uint8_t m) {
 
 void tick(uint32_t) {
   if (ringing_) {
-    if (!buzzer::tune_busy()) buzzer::play(tones_nokia_tune());  // loop
+    if (!buzzer::tune_busy()) sound::ringtone();  // loop no toque padrao
     return;
   }
   if (!armed_) return;
@@ -76,7 +76,7 @@ void tick(uint32_t) {
   ringing_ = true;
   armed_ = false;
   prefs_.putBool("al_on", false);  // one-shot
-  buzzer::play(tones_nokia_tune());
+  sound::ringtone();
 }
 
 bool input(Button b, BtnEvent e) {
