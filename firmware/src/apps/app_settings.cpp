@@ -4,6 +4,7 @@
 #include "version.h"
 #include "drivers/backlight.h"
 #include "ui/assets.h"
+#include "ui/fonts3310.h"
 #include "ui/nokia_ui.h"
 
 // Configuracoes em arvore rasa: V_ROOT lista as secoes; V_DISPLAY ajusta o
@@ -80,7 +81,7 @@ static void draw_list(U8G2& g, const char* title, const char* const* items,
 
 static void render(void* gfx) {
   U8G2& g = *(U8G2*)gfx;
-  g.setFont(u8g2_font_nokiafc22_tr);
+  g.setFont(u8g2_font_3310_small);
   switch (view) {
     case V_ROOT:
       draw_list(g, "Config", kRoot, kRootCount, cur);
