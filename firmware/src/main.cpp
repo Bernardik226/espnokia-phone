@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <U8g2lib.h>
+#include "alarm.h"
 #include "pins.h"
 #include "shell.h"
 #include "drivers/backlight.h"
@@ -36,6 +37,7 @@ void setup() {
   } else {
     Serial.println("[rtc] DS3231 ausente — relogio de videocassete");
   }
+  alarme::init();                     // recarrega aviso de jogo persistido
   wifi::init();                      // nao-bloqueante; conecta enquanto a animacao roda
   boot_anim_play(u8g2);              // logo NOKIA + maos + startup chime (segura ate o fim)
   shell.init(&app_standby, kApps, sizeof(kApps) / sizeof(kApps[0]));
@@ -47,12 +49,13 @@ void loop() {
   Button b; BtnEvent e;
   if (buttons::poll(now, b, e)) {
     if (e == EV_PRESS) buzzer::beep(900, 90);  // keypad beep DCT3: ~900 Hz / ~90ms medidos de 3310 real
-    shell.input(b, e);
+    if (!alarme::input(b, e)) shell.input(b, e);  // overlay de alarme engole teclas
   }
   shell.tick(now);
   buzzer::tick(now);
   wifi::tick(now);
   ntp::tick(now);
+  alarme::tick(now);
 
   static uint32_t last_render = 0;
   if (now - last_render >= 50) {                // ~20 fps
@@ -61,6 +64,7 @@ void loop() {
     if (shell.screen() == Shell::LAUNCHER) menu_view_draw(u8g2, shell);
     else if (shell.active() && shell.active()->on_render)
       shell.active()->on_render(&u8g2);
+    if (alarme::active()) alarme::render(&u8g2);  // overlay por cima de tudo
     u8g2.sendBuffer();
   }
   delay(2);

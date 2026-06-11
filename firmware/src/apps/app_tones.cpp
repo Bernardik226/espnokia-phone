@@ -80,5 +80,7 @@ static void render(void* gfx) {
   g.drawBox(81, 11 + (27 - th) * top / (kCount - kVisible), 3, th);
   nokia_ui::softkey(g, buzzer::tune_busy() ? "Parar" : "Tocar");
 }
+const char* tones_nokia_tune() { return kTones[0].rtttl; }
+
 const App app_tones = {"Toques", nullptr, nullptr, input, on_exit, render,
                        icon_tones_bits};
