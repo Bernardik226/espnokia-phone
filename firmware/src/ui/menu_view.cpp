@@ -1,4 +1,5 @@
 #include "menu_view.h"
+#include "assets.h"
 #include "nokia_ui.h"
 
 void menu_view_draw(U8G2& g, const Shell& shell) {
@@ -6,8 +7,9 @@ void menu_view_draw(U8G2& g, const Shell& shell) {
   g.setFont(u8g2_font_nokiafc22_tr);
   // header: nome do app bold no topo
   nokia_ui::text_bold_center(g, 8, a->name);
-  // icone 24x24 central (area util desconta a scrollbar a direita)
-  if (a->icon) g.drawXBMP(28, 11, 24, 24, a->icon);
+  // icone 28x24 central (alargado pra compensar o pixel retangular do 5110;
+  // area util desconta a scrollbar a direita)
+  if (a->icon) g.drawXBMP(26, 11, ICON_CLOCK_W, ICON_CLOCK_H, a->icon);
   // scrollbar proporcional na lateral direita (trilho + thumb)
   const int track_y = 11, track_h = 26;
   g.drawVLine(82, track_y, track_h);
