@@ -97,12 +97,7 @@ static void tick(uint32_t now_ms) {
   if (fetch_ != FETCH_PENDING || now_ms - pending_ms_ < 60) return;
   int code = http::get_json(kPaths[aba_], buf_, sizeof(buf_));
   n_jogos_ = (code == 200) ? copa_parse(buf_, jogos_, kMaxJogos, nullptr) : 0;
-  if (code == 200) {
-    fetch_ = FETCH_OK;
-  } else {
-    fetch_ = FETCH_ERR;
-    sound::play(sound::SND_ERROR);  // bip triste de rede
-  }
+  fetch_ = (code == 200) ? FETCH_OK : FETCH_ERR;  // erro fica so na tela, sem bip
 }
 
 static bool input(Button b, BtnEvent e) {
@@ -178,7 +173,7 @@ static void render(void* gfx) {
         break;
       }
       if (fetch_ == FETCH_ERR) {
-        nokia_ui::text_bold_center(g, 24, tr(STR_NET_BUSY));
+        nokia_ui::text_bold_center(g, 24, tr(STR_NO_RESPONSE));
         nokia_ui::softkey(g, tr(STR_BACK));
         break;
       }
