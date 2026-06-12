@@ -9,6 +9,7 @@
 #include "net/http.h"
 #include "net/wifi.h"
 #include "sound.h"
+#include "teams.h"
 #include "drivers/buzzer.h"
 #include "drivers/rtc.h"
 #include "ui/assets.h"
@@ -18,8 +19,9 @@
 
 // Copa 2026 via server companion: V_MENU escolhe a aba, V_LIST mostra a
 // janela de 3 jogos (refeita em silencio enquanto houver jogo rolando, pra
-// manter o placar da lista vivo), V_DETAIL abre um jogo em 2 paginas
-// (placar | gols e estadio) e V_GRUPOS pagina a classificacao. O fetch HTTP
+// manter o placar da lista vivo), V_DETAIL abre um jogo em 3 paginas
+// (placar | equipes | gols e estadio) e V_GRUPOS pagina a classificacao.
+// O fetch HTTP
 // e bloqueante (~ate 5 s), entao fica 1 frame em FETCH_PENDING pra tela
 // "Buscando..." aparecer antes — o 3310 tambem "pensava" com a ampulheta.
 enum View : uint8_t { V_MENU, V_LIST, V_DETAIL, V_GRUPOS };
@@ -38,7 +40,8 @@ static View view = V_MENU;
 static Fetch fetch_ = FETCH_IDLE;
 static uint8_t aba_ = 0;       // qual lista esta aberta
 static uint8_t cur = 0;        // cursor (menu e lista)
-static uint8_t pag_ = 0;       // pagina do detail: 0 placar, 1 gols/estadio
+static uint8_t pag_ = 0;  // detail: 0 placar, 1 equipes, 2 gols/estadio
+static const uint8_t kPags = 3;
 static uint8_t gcur_ = 0;      // grupo na tela em V_GRUPOS
 static uint32_t pending_ms_ = 0;
 
@@ -195,7 +198,8 @@ static bool input(Button b, BtnEvent e) {
       return true;
     case V_DETAIL: {
       const CopaJogo& j = jogos_[cur];
-      if (b == BTN_UP || b == BTN_DOWN) { pag_ ^= 1; return true; }
+      if (b == BTN_UP) { pag_ = (pag_ + kPags - 1) % kPags; return true; }
+      if (b == BTN_DOWN) { pag_ = (pag_ + 1) % kPags; return true; }
       if (b == BTN_OK) {
         // OK alterna o par de avisos do jogo: inicio (alarme, se ainda nao
         // comecou) + gols (vigia em background); ambos persistem na NVS
@@ -225,7 +229,17 @@ static bool input(Button b, BtnEvent e) {
   return false;
 }
 
-// autores de gol da pagina 2: um por linha, t1 a esquerda e t2 a direita
+// pagina de equipes: "BRA - Brasil" centrado; se o nome completo nao deixa
+// caber o prefixo na tela, mostra so o nome (ex.: "Estados Unidos")
+static void linha_equipe(U8G2& g, const char* code, int y) {
+  char linha[28];
+  snprintf(linha, sizeof(linha), "%s - %s", code, team_name(code));
+  if ((int)g.getUTF8Width(linha) > 80)
+    snprintf(linha, sizeof(linha), "%s", team_name(code));
+  g.drawUTF8(42 - (int)g.getUTF8Width(linha) / 2, y, linha);
+}
+
+// autores de gol da ultima pagina: um por linha, t1 a esquerda e t2 a direita
 static void desenha_gols(U8G2& g, const char* gols, bool direita) {
   int y = 16;
   const char* p = gols;
@@ -308,7 +322,15 @@ static void render(void* gfx) {
       char l1[16];
       snprintf(l1, sizeof(l1), "%s x %s", j.t1, j.t2);
       nokia_ui::text_bold_center(g, 8, l1);
-      if (pag_ == 1) {  // pagina 2: autores dos gols + estadio
+      if (pag_ == 1) {  // pagina 2: nome completo das equipes
+        linha_equipe(g, j.t1, 21);
+        g.drawStr(40, 29, "x");
+        linha_equipe(g, j.t2, 37);
+        g.drawStr(73, 47, "^");
+        g.drawStr(79, 47, "v");
+        break;
+      }
+      if (pag_ == 2) {  // pagina 3: autores dos gols + estadio
         desenha_gols(g, j.g1, false);
         desenha_gols(g, j.g2, true);
         if (j.est[0]) {
