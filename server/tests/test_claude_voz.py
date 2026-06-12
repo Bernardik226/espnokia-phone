@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from app import config, stt
 from app.claude_voz import VozService
 from app.main import create_app
+from app.memoria import MemoriaService
 
 
 def stt_ok(pcm, lang, cfg):
@@ -16,10 +17,11 @@ def chat_ok(cfg, system, mensagens):
 
 
 def faz_client(tmp_path, monkeypatch, stt_fn=stt_ok, chat_fn=chat_ok,
-               keys="k1,k2"):
+               keys="k1,k2", memoria=None):
     monkeypatch.setenv("DATA_DIR", str(tmp_path))
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    voz = VozService(stt_fn=stt_fn, chat_fn=chat_fn)
+    voz = VozService(stt_fn=stt_fn, chat_fn=chat_fn,
+                     memoria=memoria or MemoriaService(base_dir=tmp_path))
     return TestClient(create_app(device_keys=keys, voz=voz)), voz
 
 
@@ -117,3 +119,53 @@ def test_uso_jsonl_appendado(tmp_path, monkeypatch):
     assert uso["tokens_in"] == 42
     assert uso["tokens_out"] == 17
     assert uso["custo_usd"] > 0
+
+
+def test_conversa_grava_par_no_registro(tmp_path, monkeypatch):
+    client, voz = faz_client(tmp_path, monkeypatch)
+    post(client)
+    pares = voz.memoria._carrega("k1")["pares"]
+    assert pares == [{"ts": pares[0]["ts"], "q": "oi tudo bem",
+                      "r": "miau! to otimo"}]
+
+
+def test_erro_nao_grava_par(tmp_path, monkeypatch):
+    client, voz = faz_client(tmp_path, monkeypatch, stt_fn=lambda *a: "")
+    post(client)
+    assert voz.memoria._carrega("k1")["pares"] == []
+
+
+def test_memoria_entra_no_system_prompt(tmp_path, monkeypatch):
+    systems = []
+
+    def chat_spy(cfg, system, mensagens):
+        systems.append(system)
+        return "oi!", 1, 1
+
+    mem = MemoriaService(base_dir=tmp_path)
+    client, _ = faz_client(tmp_path, monkeypatch, chat_fn=chat_spy,
+                           memoria=mem)
+    post(client)
+    assert "memórias" not in systems[0]        # primeira vida: sem bloco
+    (mem._dir("k1") / "memoria.md").write_text("gosto de bolo",
+                                               encoding="utf-8")
+    post(client)
+    assert "gosto de bolo" in systems[1]
+
+
+def test_historico_sobrevive_a_restart(tmp_path, monkeypatch):
+    mensagens_vistas = []
+
+    def chat_spy(cfg, system, mensagens):
+        mensagens_vistas.append(list(mensagens))
+        return "lembro sim", 1, 1
+
+    client, _ = faz_client(tmp_path, monkeypatch, chat_fn=chat_spy)
+    post(client)
+    # "restart": client novo, outra VozService, mesmo DATA_DIR
+    client2, _ = faz_client(tmp_path, monkeypatch, chat_fn=chat_spy)
+    post(client2)
+    ultima = mensagens_vistas[-1]
+    assert ultima[0] == {"role": "user", "content": "oi tudo bem"}
+    assert ultima[1] == {"role": "assistant", "content": "lembro sim"}
+    assert ultima[-1] == {"role": "user", "content": "oi tudo bem"}
