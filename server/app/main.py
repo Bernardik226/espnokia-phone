@@ -24,16 +24,27 @@ def create_app(copa_service=None, live_scores=None, device_keys=None) -> FastAPI
 
     def responde(matches, idade):
         agora = copa_service.now_fn()
-        placares = live_scores.scores()
+        ao_vivo = live_scores.jogos()
         jogos = []
         for m in matches:
             live = m.epoch <= agora <= m.epoch + JANELA_S
-            s1, s2 = m.s1, m.s2
-            if live and (m.t1, m.t2) in placares:
-                s1, s2 = placares[(m.t1, m.t2)]
-            jogos.append({"dia": m.dia, "mes": m.mes, "h": m.h, "m": m.m,
-                          "t1": m.t1, "t2": m.t2, "info": m.info,
-                          "s1": s1, "s2": s2, "live": live})
+            j = {"dia": m.dia, "mes": m.mes, "h": m.h, "m": m.m,
+                 "t1": m.t1, "t2": m.t2, "info": m.info,
+                 "s1": m.s1, "s2": m.s2, "live": live}
+            lv = ao_vivo.get((m.t1, m.t2))
+            if lv:
+                # Campos extras só quando têm conteúdo: payload enxuto pro ESP32.
+                if lv["est"]:
+                    j["est"] = lv["est"]
+                if live and (lv["rolando"] or lv["fim"]):
+                    j["s1"], j["s2"] = lv["s1"], lv["s2"]
+                    if lv["g1"]:
+                        j["g1"] = "\n".join(lv["g1"])
+                    if lv["g2"]:
+                        j["g2"] = "\n".join(lv["g2"])
+                if live and lv["rolando"] and lv["min"]:
+                    j["min"] = lv["min"]
+            jogos.append(j)
         return {"jogos": jogos, "atualizado_s": idade}
 
     @app.get("/health")
@@ -51,6 +62,14 @@ def create_app(copa_service=None, live_scores=None, device_keys=None) -> FastAPI
     @app.get("/copa/live", dependencies=[auth])
     def live():
         return responde(*copa_service.live())
+
+    @app.get("/copa/grupos", dependencies=[auth])
+    def grupos():
+        # Chaves de 1 letra: a classificação inteira cabe no buffer do ESP32.
+        return {"grupos": [{"n": g["n"],
+                            "t": [{"c": t["c"], "p": t["pts"],
+                                   "j": t["j"], "s": t["sg"]} for t in g["t"]]}
+                           for g in live_scores.grupos()]}
 
     return app
 
