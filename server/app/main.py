@@ -6,16 +6,28 @@ from app.auth import make_auth
 from app.copa import JANELA_S, CopaService
 from app.fetcher import CachedFetcher
 from app.sources import openfootball
+from app.sources.cadeia import CadeiaDeFontes
+from app.sources.espn import EspnScores
 from app.sources.livescore import LiveScores
 
 TTL_TABELA_S = 15 * 60  # a tabela do openfootball muda pouco
+
+
+def fonte_copa():
+    """ESPN na frente (única que enxerga o ao vivo); se LIVE_SOURCE_URL
+    apontar uma reserva, ela entra na cadeia como segunda opinião."""
+    fontes = [EspnScores("fifa.world")]
+    reserva = os.environ.get("LIVE_SOURCE_URL", "")
+    if reserva:
+        fontes.append(LiveScores(reserva))
+    return CadeiaDeFontes(fontes)
 
 
 def create_app(copa_service=None, live_scores=None, device_keys=None) -> FastAPI:
     if copa_service is None:
         copa_service = CopaService(CachedFetcher(openfootball.URL, TTL_TABELA_S))
     if live_scores is None:
-        live_scores = LiveScores(os.environ.get("LIVE_SOURCE_URL", ""))
+        live_scores = fonte_copa()
     if device_keys is None:
         device_keys = os.environ.get("DEVICE_KEYS", "")
 
