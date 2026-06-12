@@ -58,10 +58,6 @@ CFG_FAKE = {"persona": "Você é o Claude, um bichinho.",
             "anthropic_api_key": "x", "claude_model": "m"}
 
 
-def chat_resumo(cfg, system, mensagens):
-    return "## minhas memorias\n- gosta de bolo"
-
-
 def enche(m, device, n):
     for i in range(n):
         m.grava_par(device, f"pergunta {i}", f"resposta {i}")
@@ -110,9 +106,26 @@ def test_resumir_acumula_memoria_anterior(tmp_path):
     m.resumir("k1", "pt", CFG_FAKE)
     enche(m, "k1", VARRE)               # enche de novo até 30
     m.resumir("k1", "pt", CFG_FAKE)
-    assert "memoria v2" in user_prompts[1] or "memoria nova" in user_prompts[1]
+    assert "memoria v2" in user_prompts[1]
     reg = m._carrega("k1")
     assert reg["resumidos"] == 2 * VARRE
+
+
+def test_resumir_nao_perde_par_gravado_durante_a_chamada(tmp_path):
+    m = svc(tmp_path)
+
+    def chat_durante(cfg, system, mensagens):
+        # simula push-to-talk chegando enquanto a API pensa
+        m.grava_par("k1", "cheguei no meio", "opa!")
+        return "memoria nova"
+
+    m.chat_fn = chat_durante
+    enche(m, "k1", MAX_PARES)
+    m.resumir("k1", "pt", CFG_FAKE)
+    reg = m._carrega("k1")
+    qs = [p["q"] for p in reg["pares"]]
+    assert "cheguei no meio" in qs          # o par novo sobreviveu
+    assert len(reg["pares"]) == MAX_PARES - VARRE + 1
 
 
 def test_resumir_corta_no_limite(tmp_path):
