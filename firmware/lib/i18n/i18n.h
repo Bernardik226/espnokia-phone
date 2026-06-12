@@ -33,6 +33,8 @@ enum StrId : uint8_t {
   STR_VOLUME, STR_VOL_LOW, STR_VOL_MED, STR_VOL_HIGH,
   // relogio (alarme/timer) e avisos
   STR_ALARM, STR_TIMER, STR_TIME_UP, STR_TURN_OFF, STR_GOAL,
+  // copa v2 (novas strings sempre no fim, antes de STR_COUNT)
+  STR_GROUPS, STR_GOALS, STR_GROUP,
   STR_COUNT
 };
 

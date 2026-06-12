@@ -8,8 +8,20 @@ static const char* kPayload =
     "{\"dia\":13,\"mes\":6,\"h\":19,\"m\":0,\"t1\":\"BRA\",\"t2\":\"MAR\","
     "\"info\":\"Grupo C\",\"s1\":-1,\"s2\":-1,\"live\":false},"
     "{\"dia\":11,\"mes\":6,\"h\":16,\"m\":0,\"t1\":\"MEX\",\"t2\":\"RSA\","
-    "\"info\":\"Grupo A\",\"s1\":2,\"s2\":1,\"live\":true}"
+    "\"info\":\"Grupo A\",\"s1\":2,\"s2\":1,\"live\":true,\"min\":\"67\","
+    "\"est\":\"Estadio Azteca · Mexico City\","
+    "\"g1\":\"J. Quinones 9'\\nR. Jimenez 67'\"}"
     "],\"atualizado_s\":42}";
+
+static const char* kGrupos =
+    "{\"grupos\":["
+    "{\"n\":\"A\",\"t\":["
+    "{\"c\":\"MEX\",\"p\":3,\"j\":1,\"s\":2},"
+    "{\"c\":\"KOR\",\"p\":0,\"j\":0,\"s\":0},"
+    "{\"c\":\"CZE\",\"p\":0,\"j\":0,\"s\":0},"
+    "{\"c\":\"RSA\",\"p\":0,\"j\":1,\"s\":-2}]},"
+    "{\"n\":\"B\",\"t\":[{\"c\":\"CAN\",\"p\":0,\"j\":0,\"s\":0}]}"
+    "]}";
 
 void test_parse_payload_normal() {
   CopaJogo jogos[8];
@@ -47,6 +59,50 @@ void test_json_invalido_da_zero() {
   TEST_ASSERT_EQUAL_UINT8(0, copa_parse("{\"sem_jogos\":1}", jogos, 4, nullptr));
 }
 
+void test_minuto_gols_e_estadio_do_jogo_live() {
+  CopaJogo jogos[8];
+  copa_parse(kPayload, jogos, 8, nullptr);
+  TEST_ASSERT_EQUAL_STRING("67", jogos[1].min);
+  TEST_ASSERT_EQUAL_STRING("Estadio Azteca · Mexico City", jogos[1].est);
+  TEST_ASSERT_EQUAL_STRING("J. Quinones 9'\nR. Jimenez 67'", jogos[1].g1);
+  TEST_ASSERT_EQUAL_STRING("", jogos[1].g2);
+}
+
+void test_campos_extras_ausentes_ficam_vazios() {
+  CopaJogo jogos[8];
+  copa_parse(kPayload, jogos, 8, nullptr);
+  TEST_ASSERT_EQUAL_STRING("", jogos[0].min);
+  TEST_ASSERT_EQUAL_STRING("", jogos[0].est);
+  TEST_ASSERT_EQUAL_STRING("", jogos[0].g1);
+}
+
+void test_parse_grupos() {
+  CopaGrupo gs[12];
+  uint8_t n = copa_parse_grupos(kGrupos, gs, 12);
+  TEST_ASSERT_EQUAL_UINT8(2, n);
+  TEST_ASSERT_EQUAL_STRING("A", gs[0].nome);
+  TEST_ASSERT_EQUAL_UINT8(4, gs[0].nt);
+  TEST_ASSERT_EQUAL_STRING("MEX", gs[0].t[0].c);
+  TEST_ASSERT_EQUAL_INT8(3, gs[0].t[0].pts);
+  TEST_ASSERT_EQUAL_INT8(1, gs[0].t[0].j);
+  TEST_ASSERT_EQUAL_INT8(2, gs[0].t[0].sg);
+  TEST_ASSERT_EQUAL_INT8(-2, gs[0].t[3].sg);
+  TEST_ASSERT_EQUAL_UINT8(1, gs[1].nt);
+}
+
+void test_parse_grupos_json_invalido_da_zero() {
+  CopaGrupo gs[12];
+  TEST_ASSERT_EQUAL_UINT8(0, copa_parse_grupos("xx", gs, 12));
+  TEST_ASSERT_EQUAL_UINT8(0, copa_parse_grupos("{\"nada\":1}", gs, 12));
+}
+
+void test_ultimo_gol_pega_a_ultima_linha() {
+  TEST_ASSERT_EQUAL_STRING("R. Jimenez 67'",
+                           copa_ultimo_gol("J. Quinones 9'\nR. Jimenez 67'"));
+  TEST_ASSERT_EQUAL_STRING("X 12'", copa_ultimo_gol("X 12'"));
+  TEST_ASSERT_EQUAL_STRING("", copa_ultimo_gol(""));
+}
+
 void test_linha_sem_placar_mostra_data() {
   CopaJogo jogos[8];
   copa_parse(kPayload, jogos, 8, nullptr);
@@ -69,6 +125,11 @@ int main(int, char**) {
   RUN_TEST(test_placar_ausente_fica_menos_um);
   RUN_TEST(test_trunca_em_max);
   RUN_TEST(test_json_invalido_da_zero);
+  RUN_TEST(test_minuto_gols_e_estadio_do_jogo_live);
+  RUN_TEST(test_campos_extras_ausentes_ficam_vazios);
+  RUN_TEST(test_parse_grupos);
+  RUN_TEST(test_parse_grupos_json_invalido_da_zero);
+  RUN_TEST(test_ultimo_gol_pega_a_ultima_linha);
   RUN_TEST(test_linha_sem_placar_mostra_data);
   RUN_TEST(test_linha_com_placar_mostra_placar);
   return UNITY_END();
