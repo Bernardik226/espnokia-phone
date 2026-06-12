@@ -12,6 +12,7 @@
 #include "drivers/buzzer.h"
 #include "drivers/mic.h"
 #include "drivers/rtc.h"
+#include "net/http.h"
 #include "net/voicecli.h"
 #include "net/wifi.h"
 #include "ui/assets.h"
@@ -33,6 +34,26 @@ static size_t fala_pos_ = 0;      // typewriter/bitspeech: posicao no texto
 static uint32_t pausa_ate_ = 0;   // respiro do bitspeech (freq 0)
 static bool fala_viva_ = false;   // typewriter rodando (so na 1a passada)
 static uint8_t pag_ = 0;
+
+// ---- registro de conversa (fluxo do server, paginado) ----
+enum RegFetch : uint8_t { REG_PENDING, REG_OK, REG_ERR, REG_NONET };
+static bool registro_ = false;
+static RegFetch reg_fetch_ = REG_OK;
+static uint32_t reg_fetch_ms_ = 0;
+static char reg_buf_[4096];           // pagina de 6 pares (~2,6 KB no pior)
+static claude::RegPar reg_itens_[6];
+static uint8_t reg_n_ = 0;
+static uint16_t reg_total_ = 0;
+static uint8_t reg_pags_ = 0, reg_pag_ = 0, reg_alvo_ = 0;
+static uint16_t reg_linha_ = 0, reg_nlinhas_ = 0;
+static bool reg_no_fim_ = false;      // subiu de pagina: entra pelo fim
+
+static void reg_pede_pagina(uint8_t pag, bool no_fim) {
+  reg_alvo_ = pag;
+  reg_no_fim_ = no_fim;
+  reg_fetch_ = wifi::connected() ? REG_PENDING : REG_NONET;
+  reg_fetch_ms_ = millis();
+}
 
 static const uint8_t kCols = 16;  // fonte 3310 small: 16 col x 5 linhas
 static const uint8_t kRows = 5;
@@ -85,6 +106,7 @@ static void on_enter() {
   gravando_ = false;
   finish_em_ = 0;
   fala_viva_ = false;
+  registro_ = false;
   mic::init();
 }
 
@@ -95,10 +117,27 @@ static void on_exit() {
   }
   voicecli::abort();
   finish_em_ = 0;
+  registro_ = false;
 }
 
 static bool input(Button b, BtnEvent e) {
   uint32_t now = millis();
+  if (registro_) {  // a tela de registro engole tudo menos o C
+    if (e != EV_PRESS) return true;
+    if (b == BTN_C) { registro_ = false; return true; }
+    if (reg_fetch_ != REG_OK) return true;  // buscando/erro: so C sai
+    if (b == BTN_DOWN) {
+      if (reg_linha_ + 4 < reg_nlinhas_) reg_linha_++;
+      else if (reg_pag_ + 1 < reg_pags_) reg_pede_pagina(reg_pag_ + 1, false);
+      return true;
+    }
+    if (b == BTN_UP) {
+      if (reg_linha_ > 0) reg_linha_--;
+      else if (reg_pag_ > 0) reg_pede_pagina(reg_pag_ - 1, true);
+      return true;
+    }
+    return true;
+  }
   if (maq_.st == claude::E_PET) {
     if (e == EV_PRESS && b == BTN_OK) {
       if (!wifi::connected()) {
@@ -119,6 +158,11 @@ static bool input(Button b, BtnEvent e) {
       grava_t0_ = now;
       nivel_ = 0;
       claude::maquina_evento(maq_, claude::EV_OK_APERTA, now);
+      return true;
+    }
+    if (e == EV_PRESS && b == BTN_DOWN) {  // pra baixo: registro de conversa
+      registro_ = true;
+      reg_pede_pagina(0, false);
       return true;
     }
     return false;  // C nao consumido: o shell fecha o app
@@ -154,6 +198,25 @@ static bool input(Button b, BtnEvent e) {
 }
 
 static void tick(uint32_t now) {
+  // registro: GET bloqueante so depois de 1 frame de "Buscando..." na tela
+  // e com o buzzer quieto (o PWM do bip ficaria preso ligado no bloqueio)
+  if (registro_ && reg_fetch_ == REG_PENDING && now - reg_fetch_ms_ >= 60 &&
+      !buzzer::busy()) {
+    char path[32];
+    snprintf(path, sizeof(path), "/claude/registro?pag=%u",
+             (unsigned)reg_alvo_);
+    int code = http::get_json(path, reg_buf_, sizeof(reg_buf_));
+    if (code == 200) {
+      reg_n_ = claude::registro_parse(reg_buf_, reg_itens_, 6, &reg_total_,
+                                      &reg_pags_, &reg_pag_);
+      reg_nlinhas_ =
+          claude::registro_linhas_total(reg_itens_, reg_n_, tr(STR_ME));
+      reg_linha_ = (reg_no_fim_ && reg_nlinhas_ > 4) ? reg_nlinhas_ - 4 : 0;
+      reg_fetch_ = REG_OK;
+    } else {
+      reg_fetch_ = REG_ERR;
+    }
+  }
   // OUVINDO: despeja o mic no upload e mede o nivel pro VU
   if (gravando_) {
     int16_t buf[256];
@@ -314,9 +377,44 @@ static void render_falando(U8G2& g) {
   }
 }
 
+// registro: fluxo "EU:/CLAWD:" rolavel, contador do par no header
+static void render_registro(U8G2& g) {
+  g.setFont(u8g2_font_3310_small);
+  if (reg_fetch_ == REG_NONET) { nokia_ui::no_network(g); return; }
+  if (reg_fetch_ == REG_PENDING) {
+    g.drawUTF8(2, 24, tr(STR_SEARCHING));
+    return;
+  }
+  if (reg_fetch_ == REG_ERR || reg_total_ == 0) {
+    const char* s = tr(reg_fetch_ == REG_ERR ? STR_NO_RESPONSE
+                                             : STR_NO_TALKS);
+    g.drawUTF8(42 - (int)g.getUTF8Width(s) / 2, 24, s);
+    return;
+  }
+  g.drawUTF8(2, 7, tr(STR_LOG));
+  char linha[49];  // 16 colunas com folga pra UTF-8 multibyte
+  uint8_t par_topo = 0;
+  for (uint8_t i = 0; i < 4; i++) {
+    if (!claude::registro_linha(reg_itens_, reg_n_, tr(STR_ME),
+                                reg_linha_ + i, linha, sizeof(linha),
+                                i == 0 ? &par_topo : nullptr))
+      break;
+    g.drawUTF8(2, 17 + i * 8, linha);
+  }
+  char cont[12];  // contador global: pagina*6 + par no topo da tela
+  snprintf(cont, sizeof(cont), "%u/%u",
+           (unsigned)(reg_pag_ * 6 + par_topo + 1), (unsigned)reg_total_);
+  g.drawStr(83 - g.getStrWidth(cont), 7, cont);
+  g.drawHLine(0, 9, 84);
+  if (reg_linha_ > 0 || reg_pag_ > 0) g.drawStr(79, 15, "^");
+  if (reg_linha_ + 4 < reg_nlinhas_ || reg_pag_ + 1 < reg_pags_)
+    g.drawStr(79, 47, "v");
+}
+
 static void render(void* gfx) {
   U8G2& g = *(U8G2*)gfx;
   uint32_t now = millis();
+  if (registro_) { render_registro(g); return; }
   switch (maq_.st) {
     case claude::E_PET: render_pet(g, now); break;
     case claude::E_OUVINDO: render_ouvindo(g, now); break;
