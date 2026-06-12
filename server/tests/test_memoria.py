@@ -1,5 +1,9 @@
 import json
 
+from fastapi.testclient import TestClient
+
+from app.claude_voz import VozService
+from app.main import create_app
 from app.memoria import MemoriaService, MAX_PARES, TETO, VARRE
 
 
@@ -190,3 +194,64 @@ def test_registro_com_shape_errado_vira_vazio(tmp_path):
     assert m._carrega("k1") == {"pares": [], "resumidos": 0}
     (d / "registro.json").write_text("[]", encoding="utf-8")
     assert m._carrega("k1") == {"pares": [], "resumidos": 0}
+
+
+def faz_client_mem(tmp_path, monkeypatch, chat_fn=lambda *a: ("oi!", 1, 1)):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    mem = MemoriaService(base_dir=tmp_path,
+                         chat_fn=lambda *a: "resumo do claw'd")
+    voz = VozService(stt_fn=lambda *a: "oi", chat_fn=chat_fn, memoria=mem)
+    return TestClient(create_app(device_keys="k1", voz=voz)), mem
+
+
+def test_rota_registro_paginada(tmp_path, monkeypatch):
+    client, mem = faz_client_mem(tmp_path, monkeypatch)
+    enche(mem, "k1", 7)
+    r = client.get("/claude/registro?pag=1",
+                   headers={"X-Device-Key": "k1"})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["total"] == 7 and body["pags"] == 2 and body["pag"] == 1
+    assert len(body["itens"]) == 1
+
+
+def test_rota_registro_sem_chave_401(tmp_path, monkeypatch):
+    client, _ = faz_client_mem(tmp_path, monkeypatch)
+    assert client.get("/claude/registro").status_code == 401
+
+
+def test_rota_memoria(tmp_path, monkeypatch):
+    client, mem = faz_client_mem(tmp_path, monkeypatch)
+    r = client.get("/claude/memoria", headers={"X-Device-Key": "k1"})
+    assert r.status_code == 200
+    assert r.json() == {"memoria": "", "resumidos": 0, "ts": 0}
+
+
+def test_voz_dispara_resumo_na_margem(tmp_path, monkeypatch):
+    client, mem = faz_client_mem(tmp_path, monkeypatch)
+    enche(mem, "k1", MAX_PARES - 1)     # a próxima conversa fecha 30
+    r = client.post("/claude/voz?lang=pt", content=b"\x00" * 64,
+                    headers={"X-Device-Key": "k1"})
+    assert r.status_code == 200
+    # TestClient roda os BackgroundTasks antes de devolver:
+    assert mem.memoria_texto("k1") == "resumo do claw'd"
+    assert len(mem._carrega("k1")["pares"]) == MAX_PARES - VARRE
+
+
+def test_resumo_falhando_nao_quebra_a_voz(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+    def chat_explode(*a):
+        raise RuntimeError("api fora")
+
+    mem = MemoriaService(base_dir=tmp_path, chat_fn=chat_explode)
+    voz = VozService(stt_fn=lambda *a: "oi",
+                     chat_fn=lambda *a: ("oi!", 1, 1), memoria=mem)
+    client = TestClient(create_app(device_keys="k1", voz=voz))
+    enche(mem, "k1", MAX_PARES - 1)
+    r = client.post("/claude/voz?lang=pt", content=b"\x00" * 64,
+                    headers={"X-Device-Key": "k1"})
+    assert r.status_code == 200          # a resposta sai mesmo assim
+    assert mem.memoria_texto("k1") == ""  # resumo não rolou, sem drama

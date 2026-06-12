@@ -1,8 +1,10 @@
+import logging
 import os
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import BackgroundTasks, Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from app import config
 from app.auth import make_auth
 from app.claude_voz import VozService
 from app.copa import JANELA_S, CopaService
@@ -32,6 +34,14 @@ def fonte_futebol():
     # pausa de tabela (o corte de 8 jogos fica com os mais próximos de hoje)
     return FutebolService({lid: EspnScores(lid, dias_atras=21)
                            for lid, _ in LIGAS})
+
+
+def resumir_seguro(memoria, device, lang):
+    """Resumo em background: falha loga e fica pra próxima conversa."""
+    try:
+        memoria.resumir(device, lang, config.load())
+    except Exception:
+        logging.exception("resumo da memoria falhou")
 
 
 def create_app(copa_service=None, live_scores=None, device_keys=None,
@@ -114,11 +124,25 @@ def create_app(copa_service=None, live_scores=None, device_keys=None,
         return fut_payload(futebol.live(liga), nomes_ligas.get(liga, ""))
 
     @app.post("/claude/voz", dependencies=[auth])
-    async def claude_voz(request: Request, lang: str = "pt"):
+    async def claude_voz(request: Request, background_tasks: BackgroundTasks,
+                         lang: str = "pt"):
         corpo = await request.body()
         device = request.headers.get("x-device-key", "")
         status, payload = voz.responder(device, corpo, lang)
+        if status == 200 and voz.memoria.precisa_resumo(device):
+            background_tasks.add_task(resumir_seguro, voz.memoria,
+                                      device, lang)
         return JSONResponse(payload, status_code=status)
+
+    @app.get("/claude/registro", dependencies=[auth])
+    def claude_registro(request: Request, pag: int = 0):
+        device = request.headers.get("x-device-key", "")
+        return voz.memoria.pares(device, pag)
+
+    @app.get("/claude/memoria", dependencies=[auth])
+    def claude_memoria(request: Request):
+        device = request.headers.get("x-device-key", "")
+        return voz.memoria.memoria(device)
 
     return app
 
