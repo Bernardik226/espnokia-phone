@@ -18,6 +18,7 @@ DEFAULTS = {
     "stt_api_key": "",       # chave da Groq quando stt = "groq"
     "persona": PERSONA,
     "max_resposta_chars": 220,
+    "web_search": True,      # o pet pode dar 1 busca na internet por fala
 }
 
 
