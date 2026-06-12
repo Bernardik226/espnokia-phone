@@ -113,6 +113,7 @@ static bool input(Button b, BtnEvent e) {
         mostra_aviso(STR_NO_RESPONSE, now);
         return true;
       }
+      buzzer::stop();  // mata o bip da tecla OK: vazaria pro inicio da gravacao
       mic::start();
       gravando_ = true;
       grava_t0_ = now;
