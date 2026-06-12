@@ -14,4 +14,7 @@
 #define PIN_I2C_SDA  21  // DS3231 (RTC)
 #define PIN_I2C_SCL  22
 #define PIN_VBAT     36  // F4 (divisor de tensão)
-// F3 (mic I2S): SCK=33, WS=32, SD=35
+// F3 (mic I2S) — INMP441, L/R no GND (canal esquerdo)
+#define PIN_MIC_SCK  33
+#define PIN_MIC_WS   32
+#define PIN_MIC_SD   35
