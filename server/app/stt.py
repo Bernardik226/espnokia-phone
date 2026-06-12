@@ -17,7 +17,7 @@ def _carregar():
 
 def transcrever(pcm: bytes, lang: str, cfg: dict) -> str:
     if cfg.get("stt", "local") != "local":
-        raise NotImplementedError("backend de STT por API e da fase do dashboard")
+        raise NotImplementedError("backend de STT por API é da fase do dashboard")
     import numpy as np
     amostras = np.frombuffer(pcm, dtype=np.int16).astype(np.float32) / 32768.0
     segmentos, _ = _carregar().transcribe(amostras, language=lang or None)
