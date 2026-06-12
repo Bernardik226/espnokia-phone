@@ -67,5 +67,13 @@ struct RegPar {
 // referencia (zerados em lixo, pra nao herdar valor velho)
 uint8_t registro_parse(const char* json, RegPar* itens, uint8_t max,
                        uint16_t* total, uint8_t* pags, uint8_t* pag);
+// linha n do fluxo da pagina ("<rotulo_eu>: q" + "CLAWD: r" por par, wrap
+// de 16 colunas via linha_texto). par_idx (opcional) sai com o indice do
+// par dono da linha. false = fluxo acabou.
+bool registro_linha(const RegPar* itens, uint8_t n_itens,
+                    const char* rotulo_eu, uint16_t n,
+                    char* out, size_t out_len, uint8_t* par_idx);
+uint16_t registro_linhas_total(const RegPar* itens, uint8_t n_itens,
+                               const char* rotulo_eu);
 
 }  // namespace claude

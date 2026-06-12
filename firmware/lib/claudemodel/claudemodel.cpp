@@ -193,4 +193,48 @@ uint8_t registro_parse(const char* json, RegPar* itens, uint8_t max,
   return n;
 }
 
+static const uint8_t kRegCols = 16;
+
+// monta "<prefixo>: <txt>" e conta/copia a linha pedida
+static uint16_t reg_bloco(const char* prefixo, const char* txt,
+                          uint16_t pula, char* out, size_t out_len,
+                          bool* achou) {
+  char tmp[300];  // prefixo curto + r[284]
+  snprintf(tmp, sizeof(tmp), "%s: %s", prefixo, txt);
+  uint16_t l = linhas_total(tmp, kRegCols);
+  if (out && pula < l) {
+    *achou = linha_texto(tmp, pula, kRegCols, out, out_len);
+  }
+  return l;
+}
+
+bool registro_linha(const RegPar* itens, uint8_t n_itens,
+                    const char* rotulo_eu, uint16_t n,
+                    char* out, size_t out_len, uint8_t* par_idx) {
+  uint16_t base = 0;
+  for (uint8_t i = 0; i < n_itens; i++) {
+    bool achou = false;
+    uint16_t lq = reg_bloco(rotulo_eu, itens[i].q, n - base,
+                            n >= base ? out : nullptr, out_len, &achou);
+    if (achou) { if (par_idx) *par_idx = i; return true; }
+    base += lq;
+    uint16_t lr = reg_bloco("CLAWD", itens[i].r, n - base,
+                            n >= base ? out : nullptr, out_len, &achou);
+    if (achou) { if (par_idx) *par_idx = i; return true; }
+    base += lr;
+  }
+  return false;
+}
+
+uint16_t registro_linhas_total(const RegPar* itens, uint8_t n_itens,
+                               const char* rotulo_eu) {
+  uint16_t base = 0;
+  bool dummy;
+  for (uint8_t i = 0; i < n_itens; i++) {
+    base += reg_bloco(rotulo_eu, itens[i].q, 0, nullptr, 0, &dummy);
+    base += reg_bloco("CLAWD", itens[i].r, 0, nullptr, 0, &dummy);
+  }
+  return base;
+}
+
 }  // namespace claude

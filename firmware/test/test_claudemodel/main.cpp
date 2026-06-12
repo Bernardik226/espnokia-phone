@@ -1,4 +1,5 @@
 #include <unity.h>
+#include <stdio.h>
 #include <string.h>
 #include "claudemodel.h"
 
@@ -238,6 +239,44 @@ void test_registro_parse_respeita_max() {
                                             &pags, &pag));
 }
 
+// ---- registro_linha: o fluxo "EU:/CLAWD:" com wrap de 16 colunas ----
+void test_registro_linha_fluxo_de_dois_pares() {
+  RegPar itens[2];
+  snprintf(itens[0].q, sizeof(itens[0].q), "oi");
+  snprintf(itens[0].r, sizeof(itens[0].r), "olá!");
+  snprintf(itens[1].q, sizeof(itens[1].q), "tudo bem?");
+  snprintf(itens[1].r, sizeof(itens[1].r), "to ótimo demais");
+  char out[49];
+  uint8_t par;
+  // par 0: "EU: oi" (1 linha) + "CLAWD: olá!" (1 linha)
+  TEST_ASSERT_TRUE(registro_linha(itens, 2, "EU", 0, out, sizeof(out), &par));
+  TEST_ASSERT_EQUAL_STRING("EU: oi", out);
+  TEST_ASSERT_EQUAL_UINT8(0, par);
+  TEST_ASSERT_TRUE(registro_linha(itens, 2, "EU", 1, out, sizeof(out), &par));
+  TEST_ASSERT_EQUAL_STRING("CLAWD: olá!", out);
+  TEST_ASSERT_EQUAL_UINT8(0, par);
+  // par 1 começa na linha 2
+  TEST_ASSERT_TRUE(registro_linha(itens, 2, "EU", 2, out, sizeof(out), &par));
+  TEST_ASSERT_EQUAL_STRING("EU: tudo bem?", out);
+  TEST_ASSERT_EQUAL_UINT8(1, par);
+  // "CLAWD: to ótimo demais" = 22 colunas -> quebra em 2 linhas
+  TEST_ASSERT_TRUE(registro_linha(itens, 2, "EU", 3, out, sizeof(out), &par));
+  TEST_ASSERT_EQUAL_UINT8(1, par);
+  TEST_ASSERT_TRUE(registro_linha(itens, 2, "EU", 4, out, sizeof(out), &par));
+  // fim do fluxo
+  TEST_ASSERT_FALSE(registro_linha(itens, 2, "EU", 5, out, sizeof(out), &par));
+  TEST_ASSERT_EQUAL_UINT16(5, registro_linhas_total(itens, 2, "EU"));
+}
+void test_registro_linha_par_idx_opcional() {
+  RegPar itens[1];
+  snprintf(itens[0].q, sizeof(itens[0].q), "a");
+  snprintf(itens[0].r, sizeof(itens[0].r), "b");
+  char out[49];
+  TEST_ASSERT_TRUE(registro_linha(itens, 1, "EU", 0, out, sizeof(out),
+                                  nullptr));
+  TEST_ASSERT_EQUAL_UINT16(2, registro_linhas_total(itens, 1, "EU"));
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_dias_civis_ancoras);
@@ -266,5 +305,7 @@ int main() {
   RUN_TEST(test_registro_parse_pagina_cheia);
   RUN_TEST(test_registro_parse_vazio_e_lixo);
   RUN_TEST(test_registro_parse_respeita_max);
+  RUN_TEST(test_registro_linha_fluxo_de_dois_pares);
+  RUN_TEST(test_registro_linha_par_idx_opcional);
   return UNITY_END();
 }
