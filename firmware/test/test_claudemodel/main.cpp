@@ -132,6 +132,51 @@ void test_linha_fora_do_range_e_vazio() {
   TEST_ASSERT_FALSE(linha_texto("", 0, 10, l, sizeof(l)));
 }
 
+// ---- bitspeech ----
+void test_bitspeech_vogal_longa_consoante_curta() {
+  Tom t;
+  size_t prox;
+  TEST_ASSERT_TRUE(bitspeech_next("ab", 0, t, &prox));
+  TEST_ASSERT_GREATER_THAN_UINT16(600, t.freq);   // vogal: aguda
+  TEST_ASSERT_EQUAL_UINT16(90, t.dur_ms);         // e longa
+  TEST_ASSERT_EQUAL(1, (int)prox);
+  TEST_ASSERT_TRUE(bitspeech_next("ab", 1, t, &prox));
+  TEST_ASSERT_LESS_THAN_UINT16(600, t.freq);      // consoante: grave
+  TEST_ASSERT_EQUAL_UINT16(45, t.dur_ms);         // e curta
+  TEST_ASSERT_TRUE(bitspeech_next("z", 0, t, &prox));
+  TEST_ASSERT_LESS_THAN_UINT16(600, t.freq);      // ate o z fica grave
+}
+void test_bitspeech_espaco_e_pontuacao_pausam() {
+  Tom t;
+  size_t prox;
+  bitspeech_next(" ", 0, t, &prox);
+  TEST_ASSERT_EQUAL_UINT16(0, t.freq);
+  bitspeech_next("!", 0, t, &prox);
+  TEST_ASSERT_EQUAL_UINT16(0, t.freq);
+}
+void test_bitspeech_acento_vira_vogal_base() {
+  Tom ta, taa;
+  size_t prox;
+  bitspeech_next("a", 0, ta, &prox);
+  bitspeech_next("\xc3\xa3", 0, taa, &prox);      // ã
+  TEST_ASSERT_EQUAL_UINT16(ta.freq, taa.freq);
+  TEST_ASSERT_EQUAL(2, (int)prox);                // pulou os 2 bytes
+}
+void test_bitspeech_deterministico_e_termina() {
+  const char* s = "oi!";
+  Tom a, b;
+  size_t p1, p2;
+  for (size_t i = 0; s[i];) {
+    TEST_ASSERT_TRUE(bitspeech_next(s, i, a, &p1));
+    TEST_ASSERT_TRUE(bitspeech_next(s, i, b, &p2));
+    TEST_ASSERT_EQUAL_UINT16(a.freq, b.freq);
+    TEST_ASSERT_EQUAL_UINT16(a.dur_ms, b.dur_ms);
+    TEST_ASSERT_EQUAL(p1, p2);
+    i = p1;
+  }
+  TEST_ASSERT_FALSE(bitspeech_next(s, 3, a, &p1));  // fim do texto
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_dias_civis_ancoras);
@@ -150,5 +195,9 @@ int main() {
   RUN_TEST(test_palavrao_corta_seco);
   RUN_TEST(test_quebra_de_linha_explicita);
   RUN_TEST(test_linha_fora_do_range_e_vazio);
+  RUN_TEST(test_bitspeech_vogal_longa_consoante_curta);
+  RUN_TEST(test_bitspeech_espaco_e_pontuacao_pausam);
+  RUN_TEST(test_bitspeech_acento_vira_vogal_base);
+  RUN_TEST(test_bitspeech_deterministico_e_termina);
   return UNITY_END();
 }

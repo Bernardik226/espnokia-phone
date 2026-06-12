@@ -114,4 +114,49 @@ bool linha_texto(const char* texto, uint16_t n, uint8_t cols,
   return false;
 }
 
+// reduz o caractere em s[pos] pra ASCII minusculo; acentos pt-BR (2 bytes,
+// 0xC3 xx) viram a letra base, o resto de multibyte vira espaco
+static char base_ascii(const char* s, size_t pos, size_t* adv) {
+  unsigned char c = (unsigned char)s[pos];
+  if (c < 0x80) {
+    *adv = 1;
+    return (c >= 'A' && c <= 'Z') ? (char)(c + 32) : (char)c;
+  }
+  size_t n = 1;
+  while ((s[pos + n] & 0xC0) == 0x80) n++;
+  *adv = n;
+  if (c == 0xC3) {
+    unsigned char x = (unsigned char)s[pos + 1] | 0x20;  // minusculiza
+    if (x >= 0xA0 && x <= 0xA5) return 'a';
+    if (x >= 0xA8 && x <= 0xAB) return 'e';
+    if (x >= 0xAC && x <= 0xAF) return 'i';
+    if ((x >= 0xB2 && x <= 0xB6) || x == 0xB8) return 'o';
+    if (x >= 0xB9 && x <= 0xBC) return 'u';
+    if (x == 0xA7) return 'c';                           // ç
+    if (x == 0xB1) return 'n';                           // ñ
+  }
+  return ' ';
+}
+
+bool bitspeech_next(const char* texto, size_t pos, Tom& t, size_t* prox) {
+  if (!texto || !texto[pos]) return false;
+  size_t adv;
+  char c = base_ascii(texto, pos, &adv);
+  *prox = pos + adv;
+  if (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u') {
+    // sol5 la5 si5 fa#5 mi5 — cada vogal canta sempre na mesma nota
+    static const uint16_t kVogal[] = {784, 880, 988, 740, 659};
+    const char* v = "aeiou";
+    t.freq = kVogal[strchr(v, c) - v];
+    t.dur_ms = 90;
+  } else if (c >= 'b' && c <= 'z') {
+    t.freq = (uint16_t)(330 + (c - 'a') * 10);  // grave, varia com a letra
+    t.dur_ms = 45;
+  } else {
+    t.freq = 0;                                 // espaco/pontuacao: respiro
+    t.dur_ms = 70;
+  }
+  return true;
+}
+
 }  // namespace claude
