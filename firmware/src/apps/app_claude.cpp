@@ -30,6 +30,7 @@ static bool gravando_ = false;
 static uint32_t grava_t0_ = 0;    // contador de segundos do OUVINDO
 static uint16_t nivel_ = 0;       // media |amostra| da ultima leitura (VU)
 static uint32_t finish_em_ = 0;   // agenda o finish() 1 frame depois
+static uint32_t ping_em_ = 0;     // proximo ping de keep-alive do socket
 static size_t fala_pos_ = 0;      // typewriter/bitspeech: posicao no texto
 static uint32_t pausa_ate_ = 0;   // respiro do bitspeech (freq 0)
 static bool fala_viva_ = false;   // typewriter rodando (so na 1a passada)
@@ -110,6 +111,8 @@ static void on_enter() {
   fala_viva_ = false;
   registro_ = false;
   mic::init();
+  // handshake TLS antecipado: apertar OK ja encontra o socket quente
+  if (wifi::connected()) voicecli::conecta();
 }
 
 static void on_exit() {
@@ -174,6 +177,8 @@ static bool input(Button b, BtnEvent e) {
       mic::start();
       gravando_ = true;
       grava_t0_ = millis();  // o begin bloqueia: conta so a gravacao real
+      Serial.printf("[voz] gravando (begin levou %u ms)\n",
+                    (unsigned)(grava_t0_ - now));
       nivel_ = 0;
       claude::maquina_evento(maq_, claude::EV_OK_APERTA, now);
       return true;
@@ -189,12 +194,15 @@ static bool input(Button b, BtnEvent e) {
   if (maq_.st == claude::E_OUVINDO) {
     if (e == EV_RELEASE && b == BTN_OK) {
       if (now - grava_t0_ < 500) {  // clique seco: cancela e ensina a segurar
+        Serial.printf("[voz] clique seco (%u ms): cancelado\n",
+                      (unsigned)(now - grava_t0_));
         mic::stop();
         gravando_ = false;
         voicecli::abort();
         mostra_aviso(STR_TALK, now);
         return true;
       }
+      Serial.printf("[voz] solto apos %u ms\n", (unsigned)(now - grava_t0_));
       claude::maquina_evento(maq_, claude::EV_OK_SOLTA, now);
       encerra_gravacao(now);
     }
@@ -241,21 +249,37 @@ static void tick(uint32_t now) {
       reg_fetch_ = REG_ERR;
     }
   }
-  // OUVINDO: despeja o mic no upload e mede o nivel pro VU
+  // OUVINDO: drena o DMA inteiro num unico write por tick (8 writes de
+  // 512 bytes rendiam 66%: o overhead de cada registro TLS comia o loop)
   if (gravando_) {
-    int16_t buf[256];
-    size_t n = mic::read(buf, 256);
-    if (n) {
-      if (!voicecli::write((const uint8_t*)buf, n * sizeof(int16_t))) {
+    static int16_t buf[2048];  // teto de ~128 ms por tick (anti-prisao)
+    size_t total = 0, n;
+    while (total < 2048 && (n = mic::read(buf + total, 2048 - total)) > 0)
+      total += n;
+    if (total) {
+      if (!voicecli::write((const uint8_t*)buf, total * sizeof(int16_t))) {
         // a conexao caiu no meio: corta e deixa o finish reportar o erro
+        Serial.println("[voz] upload caiu no meio da gravacao");
         claude::maquina_evento(maq_, claude::EV_OK_SOLTA, now);
         encerra_gravacao(now);
         return;
       }
       uint32_t soma = 0;
-      for (size_t i = 0; i < n; i++) soma += (uint16_t)abs(buf[i]);
-      nivel_ = (uint16_t)(soma / n);
+      for (size_t i = 0; i < total; i++) soma += (uint16_t)abs(buf[i]);
+      nivel_ = (uint16_t)(soma / total);
     }
+    static uint32_t nivel_log_ = 0;  // 1x/s: mostra se o mic capta algo
+    if ((int32_t)(now - nivel_log_) >= 0) {
+      nivel_log_ = now + 1000;
+      Serial.printf("[voz] nivel=%u\n", nivel_);
+    }
+  }
+  // ping a cada 30 s: segura o keep-alive na borda e reconecta fora do
+  // aperto (socket frio custava ~1,8 s de begin e comia o inicio da fala)
+  if (!gravando_ && !finish_em_ && wifi::connected() &&
+      (int32_t)(now - ping_em_) >= 0) {
+    ping_em_ = now + 30000;
+    voicecli::ping();
   }
   // timeouts da maquina: 15 s ouvindo (corta e processa), 60 s falando
   claude::Estado antes = maq_.st;
