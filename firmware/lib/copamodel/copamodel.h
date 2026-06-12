@@ -2,16 +2,18 @@
 #include <stddef.h>
 #include <stdint.h>
 
-// Modelo do contrato /copa/* do server — parseavel no env native (sem hardware).
+// Modelo do contrato /copa/* e /futebol/* do server — mesmo shape, o
+// aparelho parseia os dois apps com este codigo (env native, sem hardware).
 struct CopaJogo {
   uint8_t dia, mes, h, m;  // kickoff em hora de Brasilia
   char t1[6], t2[6];       // codigo FIFA; placeholders longos do mata-mata truncam
-  char info[16];           // "Grupo C", "Round of 32"...
+  char info[16];           // "Grupo C", "Brasileirão"...
   int8_t s1, s2;           // -1 = sem placar
   bool live;
   char min[6];             // minuto de jogo ("67"); "" fora do ao vivo
   char est[48];            // "SoFi Stadium · Los Angeles"; "" se a fonte nao tem
   char g1[80], g2[80];     // autores de gol, um por linha; "" sem gols
+  char n1[20], n2[20];     // nome completo do clube ("Flamengo"); "" na copa
 };
 
 // Uma linha da classificacao: codigo FIFA, pontos, jogos, saldo de gols.
@@ -33,6 +35,15 @@ uint8_t copa_parse(const char* json, CopaJogo* jogos, uint8_t max,
 
 // Preenche gs[] a partir do JSON de /copa/grupos; retorna quantos entraram.
 uint8_t copa_parse_grupos(const char* json, CopaGrupo* gs, uint8_t max);
+
+// Liga do cardapio dinamico de /futebol/ligas.
+struct FutLiga {
+  char id[24];  // "bra.1" — vai na query de /futebol/jogos e /futebol/live
+  char n[20];   // "Brasileirão" — nome de exibicao (vem pronto do server)
+};
+
+// Preenche ligas[] a partir do JSON de /futebol/ligas; retorna quantas entraram.
+uint8_t fut_parse_ligas(const char* json, FutLiga* ligas, uint8_t max);
 
 // Linha de lista: "13/6 BRA x MAR" sem placar, "BRA 2x1 MAR" com placar.
 void copa_linha(const CopaJogo& j, char* out, size_t len);
