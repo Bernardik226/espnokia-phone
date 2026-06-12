@@ -1,9 +1,11 @@
 import json
 import pathlib
+from datetime import datetime, timezone
 
 from fastapi.testclient import TestClient
 
 from app.copa import CopaService
+from app.futebol import FutebolService
 from app.main import create_app
 
 FIX = pathlib.Path(__file__).parent / "fixtures" / "worldcup_sample.json"
@@ -35,11 +37,21 @@ def vivo(s1, s2, rolando=True, fim=False, minuto="", g1=None, g2=None, est=""):
             "min": minuto, "g1": g1 or [], "g2": g2 or [], "est": est}
 
 
-def monta(device_keys="", agora=ANTES_DA_COPA, placares=None, grupos=None):
+class FonteFutFake:
+    def __init__(self, ps=None):
+        self.ps = ps or []
+
+    def partidas(self):
+        return self.ps
+
+
+def monta(device_keys="", agora=ANTES_DA_COPA, placares=None, grupos=None,
+          futebol=None):
     svc = CopaService(FetcherFixture(), now_fn=lambda: agora)
     app = create_app(copa_service=svc,
                      live_scores=LiveScoresFake(placares, grupos),
-                     device_keys=device_keys)
+                     device_keys=device_keys,
+                     futebol=futebol or FutebolService({}))
     return TestClient(app)
 
 
@@ -133,3 +145,36 @@ def test_grupos_shape_do_contrato():
 def test_grupos_exige_chave():
     c = monta(device_keys="segredo")
     assert c.get("/copa/grupos").status_code == 401
+
+
+def fut_partida(t1, t2, rolando=True):
+    return {"data": datetime(2026, 6, 12, 20, 0, tzinfo=timezone.utc),
+            "t1": t1, "t2": t2, "n1": "Flamengo", "n2": "Vasco",
+            "s1": 1, "s2": 0, "rolando": rolando, "fim": False,
+            "min": "30", "g1": ["Pedro 12'"], "g2": [], "est": ""}
+
+
+def test_futebol_ligas_e_jogos():
+    fut = FutebolService({"bra.1": FonteFutFake([fut_partida("FLA", "VAS")])})
+    c = monta(futebol=fut)
+    assert c.get("/futebol/ligas").json() == \
+        {"ligas": [{"id": "bra.1", "n": "Brasileirão"}]}
+    j = c.get("/futebol/jogos", params={"liga": "bra.1"}).json()["jogos"][0]
+    assert (j["t1"], j["n1"], j["s1"], j["min"]) == ("FLA", "Flamengo", 1, "30")
+    assert j["info"] == "Brasileirão"   # o detail mostra de que liga é o jogo
+    assert (j["h"], j["m"]) == (17, 0)  # 20:00 UTC em hora de Brasília
+
+
+def test_futebol_live_so_jogo_quente():
+    fut = FutebolService({"bra.1": FonteFutFake([
+        fut_partida("FLA", "VAS"),
+        fut_partida("SAO", "SAN", rolando=False)])},
+        now_fn=lambda: datetime(2026, 6, 12, 20, 30, tzinfo=timezone.utc))
+    c = monta(futebol=fut)
+    jogos = c.get("/futebol/live", params={"liga": "bra.1"}).json()["jogos"]
+    assert [j["t1"] for j in jogos] == ["FLA"]
+
+
+def test_futebol_exige_chave():
+    c = monta(device_keys="segredo")
+    assert c.get("/futebol/ligas").status_code == 401

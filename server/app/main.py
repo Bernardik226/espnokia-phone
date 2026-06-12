@@ -5,6 +5,8 @@ from fastapi import Depends, FastAPI
 from app.auth import make_auth
 from app.copa import JANELA_S, CopaService
 from app.fetcher import CachedFetcher
+from app.futebol import LIGAS, FutebolService
+from app.futebol import payload as fut_payload
 from app.sources import openfootball
 from app.sources.cadeia import CadeiaDeFontes
 from app.sources.espn import EspnScores
@@ -23,11 +25,21 @@ def fonte_copa():
     return CadeiaDeFontes(fontes)
 
 
-def create_app(copa_service=None, live_scores=None, device_keys=None) -> FastAPI:
+def fonte_futebol():
+    # 3 semanas pra trás: o app mostra os campeonatos "recentes" mesmo em
+    # pausa de tabela (o corte de 8 jogos fica com os mais próximos de hoje)
+    return FutebolService({lid: EspnScores(lid, dias_atras=21)
+                           for lid, _ in LIGAS})
+
+
+def create_app(copa_service=None, live_scores=None, device_keys=None,
+               futebol=None) -> FastAPI:
     if copa_service is None:
         copa_service = CopaService(CachedFetcher(openfootball.URL, TTL_TABELA_S))
     if live_scores is None:
         live_scores = fonte_copa()
+    if futebol is None:
+        futebol = fonte_futebol()
     if device_keys is None:
         device_keys = os.environ.get("DEVICE_KEYS", "")
 
@@ -82,6 +94,20 @@ def create_app(copa_service=None, live_scores=None, device_keys=None) -> FastAPI
                             "t": [{"c": t["c"], "p": t["pts"],
                                    "j": t["j"], "s": t["sg"]} for t in g["t"]]}
                            for g in live_scores.grupos()]}
+
+    nomes_ligas = dict(LIGAS)
+
+    @app.get("/futebol/ligas", dependencies=[auth])
+    def futebol_ligas():
+        return {"ligas": futebol.ligas()}
+
+    @app.get("/futebol/jogos", dependencies=[auth])
+    def futebol_jogos(liga: str):
+        return fut_payload(futebol.jogos(liga), nomes_ligas.get(liga, ""))
+
+    @app.get("/futebol/live", dependencies=[auth])
+    def futebol_live(liga: str):
+        return fut_payload(futebol.live(liga), nomes_ligas.get(liga, ""))
 
     return app
 

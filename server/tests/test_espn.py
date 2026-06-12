@@ -16,9 +16,10 @@ class RelogioFake:
         return self.t
 
 
-def time_(abbr, tid, score, lado):
+def time_(abbr, tid, score, lado, nome=""):
     return {"homeAway": lado, "score": str(score),
-            "team": {"id": tid, "abbreviation": abbr}}
+            "team": {"id": tid, "abbreviation": abbr,
+                     "shortDisplayName": nome}}
 
 
 def gol(tid, nome, minuto="59'", shootout=False):
@@ -29,17 +30,18 @@ def gol(tid, nome, minuto="59'", shootout=False):
 
 
 def evento(casa, fora, s1=0, s2=0, estado="in", clock="67'",
-           details=None, venue=None):
-    comp = {"competitors": [time_(casa, "1", s1, "home"),
-                            time_(fora, "2", s2, "away")],
+           details=None, venue=None, date="2026-06-12T20:00Z",
+           nomes=("", "")):
+    comp = {"competitors": [time_(casa, "1", s1, "home", nomes[0]),
+                            time_(fora, "2", s2, "away", nomes[1])],
             "status": {"type": {"state": estado}, "displayClock": clock},
             "details": details or []}
     if venue:
         comp["venue"] = venue
-    return {"competitions": [comp]}
+    return {"date": date, "competitions": [comp]}
 
 
-def monta(rotas, clock=None):
+def monta(rotas, clock=None, **kw):
     """Roteia por trecho do path ("/scoreboard", "/standings")."""
     chamadas = {"n": 0, "urls": []}
 
@@ -51,8 +53,9 @@ def monta(rotas, clock=None):
                 return httpx.Response(200, json=corpo)
         return httpx.Response(404)
 
-    es = EspnScores("fifa.world", BASE, transport=httpx.MockTransport(handler),
-                    clock=clock or RelogioFake(), hoje=lambda: HOJE)
+    es = EspnScores(kw.pop("liga", "fifa.world"), BASE,
+                    transport=httpx.MockTransport(handler),
+                    clock=clock or RelogioFake(), hoje=lambda: HOJE, **kw)
     return es, chamadas
 
 
@@ -147,6 +150,37 @@ def test_erro_na_fonte_mantem_o_cache_anterior():
     rotas.pop("/scoreboard")                 # fonte caiu (vira 404)
     clock.t += 120                           # cache de 60 s já venceu
     assert es.jogos()[("BRA", "HAI")]["s1"] == 1  # placar velho > nenhum
+
+
+def test_partidas_em_ordem_cronologica_com_nome_completo():
+    es, _ = monta({"/scoreboard": {"events": [
+        evento("PAL", "COR", 1, 0, date="2026-06-12T23:30Z",
+               nomes=("Palmeiras", "Corinthians")),
+        evento("FLA", "VAS", 2, 1, date="2026-06-12T20:00Z",
+               nomes=("Flamengo", "Vasco")),
+    ]}})
+    ps = es.partidas()
+    assert [(p["t1"], p["t2"]) for p in ps] == [("FLA", "VAS"),
+                                                ("PAL", "COR")]
+    assert (ps[0]["n1"], ps[0]["n2"]) == ("Flamengo", "Vasco")
+    assert ps[0]["data"].isoformat() == "2026-06-12T20:00:00+00:00"
+    assert (ps[0]["s1"], ps[0]["s2"], ps[0]["rolando"]) == (2, 1, True)
+
+
+def test_partidas_e_jogos_saem_do_mesmo_fetch():
+    es, ch = monta({"/scoreboard": {"events": [evento("FLA", "VAS")]}})
+    es.partidas()
+    es.jogos()
+    assert ch["n"] == 1
+
+
+def test_janela_aberta_pro_passado():
+    # O Futebol mostra os campeonatos "recentes": semana pra trás
+    es, ch = monta({"/scoreboard": {"events": []}}, liga="bra.1",
+                   dias_atras=7)
+    es.partidas()
+    assert "dates=20260605-20260613" in ch["urls"][0]
+    assert "/soccer/bra.1/scoreboard" in ch["urls"][0]
 
 
 def entrada(abbr, pts, j, sg, rank):
