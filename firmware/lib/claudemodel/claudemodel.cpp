@@ -26,4 +26,45 @@ Humor humor(int64_t agora_min, int64_t ultima_min, uint8_t hora_local) {
   return H_CARENTE;
 }
 
+static void muda(Maquina& m, Estado st, uint32_t now_ms) {
+  m.st = st;
+  m.desde_ms = now_ms;
+}
+
+void maquina_init(Maquina& m, uint32_t now_ms) { muda(m, E_PET, now_ms); }
+
+bool maquina_evento(Maquina& m, Evento ev, uint32_t now_ms) {
+  switch (m.st) {
+    case E_PET:
+      if (ev == EV_OK_APERTA) { muda(m, E_OUVINDO, now_ms); return true; }
+      break;
+    case E_OUVINDO:
+      if (ev == EV_OK_SOLTA) { muda(m, E_PENSANDO, now_ms); return true; }
+      break;
+    case E_PENSANDO:
+      if (ev == EV_RESPOSTA || ev == EV_FALHA) {
+        muda(m, E_FALANDO, now_ms);
+        return true;
+      }
+      break;
+    case E_FALANDO:
+      if (ev == EV_VOLTA) { muda(m, E_PET, now_ms); return true; }
+      break;
+  }
+  return false;
+}
+
+bool maquina_tick(Maquina& m, uint32_t now_ms) {
+  uint32_t dt = now_ms - m.desde_ms;
+  if (m.st == E_OUVINDO && dt >= kOuvindoMaxMs) {
+    muda(m, E_PENSANDO, now_ms);
+    return true;
+  }
+  if (m.st == E_FALANDO && dt >= kFalandoMaxMs) {
+    muda(m, E_PET, now_ms);
+    return true;
+  }
+  return false;
+}
+
 }  // namespace claude

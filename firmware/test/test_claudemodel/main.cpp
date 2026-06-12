@@ -42,6 +42,56 @@ void test_humor_janela_de_sono() {
   TEST_ASSERT_EQUAL(H_FELIZ, humor(agora, agora - 10, 22));
 }
 
+// ---- maquina de estados ----
+void test_maquina_caminho_feliz() {
+  Maquina m;
+  maquina_init(m, 1000);
+  TEST_ASSERT_EQUAL(E_PET, m.st);
+  TEST_ASSERT_TRUE(maquina_evento(m, EV_OK_APERTA, 2000));
+  TEST_ASSERT_EQUAL(E_OUVINDO, m.st);
+  TEST_ASSERT_TRUE(maquina_evento(m, EV_OK_SOLTA, 5000));
+  TEST_ASSERT_EQUAL(E_PENSANDO, m.st);
+  TEST_ASSERT_TRUE(maquina_evento(m, EV_RESPOSTA, 8000));
+  TEST_ASSERT_EQUAL(E_FALANDO, m.st);
+  TEST_ASSERT_TRUE(maquina_evento(m, EV_VOLTA, 9000));
+  TEST_ASSERT_EQUAL(E_PET, m.st);
+}
+void test_maquina_falha_vai_pra_falando() {
+  Maquina m;
+  maquina_init(m, 0);
+  maquina_evento(m, EV_OK_APERTA, 0);
+  maquina_evento(m, EV_OK_SOLTA, 100);
+  TEST_ASSERT_TRUE(maquina_evento(m, EV_FALHA, 200));
+  TEST_ASSERT_EQUAL(E_FALANDO, m.st);
+}
+void test_maquina_estoura_15s_ouvindo() {
+  Maquina m;
+  maquina_init(m, 0);
+  maquina_evento(m, EV_OK_APERTA, 1000);
+  TEST_ASSERT_FALSE(maquina_tick(m, 1000 + kOuvindoMaxMs - 1));
+  TEST_ASSERT_TRUE(maquina_tick(m, 1000 + kOuvindoMaxMs));
+  TEST_ASSERT_EQUAL(E_PENSANDO, m.st);
+}
+void test_maquina_estoura_60s_falando() {
+  Maquina m;
+  maquina_init(m, 0);
+  maquina_evento(m, EV_OK_APERTA, 0);
+  maquina_evento(m, EV_OK_SOLTA, 100);
+  maquina_evento(m, EV_RESPOSTA, 200);
+  TEST_ASSERT_FALSE(maquina_tick(m, 200 + kFalandoMaxMs - 1));
+  TEST_ASSERT_TRUE(maquina_tick(m, 200 + kFalandoMaxMs));
+  TEST_ASSERT_EQUAL(E_PET, m.st);
+}
+void test_maquina_ignora_evento_fora_de_hora() {
+  Maquina m;
+  maquina_init(m, 0);
+  TEST_ASSERT_FALSE(maquina_evento(m, EV_OK_SOLTA, 10));
+  TEST_ASSERT_FALSE(maquina_evento(m, EV_RESPOSTA, 10));
+  TEST_ASSERT_FALSE(maquina_evento(m, EV_VOLTA, 10));
+  TEST_ASSERT_EQUAL(E_PET, m.st);
+  TEST_ASSERT_FALSE(maquina_tick(m, 999999));  // PET nao estoura nada
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_dias_civis_ancoras);
@@ -50,5 +100,10 @@ int main() {
   RUN_TEST(test_humor_limiar_de_3_dias);
   RUN_TEST(test_humor_nunca_conversou_e_neutro);
   RUN_TEST(test_humor_janela_de_sono);
+  RUN_TEST(test_maquina_caminho_feliz);
+  RUN_TEST(test_maquina_falha_vai_pra_falando);
+  RUN_TEST(test_maquina_estoura_15s_ouvindo);
+  RUN_TEST(test_maquina_estoura_60s_falando);
+  RUN_TEST(test_maquina_ignora_evento_fora_de_hora);
   return UNITY_END();
 }

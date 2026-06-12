@@ -17,4 +17,24 @@ int64_t epoch_min(uint16_t y, uint8_t m, uint8_t d, uint8_t h, uint8_t mi);
 // DORMINDO (23h–7h) passa por cima de tudo
 Humor humor(int64_t agora_min, int64_t ultima_min, uint8_t hora_local);
 
+// ---- push-to-talk: PET -> OUVINDO (OK seguro) -> PENSANDO (OK solto) ->
+// FALANDO (resposta ou erro) -> PET (C/EV_VOLTA ou 60 s parado) ----
+enum Estado : uint8_t { E_PET, E_OUVINDO, E_PENSANDO, E_FALANDO };
+enum Evento : uint8_t { EV_OK_APERTA, EV_OK_SOLTA, EV_RESPOSTA, EV_FALHA,
+                        EV_VOLTA };
+
+constexpr uint32_t kOuvindoMaxMs = 15000;  // corta a gravacao e processa
+constexpr uint32_t kFalandoMaxMs = 60000;  // volta pro pet sozinho
+
+struct Maquina {
+  Estado st;
+  uint32_t desde_ms;  // quando entrou no estado (o app renova ao paginar)
+};
+
+void maquina_init(Maquina& m, uint32_t now_ms);
+bool maquina_evento(Maquina& m, Evento ev, uint32_t now_ms);  // true = mudou
+// PENSANDO nao tem timeout proprio: o app DEVE disparar EV_FALHA se o HTTP
+// nao retornar (timeout do client cobre isso).
+bool maquina_tick(Maquina& m, uint32_t now_ms);               // timeouts
+
 }  // namespace claude
