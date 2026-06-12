@@ -5,9 +5,10 @@
 
 namespace buzzer {
 static const uint8_t kCh = 0;
-// volume = energia do pulso: 50% de duty e o maximo audivel do piezo;
-// duties menores soam mais baixo sem mudar o timbre (10 bits de resolucao)
-static const uint16_t kDuty[] = {12, 96, 512};
+// volume = energia do pulso (10 bits de resolucao). Medido no piezo real:
+// ~9% de duty soa MAIS ALTO que 50% — as harmonicas do pulso curto caem na
+// ressonancia da capsula. A escada e por loudness ouvida, nao por duty.
+static const uint16_t kDuty[] = {12, 512, 96};
 static uint8_t vol_ = 2;
 static Rtttl rtttl_;
 static bool playing_ = false;       // tune em andamento
