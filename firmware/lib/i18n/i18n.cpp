@@ -109,6 +109,15 @@ static const char* const kStr[STR_COUNT][LANG_COUNT] = {
                      "Urheilu"},
   /* APP_FUTEBOL */ {"Futebol", "Football", "Fútbol", "Football", "Fußball",
                      "Jalkapallo"},
+  /* APP_CLAUDE */ {"Claude", "Claude", "Claude", "Claude", "Claude",
+                    "Claude"},
+  /* TALK */ {"FALAR", "TALK", "HABLAR", "PARLER", "REDEN", "PUHU"},
+  /* LISTENING */ {"OUVINDO", "LISTENING", "ESCUCHANDO", "J'ÉCOUTE",
+                   "HÖRE ZU", "KUUNTELEN"},
+  /* THINKING */ {"PENSANDO", "THINKING", "PENSANDO", "RÉFLEXION", "DENKE",
+                  "MIETIN"},
+  /* SAY_AGAIN */ {"fala de novo?", "say that again?", "¿repites?",
+                   "tu répètes?", "nochmal bitte?", "sano uudestaan?"},
 };
 
 static const char* const kDay[LANG_COUNT][7] = {

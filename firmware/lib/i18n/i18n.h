@@ -37,6 +37,8 @@ enum StrId : uint8_t {
   STR_GROUPS, STR_GOALS, STR_GROUP,
   // categoria esportes
   STR_APP_SPORTS, STR_APP_FUTEBOL,
+  // app claude
+  STR_APP_CLAUDE, STR_TALK, STR_LISTENING, STR_THINKING, STR_SAY_AGAIN,
   STR_COUNT
 };
 

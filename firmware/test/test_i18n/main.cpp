@@ -28,6 +28,8 @@ void test_accents_are_utf8() {
   const char* s = tr(STR_APP_CLOCK);
   TEST_ASSERT_EQUAL_UINT8(0xC3, (uint8_t)s[3]);  // inicio do "ó"
   TEST_ASSERT_EQUAL_UINT8(0xB3, (uint8_t)s[4]);
+  // STR_LISTENING em PT deve ser "OUVINDO"
+  TEST_ASSERT_EQUAL_STRING("OUVINDO", tr(STR_LISTENING));
 }
 
 void test_out_of_range_is_safe() {
