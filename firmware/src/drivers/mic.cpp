@@ -64,4 +64,6 @@ void stop() {
   rodando_ = false;
 }
 
+bool running() { return rodando_; }
+
 }  // namespace mic
