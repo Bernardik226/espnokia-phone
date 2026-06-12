@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <U8g2lib.h>
 #include "alarm.h"
+#include "copa_watch.h"
 #include "pins.h"
 #include "shell.h"
 #include "sound.h"
@@ -11,6 +12,7 @@
 #include "net/wifi.h"
 #include "net/ntp.h"
 #include "ui/boot_anim.h"
+#include "ui/goal_fx.h"
 #include "ui/menu_view.h"
 #include "apps/app_standby.h"
 #include "apps/app_clock.h"
@@ -41,6 +43,7 @@ void setup() {
     Serial.println("[rtc] DS3231 ausente — relogio de videocassete");
   }
   alarme::init();                     // recarrega aviso de jogo persistido
+  copa_watch::init();                 // recarrega vigia de gols persistido
   wifi::init();                      // nao-bloqueante; conecta enquanto a animacao roda
   boot_anim_play(u8g2);              // logo NOKIA + maos + startup chime (segura ate o fim)
   shell.init(&app_standby, kApps, sizeof(kApps) / sizeof(kApps[0]));
@@ -52,13 +55,17 @@ void loop() {
   Button b; BtnEvent e;
   if (buttons::poll(now, b, e)) {
     if (e == EV_PRESS) sound::play(sound::SND_KEY);
-    if (!alarme::input(b, e)) shell.input(b, e);  // overlay de alarme engole teclas
+    if (!goal_fx::input(b, e)) {                    // overlays engolem teclas
+      if (!alarme::input(b, e)) shell.input(b, e);
+    }
   }
   shell.tick(now);
   buzzer::tick(now);
   wifi::tick(now);
   ntp::tick(now);
   alarme::tick(now);
+  copa_watch::tick(now);
+  goal_fx::tick(now);
 
   static uint32_t last_render = 0;
   if (now - last_render >= 50) {                // ~20 fps
@@ -68,6 +75,7 @@ void loop() {
     else if (shell.active() && shell.active()->on_render)
       shell.active()->on_render(&u8g2);
     if (alarme::active()) alarme::render(&u8g2);  // overlay por cima de tudo
+    if (goal_fx::active()) goal_fx::render(&u8g2);  // gol por cima ate do alarme
     u8g2.sendBuffer();
   }
   delay(2);

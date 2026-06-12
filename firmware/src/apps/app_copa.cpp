@@ -3,45 +3,64 @@
 #include <string.h>
 #include <U8g2lib.h>
 #include "alarm.h"
+#include "copa_watch.h"
 #include "copamodel.h"
 #include "i18n.h"
 #include "net/http.h"
-#include "sound.h"
 #include "net/wifi.h"
+#include "sound.h"
+#include "drivers/buzzer.h"
+#include "drivers/rtc.h"
 #include "ui/assets.h"
 #include "ui/fonts3310.h"
+#include "ui/goal_fx.h"
 #include "ui/nokia_ui.h"
 
 // Copa 2026 via server companion: V_MENU escolhe a aba, V_LIST mostra a
-// janela de 3 jogos, V_DETAIL abre um jogo. O fetch HTTP e bloqueante
-// (~ate 5 s), entao fica 1 frame em FETCH_PENDING pra tela "Buscando..."
-// aparecer antes — o 3310 tambem "pensava" com a ampulheta na tela.
-enum View : uint8_t { V_MENU, V_LIST, V_DETAIL };
+// janela de 3 jogos (refeita em silencio enquanto houver jogo rolando, pra
+// manter o placar da lista vivo), V_DETAIL abre um jogo em 2 paginas
+// (placar | gols e estadio) e V_GRUPOS pagina a classificacao. O fetch HTTP
+// e bloqueante (~ate 5 s), entao fica 1 frame em FETCH_PENDING pra tela
+// "Buscando..." aparecer antes — o 3310 tambem "pensava" com a ampulheta.
+enum View : uint8_t { V_MENU, V_LIST, V_DETAIL, V_GRUPOS };
 enum Fetch : uint8_t { FETCH_IDLE, FETCH_PENDING, FETCH_OK, FETCH_ERR,
                        FETCH_NONET };
 
-static const StrId kAbas[] = {STR_NEXT_GAMES, STR_BRAZIL, STR_LIVE_TAB};
-static const char* kPaths[] = {"/copa/proximos?n=8", "/copa/brasil", "/copa/live"};
-static const uint8_t kAbaCount = 3;
+static const StrId kAbas[] = {STR_NEXT_GAMES, STR_BRAZIL, STR_LIVE_TAB,
+                              STR_GROUPS};
+static const char* kPaths[] = {"/copa/proximos?n=8", "/copa/brasil",
+                               "/copa/live"};  // grupos tem rota propria
+static const uint8_t kAbaCount = 4;
 static const uint8_t kMaxJogos = 8;
+static const uint8_t kMaxGrupos = 12;
 
 static View view = V_MENU;
 static Fetch fetch_ = FETCH_IDLE;
 static uint8_t aba_ = 0;       // qual lista esta aberta
 static uint8_t cur = 0;        // cursor (menu e lista)
+static uint8_t pag_ = 0;       // pagina do detail: 0 placar, 1 gols/estadio
+static uint8_t gcur_ = 0;      // grupo na tela em V_GRUPOS
 static uint32_t pending_ms_ = 0;
 
 static CopaJogo jogos_[kMaxJogos];
 static uint8_t n_jogos_ = 0;
-static char buf_[2048];        // payload do server (8 jogos ~1.2 KB)
+static CopaGrupo grupos_[kMaxGrupos];
+static uint8_t n_grupos_ = 0;
+static char buf_[3072];        // payload do server (/copa/grupos ~1.7 KB)
 
-// acompanhamento do jogo aberto em V_DETAIL quando esta ao vivo: refetch
-// periodico e, se o placar mudou, alerta de gol (som + "GOL!" piscando)
+// acompanhamento ao vivo: o detail aberto refaz o GET e dispara o efeito de
+// gol; a lista refaz o GET so pra manter o placar das linhas atualizado
 static const uint32_t kLiveRefetchMs = 45000;
 static int8_t live_s1_, live_s2_;
 static char live_t1_[6], live_t2_[6];
-static uint32_t live_next_ = 0;    // 0 = nao esta acompanhando
-static uint32_t goal_flash_ = 0;   // pisca "GOL!" ate este millis
+static uint32_t live_next_ = 0;    // 0 = detail nao esta acompanhando
+static uint32_t list_next_ = 0;    // 0 = lista sem jogo rolando
+
+static bool alguma_live() {
+  for (uint8_t i = 0; i < n_jogos_; i++)
+    if (jogos_[i].live) return true;
+  return false;
+}
 
 static void live_watch(const CopaJogo& j) {
   live_s1_ = j.s1; live_s2_ = j.s2;
@@ -59,11 +78,24 @@ static void abre_lista(uint8_t aba) {
   view = V_LIST;
 }
 
+static void abre_grupos() {
+  gcur_ = 0;
+  fetch_ = wifi::connected() ? FETCH_PENDING : FETCH_NONET;
+  pending_ms_ = millis();
+  view = V_GRUPOS;
+}
+
 static void on_enter() {
   view = V_MENU;
   fetch_ = FETCH_IDLE;
   cur = 0;
   live_next_ = 0;
+  list_next_ = 0;
+}
+
+// mesmo "minuto do ano" aproximado do alarme: so compara antes/depois
+static int32_t minuto_(uint8_t mes, uint8_t dia, uint8_t h, uint8_t m) {
+  return (((int32_t)mes * 31 + dia) * 24 + h) * 60 + m;
 }
 
 // refetch silencioso do jogo aberto: reencontra pelo par de times (a lista
@@ -79,8 +111,11 @@ static void live_refetch(uint32_t now_ms) {
     if (strcmp(j.t1, live_t1_) != 0 || strcmp(j.t2, live_t2_) != 0) continue;
     cur = i;
     if (j.s1 > live_s1_ || j.s2 > live_s2_) {
-      sound::play(sound::SND_ALERT);
-      goal_flash_ = now_ms + 4000;
+      char placar[24];
+      copa_linha(j, placar, sizeof(placar));
+      const char* autor = (j.s1 > live_s1_) ? copa_ultimo_gol(j.g1)
+                                            : copa_ultimo_gol(j.g2);
+      goal_fx::start(placar, autor);
     }
     live_s1_ = j.s1; live_s2_ = j.s2;
     return;
@@ -90,14 +125,39 @@ static void live_refetch(uint32_t now_ms) {
   live_next_ = 0;
 }
 
+// refetch silencioso da lista: placar ao vivo nas linhas; quando o ultimo
+// jogo rolando sai do feed, para de refazer sozinho
+static void list_refetch(uint32_t now_ms) {
+  list_next_ = now_ms + kLiveRefetchMs;
+  if (http::get_json(kPaths[aba_], buf_, sizeof(buf_)) != 200) return;
+  uint8_t n = copa_parse(buf_, jogos_, kMaxJogos, nullptr);
+  if (n == 0) return;
+  n_jogos_ = n;
+  if (cur >= n_jogos_) cur = n_jogos_ - 1;
+  if (!alguma_live()) list_next_ = 0;
+}
+
 static void tick(uint32_t now_ms) {
+  // o GET bloqueante seguraria o PWM do bip de tecla ligado por segundos:
+  // espera o som acabar (o buzzer::tick do main desliga) antes de buscar
+  if (buzzer::busy()) return;
   if (view == V_DETAIL && live_next_ && (int32_t)(now_ms - live_next_) >= 0)
     live_refetch(now_ms);
+  if (view == V_LIST && list_next_ && (int32_t)(now_ms - list_next_) >= 0)
+    list_refetch(now_ms);
   // espera 1 frame (~50 ms) renderizar "Buscando..." antes de bloquear no GET
   if (fetch_ != FETCH_PENDING || now_ms - pending_ms_ < 60) return;
+  if (view == V_GRUPOS) {
+    int code = http::get_json("/copa/grupos", buf_, sizeof(buf_));
+    n_grupos_ = (code == 200) ? copa_parse_grupos(buf_, grupos_, kMaxGrupos) : 0;
+    fetch_ = (code == 200) ? FETCH_OK : FETCH_ERR;
+    return;
+  }
   int code = http::get_json(kPaths[aba_], buf_, sizeof(buf_));
   n_jogos_ = (code == 200) ? copa_parse(buf_, jogos_, kMaxJogos, nullptr) : 0;
-  fetch_ = (code == 200) ? FETCH_OK : FETCH_ERR;  // erro fica so na tela, sem bip
+  fetch_ = (code == 200) ? FETCH_OK : FETCH_ERR;  // erro fica na tela, sem bip
+  list_next_ = (fetch_ == FETCH_OK && alguma_live()) ? now_ms + kLiveRefetchMs
+                                                     : 0;
 }
 
 static bool input(Button b, BtnEvent e) {
@@ -106,7 +166,11 @@ static bool input(Button b, BtnEvent e) {
     case V_MENU:
       if (b == BTN_UP) { cur = (cur + kAbaCount - 1) % kAbaCount; return true; }
       if (b == BTN_DOWN) { cur = (cur + 1) % kAbaCount; return true; }
-      if (b == BTN_OK) { abre_lista(cur); return true; }
+      if (b == BTN_OK) {
+        if (cur == 3) abre_grupos();
+        else abre_lista(cur);
+        return true;
+      }
       return false;  // C nao consumido → shell volta pro menu
     case V_LIST:
       if (fetch_ == FETCH_PENDING) return true;  // ocupado buscando
@@ -115,26 +179,45 @@ static bool input(Button b, BtnEvent e) {
       if (b == BTN_DOWN) { cur = (cur + 1) % n_jogos_; return true; }
       if (b == BTN_OK) {
         view = V_DETAIL;
+        pag_ = 0;
         if (jogos_[cur].live) live_watch(jogos_[cur]);
         return true;
       }
       view = V_MENU; cur = aba_;  // C volta
       return true;
+    case V_GRUPOS:
+      if (fetch_ == FETCH_PENDING) return true;
+      if (fetch_ == FETCH_OK && n_grupos_ > 0) {
+        if (b == BTN_UP) { gcur_ = (gcur_ + n_grupos_ - 1) % n_grupos_; return true; }
+        if (b == BTN_DOWN) { gcur_ = (gcur_ + 1) % n_grupos_; return true; }
+      }
+      view = V_MENU; cur = 3;  // OK/C volta
+      return true;
     case V_DETAIL: {
       const CopaJogo& j = jogos_[cur];
-      if (b == BTN_OK) {  // OK alterna o aviso de inicio do jogo
-        if (alarme::armed(j.dia, j.mes, j.h, j.m)) {
-          alarme::clear();
-          sound::play(sound::SND_CONFIRM);
+      if (b == BTN_UP || b == BTN_DOWN) { pag_ ^= 1; return true; }
+      if (b == BTN_OK) {
+        // OK alterna o par de avisos do jogo: inicio (alarme, se ainda nao
+        // comecou) + gols (vigia em background); ambos persistem na NVS
+        bool aviso = alarme::armed(j.dia, j.mes, j.h, j.m) ||
+                     copa_watch::armed(j.t1, j.t2);
+        if (aviso) {
+          if (alarme::armed(j.dia, j.mes, j.h, j.m)) alarme::clear();
+          copa_watch::disarm();
         } else {
           char lbl[16];
           snprintf(lbl, sizeof(lbl), "%s x %s", j.t1, j.t2);
-          alarme::set(STR_GAME_NOW, j.dia, j.mes, j.h, j.m, lbl);
-          sound::play(sound::SND_CONFIRM);
+          rtc::DateTime dt;
+          bool futuro = rtc::now(dt) &&
+                        minuto_(dt.month, dt.day, dt.hour, dt.min) <
+                            minuto_(j.mes, j.dia, j.h, j.m);
+          if (futuro) alarme::set(STR_GAME_NOW, j.dia, j.mes, j.h, j.m, lbl);
+          copa_watch::arm(j.t1, j.t2, j.dia, j.mes, j.h, j.m);
         }
+        sound::play(sound::SND_CONFIRM);
         return true;
       }
-      view = V_LIST;  // C/UP/DOWN volta pra lista
+      view = V_LIST;  // C volta pra lista
       live_next_ = 0;
       return true;
     }
@@ -142,25 +225,45 @@ static bool input(Button b, BtnEvent e) {
   return false;
 }
 
+// autores de gol da pagina 2: um por linha, t1 a esquerda e t2 a direita
+static void desenha_gols(U8G2& g, const char* gols, bool direita) {
+  int y = 16;
+  const char* p = gols;
+  while (*p && y <= 30) {
+    const char* nl = strchr(p, '\n');
+    size_t len = nl ? (size_t)(nl - p) : strlen(p);
+    char linha[28];
+    if (len >= sizeof(linha)) len = sizeof(linha) - 1;
+    memcpy(linha, p, len);
+    linha[len] = '\0';
+    int x = direita ? 82 - (int)g.getUTF8Width(linha) : 2;
+    g.drawUTF8(x, y, linha);
+    y += 7;
+    if (!nl) break;
+    p = nl + 1;
+  }
+}
+
 static void render(void* gfx) {
   U8G2& g = *(U8G2*)gfx;
   g.setFont(u8g2_font_3310_small);
   switch (view) {
-    case V_MENU:
+    case V_MENU: {
       nokia_ui::text_bold_center(g, 8, tr(STR_APP_COPA));
-      for (uint8_t i = 0; i < kAbaCount; i++) {
+      const uint8_t kVis = 3;
+      uint8_t top = cur >= kVis ? (uint8_t)(cur - kVis + 1) : 0;
+      for (uint8_t i = 0; i < kVis && top + i < kAbaCount; i++) {
         int y = 11 + i * 9;
-        if (i == cur) {
+        if (top + i == cur) {
           g.drawBox(0, y, 84, 9);
           g.setDrawColor(0);
-          g.drawUTF8(3, y + 8, tr(kAbas[i]));
-          g.setDrawColor(1);
-        } else {
-          g.drawUTF8(3, y + 8, tr(kAbas[i]));
         }
+        g.drawUTF8(3, y + 8, tr(kAbas[top + i]));
+        g.setDrawColor(1);
       }
       nokia_ui::softkey(g, tr(STR_SELECT));
       break;
+    }
     case V_LIST: {
       nokia_ui::text_bold_center(g, 8, tr(kAbas[aba_]));
       if (fetch_ == FETCH_PENDING) {
@@ -202,9 +305,30 @@ static void render(void* gfx) {
     }
     case V_DETAIL: {
       const CopaJogo& j = jogos_[cur];
-      char l1[16], l2[20];
+      char l1[16];
       snprintf(l1, sizeof(l1), "%s x %s", j.t1, j.t2);
       nokia_ui::text_bold_center(g, 8, l1);
+      if (pag_ == 1) {  // pagina 2: autores dos gols + estadio
+        desenha_gols(g, j.g1, false);
+        desenha_gols(g, j.g2, true);
+        if (j.est[0]) {
+          const char* sep = strstr(j.est, " \xc2\xb7 ");  // " · " do server
+          if (sep) {
+            char nome[40];
+            size_t len = (size_t)(sep - j.est);
+            if (len >= sizeof(nome)) len = sizeof(nome) - 1;
+            memcpy(nome, j.est, len);
+            nome[len] = '\0';
+            g.drawUTF8(2, 38, nome);
+            g.drawUTF8(2, 45, sep + 4);
+          } else {
+            g.drawUTF8(2, 45, j.est);
+          }
+        }
+        g.drawStr(79, 47, "^");  // tem pagina pra cima
+        break;
+      }
+      char l2[24];
       if (j.s1 >= 0 && j.s2 >= 0) {
         snprintf(l2, sizeof(l2), "%d x %d", j.s1, j.s2);
         nokia_ui::text_bold_center(g, 20, l2);
@@ -213,13 +337,63 @@ static void render(void* gfx) {
         g.drawStr(42 - (int)g.getStrWidth(l2) / 2, 20, l2);
       }
       g.drawStr(42 - (int)g.getStrWidth(j.info) / 2, 30, j.info);
-      bool tem_aviso = alarme::armed(j.dia, j.mes, j.h, j.m);
-      bool gol = goal_flash_ && (int32_t)(millis() - goal_flash_) < 0;
-      if (gol) {  // acabou de sair gol: "GOL!" piscando no lugar do AO VIVO
-        if ((millis() / 250) % 2 == 0) nokia_ui::text_bold_center(g, 39, tr(STR_GOAL));
-      } else if (j.live) nokia_ui::text_bold_center(g, 39, tr(STR_LIVE_BIG));
-      else if (tem_aviso) g.drawUTF8(42 - (int)g.getUTF8Width(tr(STR_NOTIFY_ON)) / 2, 39, tr(STR_NOTIFY_ON));
+      bool tem_aviso = alarme::armed(j.dia, j.mes, j.h, j.m) ||
+                       copa_watch::armed(j.t1, j.t2);
+      if (j.live) {
+        if (j.min[0]) {  // minuto de jogo ao lado: "AO VIVO 67'"
+          bool num = strspn(j.min, "0123456789") == strlen(j.min);
+          snprintf(l2, sizeof(l2), "%s %s%s", tr(STR_LIVE_BIG), j.min,
+                   num ? "'" : "");
+          nokia_ui::text_bold_center(g, 39, l2);
+        } else {
+          nokia_ui::text_bold_center(g, 39, tr(STR_LIVE_BIG));
+        }
+      } else if (tem_aviso) {
+        g.drawUTF8(42 - (int)g.getUTF8Width(tr(STR_NOTIFY_ON)) / 2, 39,
+                   tr(STR_NOTIFY_ON));
+      }
       nokia_ui::softkey(g, tr(tem_aviso ? STR_NOTIFY_OFF : STR_NOTIFY));
+      g.drawStr(79, 47, "v");  // tem pagina pra baixo
+      break;
+    }
+    case V_GRUPOS: {
+      if (fetch_ == FETCH_PENDING) {
+        nokia_ui::text_bold_center(g, 8, tr(STR_GROUPS));
+        g.drawUTF8(2, 24, tr(STR_SEARCHING));
+        break;
+      }
+      if (fetch_ == FETCH_NONET) {
+        nokia_ui::text_bold_center(g, 8, tr(STR_GROUPS));
+        nokia_ui::no_network(g);
+        nokia_ui::softkey(g, tr(STR_BACK));
+        break;
+      }
+      if (fetch_ != FETCH_OK || n_grupos_ == 0) {
+        nokia_ui::text_bold_center(g, 8, tr(STR_GROUPS));
+        nokia_ui::text_bold_center(g, 24, tr(STR_NO_RESPONSE));
+        nokia_ui::softkey(g, tr(STR_BACK));
+        break;
+      }
+      const CopaGrupo& grp = grupos_[gcur_];
+      char titulo[20];
+      snprintf(titulo, sizeof(titulo), "%s %s", tr(STR_GROUP), grp.nome);
+      nokia_ui::text_bold_center(g, 8, titulo);
+      // colunas: pontos, jogos, saldo de gols (classificado pelo server)
+      g.drawStr(34, 16, "P");
+      g.drawStr(50, 16, "J");
+      g.drawStr(62, 16, "S");
+      char num[8];
+      for (uint8_t i = 0; i < grp.nt; i++) {
+        int y = 24 + i * 7;
+        const CopaGrupoTime& t = grp.t[i];
+        g.drawStr(2, y, t.c);
+        snprintf(num, sizeof(num), "%d", t.pts);
+        g.drawStr(34, y, num);
+        snprintf(num, sizeof(num), "%d", t.j);
+        g.drawStr(50, y, num);
+        snprintf(num, sizeof(num), "%+d", t.sg);
+        g.drawStr(62, y, num);
+      }
       break;
     }
   }
