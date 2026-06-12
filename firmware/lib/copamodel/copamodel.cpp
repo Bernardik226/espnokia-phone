@@ -34,6 +34,8 @@ uint8_t copa_parse(const char* json, CopaJogo* jogos, uint8_t max,
     copia(g.est, sizeof(g.est), j["est"]);
     copia(g.g1, sizeof(g.g1), j["g1"]);
     copia(g.g2, sizeof(g.g2), j["g2"]);
+    copia(g.n1, sizeof(g.n1), j["n1"]);
+    copia(g.n2, sizeof(g.n2), j["n2"]);
     n++;
   }
   return n;
@@ -60,6 +62,23 @@ uint8_t copa_parse_grupos(const char* json, CopaGrupo* gs, uint8_t max) {
       gt.sg = t["s"] | 0;
       grp.nt++;
     }
+    n++;
+  }
+  return n;
+}
+
+uint8_t fut_parse_ligas(const char* json, FutLiga* ligas, uint8_t max) {
+  JsonDocument doc;
+  if (deserializeJson(doc, json) != DeserializationError::Ok) return 0;
+  JsonArray arr = doc["ligas"];
+  if (arr.isNull()) return 0;
+
+  uint8_t n = 0;
+  for (JsonObject l : arr) {
+    if (n >= max) break;
+    copia(ligas[n].id, sizeof(ligas[n].id), l["id"]);
+    copia(ligas[n].n, sizeof(ligas[n].n), l["n"]);
+    if (!ligas[n].id[0]) continue;  // sem id nao tem como buscar os jogos
     n++;
   }
   return n;

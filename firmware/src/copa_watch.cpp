@@ -18,6 +18,7 @@ static Preferences prefs_;
 static bool loaded_ = false;
 static bool armed_ = false;
 static char t1_[6], t2_[6];
+static char path_[48];  // de onde vigiar: /copa/live ou /futebol/live?liga=X
 static uint8_t d_, mo_, h_, mi_;
 static int8_t s1_ = -1, s2_ = -1;  // baseline em RAM; -1 = ainda sem fetch
 static uint32_t next_ = 0;
@@ -30,6 +31,9 @@ static void load() {
   armed_ = prefs_.getBool("cw_on", false);
   prefs_.getString("cw_t1", t1_, sizeof(t1_));
   prefs_.getString("cw_t2", t2_, sizeof(t2_));
+  prefs_.getString("cw_p", path_, sizeof(path_));
+  if (!path_[0])  // slot gravado antes do Futebol existir: era sempre a Copa
+    snprintf(path_, sizeof(path_), "/copa/live");
   d_ = prefs_.getUChar("cw_d", 0);
   mo_ = prefs_.getUChar("cw_mo", 0);
   h_ = prefs_.getUChar("cw_h", 0);
@@ -40,17 +44,19 @@ static void load() {
 void init() { load(); }
 
 void arm(const char* t1, const char* t2, uint8_t dia, uint8_t mes,
-         uint8_t h, uint8_t m) {
+         uint8_t h, uint8_t m, const char* path) {
   load();
   armed_ = true;
   snprintf(t1_, sizeof(t1_), "%s", t1);
   snprintf(t2_, sizeof(t2_), "%s", t2);
+  snprintf(path_, sizeof(path_), "%s", path);
   d_ = dia; mo_ = mes; h_ = h; mi_ = m;
   s1_ = s2_ = -1;
   next_ = 0;
   prefs_.putBool("cw_on", true);
   prefs_.putString("cw_t1", t1_);
   prefs_.putString("cw_t2", t2_);
+  prefs_.putString("cw_p", path_);
   prefs_.putUChar("cw_d", d_);
   prefs_.putUChar("cw_mo", mo_);
   prefs_.putUChar("cw_h", h_);
@@ -85,7 +91,7 @@ void tick(uint32_t now) {
   if (delta < 0) return;  // nem comecou (o aviso de inicio e do alarme)
   if (delta > kJanelaMin) { disarm(); return; }
   if (buzzer::busy()) { next_ = now + 200; return; }  // GET seguraria o bip
-  if (http::get_json("/copa/live", buf_, sizeof(buf_)) != 200) return;
+  if (http::get_json(path_, buf_, sizeof(buf_)) != 200) return;
   uint8_t n = copa_parse(buf_, jogos_, 8, nullptr);
   for (uint8_t i = 0; i < n; i++) {
     const CopaJogo& j = jogos_[i];

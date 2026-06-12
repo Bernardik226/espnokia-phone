@@ -35,6 +35,8 @@ enum StrId : uint8_t {
   STR_ALARM, STR_TIMER, STR_TIME_UP, STR_TURN_OFF, STR_GOAL,
   // copa v2 (novas strings sempre no fim, antes de STR_COUNT)
   STR_GROUPS, STR_GOALS, STR_GROUP,
+  // categoria esportes
+  STR_APP_SPORTS, STR_APP_FUTEBOL,
   STR_COUNT
 };
 

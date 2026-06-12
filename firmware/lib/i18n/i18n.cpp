@@ -105,6 +105,10 @@ static const char* const kStr[STR_COUNT][LANG_COUNT] = {
                      "Lohkot"},
   /* GOALS       */ {"Gols", "Goals", "Goles", "Buts", "Tore", "Maalit"},
   /* GROUP       */ {"Grupo", "Group", "Grupo", "Groupe", "Gruppe", "Lohko"},
+  /* APP_SPORTS  */ {"Esportes", "Sports", "Deportes", "Sports", "Sport",
+                     "Urheilu"},
+  /* APP_FUTEBOL */ {"Futebol", "Football", "Fútbol", "Football", "Fußball",
+                     "Jalkapallo"},
 };
 
 static const char* const kDay[LANG_COUNT][7] = {
