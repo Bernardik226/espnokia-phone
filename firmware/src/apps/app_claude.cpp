@@ -264,7 +264,8 @@ static void render_pet(U8G2& g, uint32_t now) {
 
 static void render_ouvindo(U8G2& g, uint32_t now) {
   desenha_pet(g, face_neutro_bits, 0);
-  nokia_ui::text_bold(g, 2, 7, tr(STR_LISTENING));
+  g.setFont(u8g2_font_3310_small);  // titulo na fonte normal do sistema
+  g.drawUTF8(2, 7, tr(STR_LISTENING));
   // mic ao lado do pet + ondas de som crescendo em 4 tempos (vazio, 1, 2, 3)
   g.drawXBMP(47, 14, ICON_MIC_W, ICON_MIC_H, icon_mic_bits);
   uint8_t f = (uint8_t)((now / 280) % 4);
@@ -278,7 +279,6 @@ static void render_ouvindo(U8G2& g, uint32_t now) {
   // contador de segundos no canto, como o relogio do standby
   char s[8];
   snprintf(s, sizeof(s), "%us", (unsigned)((now - grava_t0_) / 1000));
-  g.setFont(u8g2_font_3310_small);
   g.drawStr(83 - g.getStrWidth(s), 7, s);
 }
 
