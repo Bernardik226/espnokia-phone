@@ -68,6 +68,14 @@ def test_falha_do_claude_502(tmp_path, monkeypatch):
     assert post(client).status_code == 502
 
 
+def test_falha_do_stt_502(tmp_path, monkeypatch):
+    # groq fora do ar / chave errada: 502 limpo em vez de 500 estourado
+    def explode(pcm, lang, cfg):
+        raise RuntimeError("groq fora")
+    client, _ = faz_client(tmp_path, monkeypatch, stt_fn=explode)
+    assert post(client).status_code == 502
+
+
 def test_stt_api_reservado_501(tmp_path, monkeypatch):
     monkeypatch.setenv("DATA_DIR", str(tmp_path))
     cfg = dict(config.DEFAULTS)

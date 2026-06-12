@@ -1,4 +1,4 @@
-"""Voz do bichinho: PCM16 cru no corpo → faster-whisper → Claude → JSON
+"""Voz do bichinho: PCM16 cru no corpo → STT plugável → Claude → JSON
 {"falei","resposta"}. Histórico por device persiste em DATA_DIR/claw/ via
 MemoriaService: o pet lembra das últimas conversas e carrega a memória
 resumida no system — reiniciou o server, ele continua o papo."""
@@ -41,7 +41,10 @@ class VozService:
         try:
             falei = self.stt_fn(corpo, lang, cfg)
         except NotImplementedError:
-            return 501, {"erro": "stt por api ainda nao existe"}
+            return 501, {"erro": "backend de stt desconhecido"}
+        except Exception:
+            logging.exception("stt falhou")
+            return 502, {"erro": "stt falhou"}
         if not falei:
             return 422, {"erro": "nao entendi"}
         if self.chat_fn is None and not cfg.get("anthropic_api_key"):
