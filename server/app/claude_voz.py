@@ -31,7 +31,8 @@ def _chat_anthropic(cfg, system, mensagens):
                                 system=system, messages=mensagens,
                                 tools=tools)
     # com busca, o content mistura blocos de tool use: o texto e o que vale
-    texto = "".join(b.text for b in r.content if b.type == "text").strip()
+    texto = " ".join(b.text.strip() for b in r.content
+                     if b.type == "text").strip()
     return texto, r.usage.input_tokens, r.usage.output_tokens
 
 
@@ -43,7 +44,7 @@ class VozService:
         self.now_fn = now_fn
         self.memoria = memoria or MemoriaService(now_fn=now_fn)
 
-    def responder(self, device: str, corpo: bytes, lang: str):
+    def responder(self, device: str, corpo: bytes, lang: str, t: str = ""):
         if len(corpo) > MAX_CORPO:
             return 413, {"erro": "audio grande demais"}
         cfg = config.load()
@@ -61,10 +62,13 @@ class VozService:
         system = (f"{cfg['persona']} Responda em ate "
                   f"{cfg['max_resposta_chars']} caracteres, no idioma "
                   f"{lang or 'pt'}, sem markdown.")
+        if t:  # hora local mandada pelo device (RTC): o pet sabe que horas sao
+            system += f" Agora, no relógio do usuário, são {t}."
         if cfg.get("web_search", True):
             system += (" Você pode buscar na internet quando precisar de "
-                       "informação atual; responda só o fato, sem citar "
-                       "links nem fontes.")
+                       "informação atual. Nunca invente placar, notícia ou "
+                       "fato recente: ou você busca, ou diz que não sabe. "
+                       "Responda só o fato, sem citar links nem fontes.")
         mem = self.memoria.memoria_texto(device)
         if mem:
             system += f"\n\nSuas memórias das conversas passadas:\n{mem}"

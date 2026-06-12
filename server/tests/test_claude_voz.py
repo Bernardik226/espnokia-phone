@@ -116,6 +116,21 @@ def test_lang_entra_no_system_prompt(tmp_path, monkeypatch):
     assert "220" in visto["system"]
 
 
+def test_hora_do_device_entra_no_system(tmp_path, monkeypatch):
+    visto = {}
+
+    def chat_espiao(cfg, system, mensagens):
+        visto["system"] = system
+        return "resp", 1, 1
+
+    client, _ = faz_client(tmp_path, monkeypatch, chat_fn=chat_espiao)
+    client.post("/claude/voz?lang=pt&t=2026-06-12T19:45",
+                content=b"\x00\x01" * 100, headers={"X-Device-Key": "k1"})
+    assert "2026-06-12T19:45" in visto["system"]
+    post(client)  # sem t (RTC sem hora): nada de relogio no system
+    assert "relógio" not in visto["system"]
+
+
 def test_web_search_entra_no_system_por_default(tmp_path, monkeypatch):
     visto = {}
 

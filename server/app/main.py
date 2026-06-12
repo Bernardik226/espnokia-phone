@@ -131,10 +131,10 @@ def create_app(copa_service=None, live_scores=None, device_keys=None,
 
     @app.post("/claude/voz", dependencies=[auth])
     async def claude_voz(request: Request, background_tasks: BackgroundTasks,
-                         lang: str = "pt"):
+                         lang: str = "pt", t: str = ""):
         corpo = await request.body()
         device = request.headers.get("x-device-key", "")
-        status, payload = voz.responder(device, corpo, lang)
+        status, payload = voz.responder(device, corpo, lang, t)
         if status == 200 and voz.memoria.precisa_resumo(device):
             background_tasks.add_task(resumir_seguro, voz.memoria,
                                       device, lang)
