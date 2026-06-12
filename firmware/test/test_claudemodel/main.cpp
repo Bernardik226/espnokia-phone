@@ -177,6 +177,28 @@ void test_bitspeech_deterministico_e_termina() {
   TEST_ASSERT_FALSE(bitspeech_next(s, 3, a, &p1));  // fim do texto
 }
 
+// ---- parse da resposta do server ----
+void test_voz_parse_extrai_falei_e_resposta() {
+  char falei[32], resp[64];
+  TEST_ASSERT_TRUE(voz_parse(
+      "{\"falei\":\"oi tudo bem\",\"resposta\":\"miau! to otimo\"}",
+      falei, sizeof(falei), resp, sizeof(resp)));
+  TEST_ASSERT_EQUAL_STRING("oi tudo bem", falei);
+  TEST_ASSERT_EQUAL_STRING("miau! to otimo", resp);
+}
+void test_voz_parse_falei_opcional() {
+  char resp[64];
+  TEST_ASSERT_TRUE(voz_parse("{\"resposta\":\"oi\"}", nullptr, 0,
+                             resp, sizeof(resp)));
+  TEST_ASSERT_EQUAL_STRING("oi", resp);
+}
+void test_voz_parse_rejeita_sem_resposta_ou_lixo() {
+  char resp[64];
+  TEST_ASSERT_FALSE(voz_parse("{\"erro\":\"sem chave\"}", nullptr, 0,
+                              resp, sizeof(resp)));
+  TEST_ASSERT_FALSE(voz_parse("nem json", nullptr, 0, resp, sizeof(resp)));
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_dias_civis_ancoras);
@@ -199,5 +221,8 @@ int main() {
   RUN_TEST(test_bitspeech_espaco_e_pontuacao_pausam);
   RUN_TEST(test_bitspeech_acento_vira_vogal_base);
   RUN_TEST(test_bitspeech_deterministico_e_termina);
+  RUN_TEST(test_voz_parse_extrai_falei_e_resposta);
+  RUN_TEST(test_voz_parse_falei_opcional);
+  RUN_TEST(test_voz_parse_rejeita_sem_resposta_ou_lixo);
   return UNITY_END();
 }
