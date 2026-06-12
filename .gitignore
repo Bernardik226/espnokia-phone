@@ -6,3 +6,6 @@ __pycache__/
 .venv/
 .env
 docs/superpowers/
+
+# env local (chaves de dev)
+server/.env.local
