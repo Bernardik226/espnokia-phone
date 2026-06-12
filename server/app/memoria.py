@@ -19,6 +19,26 @@ MAX_R_BYTES = 280   # resposta truncada no endpoint
 MAX_MEMORIA_CHARS = 1500
 MAX_TOKENS_RESUMO = 600
 
+PROMPT_RESUMO = (
+    "Minha memória atual:\n{memoria}\n\n"
+    "Conversas novas pra incorporar:\n{conversas}\n"
+    "Reescreva sua memória em primeira pessoa, no idioma {lang}, em até "
+    "1500 caracteres, markdown simples (use títulos e listas se ajudar), "
+    "guardando o que importa: fatos sobre quem fala com você, gostos, "
+    "piadas internas, o clima das conversas e suas percepções. Funda a "
+    "memória antiga com o novo sem perder o que ainda importa. Responda "
+    "SÓ com a memória nova."
+)
+
+
+def _chat_anthropic(cfg, system, mensagens):
+    import anthropic
+    cliente = anthropic.Anthropic(api_key=cfg["anthropic_api_key"])
+    r = cliente.messages.create(model=cfg["claude_model"],
+                                max_tokens=MAX_TOKENS_RESUMO,
+                                system=system, messages=mensagens)
+    return r.content[0].text
+
 
 class MemoriaService:
     def __init__(self, base_dir=None, chat_fn=None, now_fn=time.time):
@@ -38,9 +58,15 @@ class MemoriaService:
         if not arq.exists():
             return {"pares": [], "resumidos": 0}
         try:
-            return json.loads(arq.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            logging.warning("registro.json corrompido, recomeçando")
+            reg = json.loads(arq.read_text(encoding="utf-8"))
+            # valida a forma: deve ser dict com pares=lista e resumidos=int
+            if (not isinstance(reg, dict) or
+                not isinstance(reg.get("pares"), list) or
+                not isinstance(reg.get("resumidos"), int)):
+                raise ValueError("formato inválido")
+            return reg
+        except (json.JSONDecodeError, OSError, ValueError):
+            logging.warning("registro.json corrompido em %s, recomeçando", arq)
             return {"pares": [], "resumidos": 0}
 
     def _salva(self, device, reg):
@@ -54,4 +80,31 @@ class MemoriaService:
         reg["pares"].append({"ts": int(self.now_fn()), "q": q, "r": r})
         if len(reg["pares"]) > TETO:    # resumo vive falhando: não cresce
             reg["pares"] = reg["pares"][-TETO:]   # pra sempre
+        self._salva(device, reg)
+
+    def precisa_resumo(self, device):
+        return len(self._carrega(device)["pares"]) >= MAX_PARES
+
+    def memoria_texto(self, device):
+        arq = self._dir(device) / "memoria.md"
+        return arq.read_text(encoding="utf-8") if arq.exists() else ""
+
+    def resumir(self, device, lang, cfg):
+        reg = self._carrega(device)
+        antigos = reg["pares"][:VARRE]
+        if not antigos:
+            return
+        conversas = "".join(f"EU: {p['q']}\nVOCÊ: {p['r']}\n"
+                            for p in antigos)
+        user = PROMPT_RESUMO.format(
+            memoria=self.memoria_texto(device) or "(ainda vazia)",
+            conversas=conversas, lang=lang or "pt")
+        system = cfg["persona"] + (" Você vai atualizar suas memórias "
+                                   "das conversas.")
+        nova = (self.chat_fn or _chat_anthropic)(
+            cfg, system, [{"role": "user", "content": user}])
+        nova = nova[:MAX_MEMORIA_CHARS]
+        (self._dir(device) / "memoria.md").write_text(nova, encoding="utf-8")
+        reg["pares"] = reg["pares"][len(antigos):]
+        reg["resumidos"] += len(antigos)
         self._salva(device, reg)
