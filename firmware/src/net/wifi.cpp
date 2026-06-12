@@ -20,6 +20,7 @@ void init() {
     return;
   }
   WiFi.mode(WIFI_STA);
+  WiFi.setSleep(false);  // modem sleep custa ate segundos por requisicao
   WiFi.setAutoReconnect(false);  // backoff manual no tick
   WiFi.begin(ssid_, pass_);
 }
