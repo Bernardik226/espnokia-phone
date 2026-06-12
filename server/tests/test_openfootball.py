@@ -52,5 +52,6 @@ def test_ordenado_por_kickoff_com_epoch_utc():
 
 def test_todas_as_48_selecoes_tem_codigo():
     from app.teams import NAME_TO_CODE
-    assert len(NAME_TO_CODE) == 48
+    # 48 seleções; algumas têm grafia dupla (openfootball × fonte ao vivo)
+    assert len(set(NAME_TO_CODE.values())) == 48
     assert all(len(c) == 3 for c in NAME_TO_CODE.values())

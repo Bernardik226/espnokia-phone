@@ -1,4 +1,5 @@
-# Mapa nome (como aparece no openfootball 2026) → código FIFA.
+# Mapa nome → código FIFA. Cobre as grafias do openfootball 2026 E as da
+# fonte de placar ao vivo (worldcup26.ir), que diferem em alguns países.
 # Placeholders do mata-mata ("2A", "W101") não estão aqui de propósito:
 # code() devolve o nome como veio.
 NAME_TO_CODE = {
@@ -8,6 +9,7 @@ NAME_TO_CODE = {
     "Austria": "AUT",
     "Belgium": "BEL",
     "Bosnia & Herzegovina": "BIH",
+    "Bosnia and Herzegovina": "BIH",
     "Brazil": "BRA",
     "Canada": "CAN",
     "Cape Verde": "CPV",
@@ -16,6 +18,7 @@ NAME_TO_CODE = {
     "Curaçao": "CUW",
     "Czech Republic": "CZE",
     "DR Congo": "COD",
+    "Democratic Republic of the Congo": "COD",
     "Ecuador": "ECU",
     "Egypt": "EGY",
     "England": "ENG",
@@ -48,6 +51,7 @@ NAME_TO_CODE = {
     "Tunisia": "TUN",
     "Turkey": "TUR",
     "USA": "USA",
+    "United States": "USA",
     "Uruguay": "URU",
     "Uzbekistan": "UZB",
 }
