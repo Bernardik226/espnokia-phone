@@ -14,8 +14,8 @@ PERSONA = (
 DEFAULTS = {
     "anthropic_api_key": "",
     "claude_model": "claude-haiku-4-5-20251001",
-    "stt": "local",          # "api" reservado pra fase do dashboard (501)
-    "stt_api_key": "",
+    "stt": "local",          # ou "groq" (whisper na API da Groq, mais fiel)
+    "stt_api_key": "",       # chave da Groq quando stt = "groq"
     "persona": PERSONA,
     "max_resposta_chars": 220,
 }
@@ -32,6 +32,10 @@ def load() -> dict:
     if not arq.exists():
         cfg = dict(DEFAULTS)
         cfg["anthropic_api_key"] = os.environ.get("ANTHROPIC_API_KEY", "")
+        cfg["stt_api_key"] = os.environ.get("GROQ_API_KEY", "")
+        # com chave da Groq no env, ela vira o default (STT_BACKEND força)
+        cfg["stt"] = os.environ.get(
+            "STT_BACKEND", "groq" if cfg["stt_api_key"] else "local")
         arq.write_text(json.dumps(cfg, indent=2, ensure_ascii=False), encoding="utf-8")
         return cfg
     cfg = dict(DEFAULTS)

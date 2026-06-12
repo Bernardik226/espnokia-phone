@@ -1,10 +1,11 @@
 import logging
 import os
+import threading
 
 from fastapi import BackgroundTasks, Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from app import config
+from app import config, stt
 from app.auth import make_auth
 from app.claude_voz import VozService
 from app.copa import JANELA_S, CopaService
@@ -56,6 +57,11 @@ def create_app(copa_service=None, live_scores=None, device_keys=None,
         device_keys = os.environ.get("DEVICE_KEYS", "")
     if voz is None:
         voz = VozService()
+
+    # STT_PRELOAD=1 aquece o whisper local no boot em vez de na primeira
+    # fala (opt-in: backend groq e testes não pagam o download do modelo)
+    if os.environ.get("STT_PRELOAD") == "1" and config.load()["stt"] == "local":
+        threading.Thread(target=stt._carregar, daemon=True).start()
 
     app = FastAPI(title="espnokia server", docs_url=None, redoc_url=None)
     auth = Depends(make_auth(device_keys))
