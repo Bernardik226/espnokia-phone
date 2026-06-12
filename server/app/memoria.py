@@ -23,7 +23,7 @@ PROMPT_RESUMO = (
     "Minha memória atual:\n{memoria}\n\n"
     "Conversas novas pra incorporar:\n{conversas}\n"
     "Reescreva sua memória em primeira pessoa, no idioma {lang}, em até "
-    "1500 caracteres, markdown simples (use títulos e listas se ajudar), "
+    "{max_chars} caracteres, markdown simples (use títulos e listas se ajudar), "
     "guardando o que importa: fatos sobre quem fala com você, gostos, "
     "piadas internas, o clima das conversas e suas percepções. Funda a "
     "memória antiga com o novo sem perder o que ainda importa. Responda "
@@ -98,13 +98,22 @@ class MemoriaService:
                             for p in antigos)
         user = PROMPT_RESUMO.format(
             memoria=self.memoria_texto(device) or "(ainda vazia)",
-            conversas=conversas, lang=lang or "pt")
+            conversas=conversas, lang=lang or "pt",
+            max_chars=MAX_MEMORIA_CHARS)
         system = cfg["persona"] + (" Você vai atualizar suas memórias "
                                    "das conversas.")
         nova = (self.chat_fn or _chat_anthropic)(
             cfg, system, [{"role": "user", "content": user}])
         nova = nova[:MAX_MEMORIA_CHARS]
-        (self._dir(device) / "memoria.md").write_text(nova, encoding="utf-8")
-        reg["pares"] = reg["pares"][len(antigos):]
+        arq = self._dir(device) / "memoria.md"
+        tmp = arq.with_suffix(".tmp")   # escrita atômica
+        tmp.write_text(nova, encoding="utf-8")
+        os.replace(tmp, arq)
+        # recarrega antes de varrer: um grava_par pode ter chegado
+        # enquanto a API pensava (resumo roda em background)
+        vistos = {(p["ts"], p["q"]) for p in antigos}
+        reg = self._carrega(device)
+        reg["pares"] = [p for p in reg["pares"]
+                        if (p["ts"], p["q"]) not in vistos]
         reg["resumidos"] += len(antigos)
         self._salva(device, reg)
