@@ -20,10 +20,19 @@ PRECO_OUT = 5.00 / 1_000_000
 def _chat_anthropic(cfg, system, mensagens):
     import anthropic
     cliente = anthropic.Anthropic(api_key=cfg["anthropic_api_key"])
+    tools = []
+    if cfg.get("web_search", True):
+        # busca server-side da API: no maximo 1 por fala (~US$0,01 quando
+        # o Claude decide usar; perguntas comuns nao buscam e nao pagam)
+        tools = [{"type": "web_search_20250305", "name": "web_search",
+                  "max_uses": 1}]
     r = cliente.messages.create(model=cfg["claude_model"],
                                 max_tokens=MAX_TOKENS,
-                                system=system, messages=mensagens)
-    return r.content[0].text, r.usage.input_tokens, r.usage.output_tokens
+                                system=system, messages=mensagens,
+                                tools=tools)
+    # com busca, o content mistura blocos de tool use: o texto e o que vale
+    texto = "".join(b.text for b in r.content if b.type == "text").strip()
+    return texto, r.usage.input_tokens, r.usage.output_tokens
 
 
 class VozService:
@@ -52,6 +61,10 @@ class VozService:
         system = (f"{cfg['persona']} Responda em ate "
                   f"{cfg['max_resposta_chars']} caracteres, no idioma "
                   f"{lang or 'pt'}, sem markdown.")
+        if cfg.get("web_search", True):
+            system += (" Você pode buscar na internet quando precisar de "
+                       "informação atual; responda só o fato, sem citar "
+                       "links nem fontes.")
         mem = self.memoria.memoria_texto(device)
         if mem:
             system += f"\n\nSuas memórias das conversas passadas:\n{mem}"

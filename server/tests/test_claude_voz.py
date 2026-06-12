@@ -116,6 +116,34 @@ def test_lang_entra_no_system_prompt(tmp_path, monkeypatch):
     assert "220" in visto["system"]
 
 
+def test_web_search_entra_no_system_por_default(tmp_path, monkeypatch):
+    visto = {}
+
+    def chat_espiao(cfg, system, mensagens):
+        visto["system"] = system
+        return "resp", 1, 1
+
+    client, _ = faz_client(tmp_path, monkeypatch, chat_fn=chat_espiao)
+    post(client)
+    assert "buscar na internet" in visto["system"]
+
+
+def test_web_search_desligado_sai_do_system(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    cfg = dict(config.DEFAULTS)
+    cfg["web_search"] = False
+    (tmp_path / "config.json").write_text(json.dumps(cfg))
+    visto = {}
+
+    def chat_espiao(cfg, system, mensagens):
+        visto["system"] = system
+        return "resp", 1, 1
+
+    client, _ = faz_client(tmp_path, monkeypatch, chat_fn=chat_espiao)
+    post(client)
+    assert "buscar na internet" not in visto["system"]
+
+
 def test_uso_jsonl_appendado(tmp_path, monkeypatch):
     client, _ = faz_client(tmp_path, monkeypatch)
     post(client)
