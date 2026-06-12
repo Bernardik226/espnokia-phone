@@ -52,4 +52,10 @@ struct Tom {
 // caractere (pula UTF-8 inteiro). false = fim do texto.
 bool bitspeech_next(const char* texto, size_t pos, Tom& t, size_t* prox);
 
+// ---- resposta do server: {"falei": "...", "resposta": "..."} ----
+// falei pode ser nullptr (so interessa a resposta). false = JSON invalido
+// ou sem "resposta".
+bool voz_parse(const char* json, char* falei, size_t falei_len,
+               char* resposta, size_t resp_len);
+
 }  // namespace claude

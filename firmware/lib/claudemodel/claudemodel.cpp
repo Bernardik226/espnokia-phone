@@ -1,5 +1,7 @@
 #include "claudemodel.h"
+#include <stdio.h>
 #include <string.h>
+#include <ArduinoJson.h>
 
 namespace claude {
 
@@ -155,6 +157,20 @@ bool bitspeech_next(const char* texto, size_t pos, Tom& t, size_t* prox) {
   } else {
     t.freq = 0;                                 // espaco/pontuacao: respiro
     t.dur_ms = 70;
+  }
+  return true;
+}
+
+bool voz_parse(const char* json, char* falei, size_t falei_len,
+               char* resposta, size_t resp_len) {
+  JsonDocument doc;
+  if (deserializeJson(doc, json)) return false;
+  const char* r = doc["resposta"];
+  if (!r || !r[0]) return false;
+  snprintf(resposta, resp_len, "%s", r);
+  if (falei && falei_len) {
+    const char* f = doc["falei"];
+    snprintf(falei, falei_len, "%s", f ? f : "");
   }
   return true;
 }
