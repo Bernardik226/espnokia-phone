@@ -135,6 +135,53 @@ def test_resumir_corta_no_limite(tmp_path):
     assert len(m.memoria_texto("k1")) == 1500
 
 
+def test_pares_pagina_mais_recente_primeiro(tmp_path):
+    m = svc(tmp_path)
+    enche(m, "k1", 14)                  # 14 pares -> 3 páginas (6+6+2)
+    p0 = m.pares("k1", 0)
+    assert p0["total"] == 14 and p0["pags"] == 3 and p0["pag"] == 0
+    assert p0["itens"][0]["q"] == "pergunta 13"   # mais recente primeiro
+    assert len(p0["itens"]) == 6
+    p2 = m.pares("k1", 2)
+    assert len(p2["itens"]) == 2
+    assert p2["itens"][-1]["q"] == "pergunta 0"   # o mais antigo no fim
+
+
+def test_pares_vazio(tmp_path):
+    assert svc(tmp_path).pares("k1", 0) == {
+        "total": 0, "pags": 0, "pag": 0, "itens": []}
+
+
+def test_pares_trunca_em_bytes_sem_quebrar_utf8(tmp_path):
+    m = svc(tmp_path)
+    m.grava_par("k1", "é" * 200, "ã" * 300)   # 2 bytes por char
+    it = m.pares("k1", 0)["itens"][0]
+    assert it["q"].endswith("…")
+    assert len(it["q"].encode("utf-8")) <= 160
+    assert len(it["r"].encode("utf-8")) <= 280
+    it["q"].encode("utf-8").decode("utf-8")   # não quebrou multibyte
+
+
+def test_memoria_payload(tmp_path):
+    m = svc(tmp_path, chat_fn=lambda *a: "lembro de tudo")
+    assert m.memoria("k1") == {"memoria": "", "resumidos": 0, "ts": 0}
+    enche(m, "k1", MAX_PARES)
+    m.resumir("k1", "pt", CFG_FAKE)
+    pay = m.memoria("k1")
+    assert pay["memoria"] == "lembro de tudo"
+    assert pay["resumidos"] == VARRE
+    assert pay["ts"] > 0
+
+
+def test_recentes_em_formato_de_mensagens(tmp_path):
+    m = svc(tmp_path)
+    enche(m, "k1", 8)
+    msgs = m.recentes("k1", n=6)
+    assert len(msgs) == 12
+    assert msgs[0] == {"role": "user", "content": "pergunta 2"}
+    assert msgs[-1] == {"role": "assistant", "content": "resposta 7"}
+
+
 def test_registro_com_shape_errado_vira_vazio(tmp_path):
     m = svc(tmp_path)
     m.grava_par("k1", "a", "b")
