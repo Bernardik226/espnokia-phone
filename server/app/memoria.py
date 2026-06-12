@@ -31,6 +31,21 @@ PROMPT_RESUMO = (
 )
 
 
+def _corta_utf8(s: str, max_bytes: int) -> str:
+    """Trunca em bytes sem quebrar caractere UTF-8 (o ESP32 dimensiona
+    buffers em bytes)."""
+    b = s.encode("utf-8")
+    if len(b) <= max_bytes:
+        return s
+    corte = b[:max_bytes - 3]      # espaço pro "…" (3 bytes)
+    while corte:
+        try:                       # descarta o caractere partido no fim
+            return corte.decode("utf-8") + "…"
+        except UnicodeDecodeError:
+            corte = corte[:-1]
+    return "…"
+
+
 def _chat_anthropic(cfg, system, mensagens):
     import anthropic
     cliente = anthropic.Anthropic(api_key=cfg["anthropic_api_key"])
@@ -117,3 +132,28 @@ class MemoriaService:
                         if (p["ts"], p["q"]) not in vistos]
         reg["resumidos"] += len(antigos)
         self._salva(device, reg)
+
+    def pares(self, device, pag):
+        todos = list(reversed(self._carrega(device)["pares"]))
+        total = len(todos)
+        pags = (total + PARES_POR_PAG - 1) // PARES_POR_PAG
+        ini = pag * PARES_POR_PAG
+        itens = [{"q": _corta_utf8(p["q"], MAX_Q_BYTES),
+                  "r": _corta_utf8(p["r"], MAX_R_BYTES)}
+                 for p in todos[ini:ini + PARES_POR_PAG]]
+        return {"total": total, "pags": pags, "pag": pag, "itens": itens}
+
+    def memoria(self, device):
+        arq = self._dir(device) / "memoria.md"
+        if not arq.exists():
+            return {"memoria": "", "resumidos": 0, "ts": 0}
+        return {"memoria": arq.read_text(encoding="utf-8"),
+                "resumidos": self._carrega(device)["resumidos"],
+                "ts": int(arq.stat().st_mtime)}
+
+    def recentes(self, device, n=6):
+        msgs = []
+        for p in self._carrega(device)["pares"][-n:]:
+            msgs.append({"role": "user", "content": p["q"]})
+            msgs.append({"role": "assistant", "content": p["r"]})
+        return msgs
