@@ -488,3 +488,20 @@ name: icon_claude
 .............#......#.......
 .............#..............
 ............................
+
+// tela OUVINDO do app Claude: microfone classico — capsula, arco de
+// suporte, haste e base (as ondas de som sao drawCircle no codigo)
+name: icon_mic
+..#####..
+.#######.
+.#######.
+.#######.
+.#######.
+.#######.
+..#####..
+#.......#
+#.......#
+.#.....#.
+..#####..
+....#....
+..#####..

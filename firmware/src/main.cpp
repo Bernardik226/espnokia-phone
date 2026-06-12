@@ -57,11 +57,14 @@ void loop() {
 
   Button b; BtnEvent e;
   if (buttons::poll(now, b, e)) {
-    // tecla muda enquanto o mic grava: o bip vazaria pra gravacao
-    if (e == EV_PRESS && !mic::running()) sound::play(sound::SND_KEY);
     if (!goal_fx::input(b, e)) {                    // overlays engolem teclas
       if (!alarme::input(b, e)) shell.input(b, e);
     }
+    // bip de tecla so DEPOIS do input: a tecla que liga o mic (e qualquer
+    // outra durante a gravacao) fica muda. Bipar antes segurava um tom de
+    // 900 Hz ligado durante todo o handshake TLS do begin() — o tick que o
+    // desligaria nao roda enquanto o input bloqueia.
+    if (e == EV_PRESS && !mic::running()) sound::play(sound::SND_KEY);
   }
   shell.tick(now);
   buzzer::tick(now);

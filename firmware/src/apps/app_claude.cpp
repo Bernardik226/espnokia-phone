@@ -230,6 +230,17 @@ static void desenha_pet(U8G2& g, const unsigned char* face, int dx) {
 
 static void render_pet(U8G2& g, uint32_t now) {
   claude::Humor h = claude::humor(agora_min(), ultima_min_, hora_agora());
+  // emocao em doses: aparece por 10 s quando o humor muda e volta pro idle;
+  // re-aparece por 10 s a cada 45 s (sono nao e emocao — fica a noite toda)
+  static claude::Humor ult_h = claude::H_NEUTRO;
+  static uint32_t emo_t0 = 0;
+  if (h != ult_h) {
+    ult_h = h;
+    emo_t0 = now;
+  }
+  if ((h == claude::H_FELIZ || h == claude::H_CARENTE) &&
+      (now - emo_t0) % 45000 >= 10000)
+    h = claude::H_NEUTRO;
   bool pisca = (now % 4200) < 160;  // piscadela de vez em quando
   const unsigned char* face =
       (h == claude::H_DORMINDO || pisca) ? face_dormindo_bits
@@ -254,15 +265,21 @@ static void render_pet(U8G2& g, uint32_t now) {
 static void render_ouvindo(U8G2& g, uint32_t now) {
   desenha_pet(g, face_neutro_bits, 0);
   nokia_ui::text_bold(g, 2, 7, tr(STR_LISTENING));
-  // VU: barra cresce com o nivel medio da ultima leitura do mic
-  int h = nivel_ / 60;
-  if (h > 20) h = 20;
-  g.drawFrame(48, 18, 8, 22);
-  if (h) g.drawBox(49, 38 - h, 6, h + 1);
+  // mic ao lado do pet + ondas de som crescendo em 4 tempos (vazio, 1, 2, 3)
+  g.drawXBMP(47, 14, ICON_MIC_W, ICON_MIC_H, icon_mic_bits);
+  uint8_t f = (uint8_t)((now / 280) % 4);
+  for (uint8_t r = 1; r <= f; r++)
+    g.drawCircle(57, 17, r * 3, U8G2_DRAW_UPPER_RIGHT | U8G2_DRAW_LOWER_RIGHT);
+  // VU horizontal no lugar do softkey, com a altura da fonte do sistema
+  int w = nivel_ / 28;
+  if (w > 42) w = 42;
+  g.drawFrame(20, 41, 44, 7);
+  if (w) g.drawBox(21, 42, w, 5);
+  // contador de segundos no canto, como o relogio do standby
   char s[8];
   snprintf(s, sizeof(s), "%us", (unsigned)((now - grava_t0_) / 1000));
   g.setFont(u8g2_font_3310_small);
-  g.drawStr(62, 30, s);
+  g.drawStr(83 - g.getStrWidth(s), 7, s);
 }
 
 static void render_pensando(U8G2& g, uint32_t now) {
