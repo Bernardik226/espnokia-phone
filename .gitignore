@@ -9,3 +9,5 @@ docs/superpowers/
 
 # env local (chaves de dev)
 server/.env.local
+
+server/data/
