@@ -118,6 +118,10 @@ static const char* const kStr[STR_COUNT][LANG_COUNT] = {
                   "MIETIN"},
   /* SAY_AGAIN */ {"fala de novo?", "say that again?", "¿repites?",
                    "tu répètes?", "nochmal bitte?", "sano uudestaan?"},
+  /* LOG */ {"REGISTRO", "LOG", "REGISTRO", "JOURNAL", "PROTOKOLL", "LOKI"},
+  /* NO_TALKS */ {"SEM CONVERSAS", "NO TALKS YET", "SIN CHARLAS",
+                  "AUCUN MESSAGE", "KEINE GESPRACHE", "EI JUTTUJA"},
+  /* ME */ {"EU", "ME", "YO", "MOI", "ICH", "MINA"},
 };
 
 static const char* const kDay[LANG_COUNT][7] = {
