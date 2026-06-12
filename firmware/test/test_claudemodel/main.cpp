@@ -199,6 +199,45 @@ void test_voz_parse_rejeita_sem_resposta_ou_lixo() {
   TEST_ASSERT_FALSE(voz_parse("nem json", nullptr, 0, resp, sizeof(resp)));
 }
 
+// ---- registro_parse ----
+void test_registro_parse_pagina_cheia() {
+  const char* json =
+      "{\"total\":14,\"pags\":3,\"pag\":1,\"itens\":["
+      "{\"q\":\"vc gosta de bolo?\",\"r\":\"adoro! só nunca comi\"},"
+      "{\"q\":\"é?\",\"r\":\"moro num nokia, né\"}]}";
+  RegPar itens[6];
+  uint16_t total; uint8_t pags, pag;
+  uint8_t n = registro_parse(json, itens, 6, &total, &pags, &pag);
+  TEST_ASSERT_EQUAL_UINT8(2, n);
+  TEST_ASSERT_EQUAL_UINT16(14, total);
+  TEST_ASSERT_EQUAL_UINT8(3, pags);
+  TEST_ASSERT_EQUAL_UINT8(1, pag);
+  TEST_ASSERT_EQUAL_STRING("vc gosta de bolo?", itens[0].q);
+  TEST_ASSERT_EQUAL_STRING("adoro! só nunca comi", itens[0].r);
+  TEST_ASSERT_EQUAL_STRING("moro num nokia, né", itens[1].r);
+}
+void test_registro_parse_vazio_e_lixo() {
+  RegPar itens[6];
+  uint16_t total = 99; uint8_t pags = 9, pag = 9;
+  TEST_ASSERT_EQUAL_UINT8(0, registro_parse(
+      "{\"total\":0,\"pags\":0,\"pag\":0,\"itens\":[]}",
+      itens, 6, &total, &pags, &pag));
+  TEST_ASSERT_EQUAL_UINT16(0, total);
+  TEST_ASSERT_EQUAL_UINT8(0, registro_parse("{trunca", itens, 6, &total,
+                                            &pags, &pag));
+  TEST_ASSERT_EQUAL_UINT16(0, total);   // lixo zera, não herda valor velho
+}
+void test_registro_parse_respeita_max() {
+  const char* json =
+      "{\"total\":3,\"pags\":1,\"pag\":0,\"itens\":["
+      "{\"q\":\"a\",\"r\":\"b\"},{\"q\":\"c\",\"r\":\"d\"},"
+      "{\"q\":\"e\",\"r\":\"f\"}]}";
+  RegPar itens[2];
+  uint16_t total; uint8_t pags, pag;
+  TEST_ASSERT_EQUAL_UINT8(2, registro_parse(json, itens, 2, &total,
+                                            &pags, &pag));
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_dias_civis_ancoras);
@@ -224,5 +263,8 @@ int main() {
   RUN_TEST(test_voz_parse_extrai_falei_e_resposta);
   RUN_TEST(test_voz_parse_falei_opcional);
   RUN_TEST(test_voz_parse_rejeita_sem_resposta_ou_lixo);
+  RUN_TEST(test_registro_parse_pagina_cheia);
+  RUN_TEST(test_registro_parse_vazio_e_lixo);
+  RUN_TEST(test_registro_parse_respeita_max);
   return UNITY_END();
 }

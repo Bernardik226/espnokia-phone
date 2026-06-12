@@ -58,4 +58,14 @@ bool bitspeech_next(const char* texto, size_t pos, Tom& t, size_t* prox);
 bool voz_parse(const char* json, char* falei, size_t falei_len,
                char* resposta, size_t resp_len);
 
+// ---- registro de conversa: GET /claude/registro paginado ----
+struct RegPar {
+  char q[164];   // MAX_Q_BYTES do server + nul (a "pergunta" da pessoa)
+  char r[284];   // MAX_R_BYTES do server + nul (a resposta do Clawd)
+};
+// devolve quantos itens leu (0 em JSON invalido); total/pags/pag por
+// referencia (zerados em lixo, pra nao herdar valor velho)
+uint8_t registro_parse(const char* json, RegPar* itens, uint8_t max,
+                       uint16_t* total, uint8_t* pags, uint8_t* pag);
+
 }  // namespace claude

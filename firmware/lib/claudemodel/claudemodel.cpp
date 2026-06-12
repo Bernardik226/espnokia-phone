@@ -175,4 +175,22 @@ bool voz_parse(const char* json, char* falei, size_t falei_len,
   return true;
 }
 
+uint8_t registro_parse(const char* json, RegPar* itens, uint8_t max,
+                       uint16_t* total, uint8_t* pags, uint8_t* pag) {
+  *total = 0; *pags = 0; *pag = 0;
+  JsonDocument doc;
+  if (deserializeJson(doc, json)) return 0;
+  *total = doc["total"] | 0;
+  *pags = doc["pags"] | 0;
+  *pag = doc["pag"] | 0;
+  uint8_t n = 0;
+  for (JsonObject it : doc["itens"].as<JsonArray>()) {
+    if (n >= max) break;
+    snprintf(itens[n].q, sizeof(itens[n].q), "%s", (const char*)(it["q"] | ""));
+    snprintf(itens[n].r, sizeof(itens[n].r), "%s", (const char*)(it["r"] | ""));
+    n++;
+  }
+  return n;
+}
+
 }  // namespace claude
