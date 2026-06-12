@@ -1,12 +1,13 @@
 """Voz do bichinho: PCM16 cru no corpo → faster-whisper → Claude → JSON
-{"falei","resposta"}. Histórico por device fica em RAM (deque de 6 pares):
-reiniciou o server, o pet esqueceu — bom o bastante pra um tamagotchi."""
+{"falei","resposta"}. Histórico por device persiste em DATA_DIR/claw/ via
+MemoriaService: o pet lembra das últimas conversas e carrega a memória
+resumida no system — reiniciou o server, ele continua o papo."""
 import json
 import logging
 import time
-from collections import deque
 
 from app import config, stt
+from app.memoria import MemoriaService
 
 MAX_CORPO = 500 * 1024          # ~15,6 s de PCM16 16 kHz
 MAX_TOKENS = 300
@@ -26,11 +27,12 @@ def _chat_anthropic(cfg, system, mensagens):
 
 
 class VozService:
-    def __init__(self, stt_fn=None, chat_fn=None, now_fn=time.time):
+    def __init__(self, stt_fn=None, chat_fn=None, now_fn=time.time,
+                 memoria=None):
         self.stt_fn = stt_fn or stt.transcrever
         self.chat_fn = chat_fn          # None = Anthropic de verdade
         self.now_fn = now_fn
-        self.historico = {}             # device -> deque (6 pares user/assistant)
+        self.memoria = memoria or MemoriaService(now_fn=now_fn)
 
     def responder(self, device: str, corpo: bytes, lang: str):
         if len(corpo) > MAX_CORPO:
@@ -44,19 +46,21 @@ class VozService:
             return 422, {"erro": "nao entendi"}
         if self.chat_fn is None and not cfg.get("anthropic_api_key"):
             return 502, {"erro": "sem chave anthropic no config"}
-        hist = self.historico.setdefault(device, deque(maxlen=12))
         system = (f"{cfg['persona']} Responda em ate "
                   f"{cfg['max_resposta_chars']} caracteres, no idioma "
                   f"{lang or 'pt'}, sem markdown.")
-        mensagens = list(hist) + [{"role": "user", "content": falei}]
+        mem = self.memoria.memoria_texto(device)
+        if mem:
+            system += f"\n\nSuas memórias das conversas passadas:\n{mem}"
+        mensagens = (self.memoria.recentes(device) +
+                     [{"role": "user", "content": falei}])
         try:
             resposta, t_in, t_out = (self.chat_fn or _chat_anthropic)(
                 cfg, system, mensagens)
         except Exception:
             logging.exception("claude api falhou")
             return 502, {"erro": "sem resposta do claude"}
-        hist.append({"role": "user", "content": falei})
-        hist.append({"role": "assistant", "content": resposta})
+        self.memoria.grava_par(device, falei, resposta)
         try:
             self._loga_uso(device, t_in, t_out)
         except OSError:
