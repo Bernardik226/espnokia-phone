@@ -167,8 +167,13 @@ static bool input(Button b, BtnEvent e) {
       }
       static const char* kLang[LANG_COUNT] = {"pt", "en", "es",
                                               "fr", "de", "fi"};
-      char path[28];
-      snprintf(path, sizeof(path), "/claude/voz?lang=%s", kLang[i18n_lang()]);
+      char path[64];
+      size_t pn = snprintf(path, sizeof(path), "/claude/voz?lang=%s",
+                           kLang[i18n_lang()]);
+      rtc::DateTime dt;  // hora local do RTC: o Claw'd sabe que horas sao
+      if (rtc::now(dt))
+        snprintf(path + pn, sizeof(path) - pn, "&t=%04u-%02u-%02uT%02u:%02u",
+                 dt.year, dt.month, dt.day, dt.hour, dt.min);
       if (!voicecli::begin(path)) {
         mostra_aviso(STR_NO_RESPONSE, now);
         return true;
