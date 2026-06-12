@@ -4,6 +4,7 @@
 #include <string.h>
 #include "copamodel.h"
 #include "drivers/buzzer.h"
+#include "drivers/mic.h"
 #include "drivers/rtc.h"
 #include "net/http.h"
 #include "net/wifi.h"
@@ -91,6 +92,8 @@ void tick(uint32_t now) {
   if (delta < 0) return;  // nem comecou (o aviso de inicio e do alarme)
   if (delta > kJanelaMin) { disarm(); return; }
   if (buzzer::busy()) { next_ = now + 200; return; }  // GET seguraria o bip
+  // gravando voz: GET bloqueante derrubaria amostras do I2S
+  if (mic::running()) { next_ = now + 200; return; }
   if (http::get_json(path_, buf_, sizeof(buf_)) != 200) return;
   uint8_t n = copa_parse(buf_, jogos_, 8, nullptr);
   for (uint8_t i = 0; i < n; i++) {

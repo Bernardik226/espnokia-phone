@@ -12,4 +12,5 @@ void start();                           // limpa o DMA e comeca a ouvir
 size_t read(int16_t* buf, size_t max);  // amostras copiadas (0 = nada ainda;
                                         // max e limitado a 256 por chamada)
 void stop();
+bool running();  // captura ativa? (outros modulos adiam trabalho bloqueante)
 }  // namespace mic
