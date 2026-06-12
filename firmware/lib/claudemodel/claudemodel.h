@@ -37,4 +37,10 @@ bool maquina_evento(Maquina& m, Evento ev, uint32_t now_ms);  // true = mudou
 // nao retornar (timeout do client cobre isso).
 bool maquina_tick(Maquina& m, uint32_t now_ms);               // timeouts
 
+// ---- paginacao: quebra em palavras, colunas em caracteres UTF-8 ----
+uint16_t linhas_total(const char* texto, uint8_t cols);
+// copia a linha n (0-based) pra out; false se a linha nao existe
+bool linha_texto(const char* texto, uint16_t n, uint8_t cols,
+                 char* out, size_t out_len);
+
 }  // namespace claude

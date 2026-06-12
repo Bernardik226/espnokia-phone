@@ -92,6 +92,46 @@ void test_maquina_ignora_evento_fora_de_hora() {
   TEST_ASSERT_FALSE(maquina_tick(m, 999999));  // PET nao estoura nada
 }
 
+// ---- paginacao ----
+void test_linhas_quebram_no_espaco() {
+  // cols=9: "um dois t" estoura -> quebra no espaco
+  TEST_ASSERT_EQUAL_UINT16(3, linhas_total("um dois tres quatro", 9));
+  char l[32];
+  TEST_ASSERT_TRUE(linha_texto("um dois tres quatro", 0, 9, l, sizeof(l)));
+  TEST_ASSERT_EQUAL_STRING("um dois", l);
+  TEST_ASSERT_TRUE(linha_texto("um dois tres quatro", 1, 9, l, sizeof(l)));
+  TEST_ASSERT_EQUAL_STRING("tres", l);
+  TEST_ASSERT_TRUE(linha_texto("um dois tres quatro", 2, 9, l, sizeof(l)));
+  TEST_ASSERT_EQUAL_STRING("quatro", l);
+}
+void test_acento_conta_uma_coluna() {
+  // "não é" = n a~ o _ e' = 5 colunas (7 bytes)
+  TEST_ASSERT_EQUAL_UINT16(1, linhas_total("n\xc3\xa3o \xc3\xa9", 5));
+  char l[16];
+  TEST_ASSERT_TRUE(linha_texto("n\xc3\xa3o \xc3\xa9", 0, 5, l, sizeof(l)));
+  TEST_ASSERT_EQUAL_STRING("n\xc3\xa3o \xc3\xa9", l);
+}
+void test_palavrao_corta_seco() {
+  TEST_ASSERT_EQUAL_UINT16(2, linhas_total("abcdefgh", 4));
+  char l[8];
+  TEST_ASSERT_TRUE(linha_texto("abcdefgh", 1, 4, l, sizeof(l)));
+  TEST_ASSERT_EQUAL_STRING("efgh", l);
+}
+void test_quebra_de_linha_explicita() {
+  TEST_ASSERT_EQUAL_UINT16(2, linhas_total("oi\ntudo", 10));
+  char l[8];
+  TEST_ASSERT_TRUE(linha_texto("oi\ntudo", 0, 10, l, sizeof(l)));
+  TEST_ASSERT_EQUAL_STRING("oi", l);
+  TEST_ASSERT_TRUE(linha_texto("oi\ntudo", 1, 10, l, sizeof(l)));
+  TEST_ASSERT_EQUAL_STRING("tudo", l);
+}
+void test_linha_fora_do_range_e_vazio() {
+  char l[8];
+  TEST_ASSERT_FALSE(linha_texto("oi", 1, 10, l, sizeof(l)));
+  TEST_ASSERT_EQUAL_UINT16(0, linhas_total("", 10));
+  TEST_ASSERT_FALSE(linha_texto("", 0, 10, l, sizeof(l)));
+}
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_dias_civis_ancoras);
@@ -105,5 +145,10 @@ int main() {
   RUN_TEST(test_maquina_estoura_15s_ouvindo);
   RUN_TEST(test_maquina_estoura_60s_falando);
   RUN_TEST(test_maquina_ignora_evento_fora_de_hora);
+  RUN_TEST(test_linhas_quebram_no_espaco);
+  RUN_TEST(test_acento_conta_uma_coluna);
+  RUN_TEST(test_palavrao_corta_seco);
+  RUN_TEST(test_quebra_de_linha_explicita);
+  RUN_TEST(test_linha_fora_do_range_e_vazio);
   return UNITY_END();
 }
