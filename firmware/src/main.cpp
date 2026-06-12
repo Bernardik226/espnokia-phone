@@ -8,6 +8,7 @@
 #include "drivers/backlight.h"
 #include "drivers/buzzer.h"
 #include "drivers/buttons.h"
+#include "drivers/mic.h"
 #include "drivers/rtc.h"
 #include "net/wifi.h"
 #include "net/ntp.h"
@@ -56,7 +57,8 @@ void loop() {
 
   Button b; BtnEvent e;
   if (buttons::poll(now, b, e)) {
-    if (e == EV_PRESS) sound::play(sound::SND_KEY);
+    // tecla muda enquanto o mic grava: o bip vazaria pra gravacao
+    if (e == EV_PRESS && !mic::running()) sound::play(sound::SND_KEY);
     if (!goal_fx::input(b, e)) {                    // overlays engolem teclas
       if (!alarme::input(b, e)) shell.input(b, e);
     }
