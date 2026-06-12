@@ -1,8 +1,10 @@
 import os
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
+from fastapi.responses import JSONResponse
 
 from app.auth import make_auth
+from app.claude_voz import VozService
 from app.copa import JANELA_S, CopaService
 from app.fetcher import CachedFetcher
 from app.futebol import LIGAS, FutebolService
@@ -33,7 +35,7 @@ def fonte_futebol():
 
 
 def create_app(copa_service=None, live_scores=None, device_keys=None,
-               futebol=None) -> FastAPI:
+               futebol=None, voz=None) -> FastAPI:
     if copa_service is None:
         copa_service = CopaService(CachedFetcher(openfootball.URL, TTL_TABELA_S))
     if live_scores is None:
@@ -42,6 +44,8 @@ def create_app(copa_service=None, live_scores=None, device_keys=None,
         futebol = fonte_futebol()
     if device_keys is None:
         device_keys = os.environ.get("DEVICE_KEYS", "")
+    if voz is None:
+        voz = VozService()
 
     app = FastAPI(title="espnokia server", docs_url=None, redoc_url=None)
     auth = Depends(make_auth(device_keys))
@@ -108,6 +112,13 @@ def create_app(copa_service=None, live_scores=None, device_keys=None,
     @app.get("/futebol/live", dependencies=[auth])
     def futebol_live(liga: str):
         return fut_payload(futebol.live(liga), nomes_ligas.get(liga, ""))
+
+    @app.post("/claude/voz", dependencies=[auth])
+    async def claude_voz(request: Request, lang: str = "pt"):
+        corpo = await request.body()
+        device = request.headers.get("x-device-key", "")
+        status, payload = voz.responder(device, corpo, lang)
+        return JSONResponse(payload, status_code=status)
 
     return app
 
