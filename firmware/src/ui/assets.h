@@ -277,3 +277,24 @@ static const unsigned char icon_mic_bits[] U8X8_PROGMEM = {
     0x7c, 0x00, 0x01, 0x01, 0x01, 0x01, 0x82, 0x00, 0x7c, 0x00, 0x10, 0x00,
     0x7c, 0x00,
 };
+
+// mini mic pro softkey do pet (capsula, arco, haste e base)
+#define MINI_MIC_W 5
+#define MINI_MIC_H 7
+static const unsigned char mini_mic_bits[] U8X8_PROGMEM = {
+    0x0e, 0x0e, 0x0e, 0x11, 0x0e, 0x04, 0x0e,
+};
+
+// mini relogio do registro de conversa (ponteiros nas 3h)
+#define MINI_CLOCK_W 5
+#define MINI_CLOCK_H 5
+static const unsigned char mini_clock_bits[] U8X8_PROGMEM = {
+    0x0e, 0x15, 0x1d, 0x11, 0x0e,
+};
+
+// setinha pra baixo: lembra que o registro abre no pra-baixo
+#define MINI_DOWN_W 5
+#define MINI_DOWN_H 5
+static const unsigned char mini_down_bits[] U8X8_PROGMEM = {
+    0x04, 0x04, 0x1f, 0x0e, 0x04,
+};

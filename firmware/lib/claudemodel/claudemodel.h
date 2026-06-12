@@ -62,6 +62,8 @@ bool voz_parse(const char* json, char* falei, size_t falei_len,
 struct RegPar {
   char q[164];   // MAX_Q_BYTES do server + nul (a "pergunta" da pessoa)
   char r[284];   // MAX_R_BYTES do server + nul (a resposta do Clawd)
+  char d[6];     // data "dd/mm" pronta do server
+  char h[6];     // hora "hh:mm" pronta do server
 };
 // devolve quantos itens leu (0 em JSON invalido); total/pags/pag por
 // referencia (zerados em lixo, pra nao herdar valor velho)

@@ -188,6 +188,8 @@ uint8_t registro_parse(const char* json, RegPar* itens, uint8_t max,
     if (n >= max) break;
     snprintf(itens[n].q, sizeof(itens[n].q), "%s", (const char*)(it["q"] | ""));
     snprintf(itens[n].r, sizeof(itens[n].r), "%s", (const char*)(it["r"] | ""));
+    snprintf(itens[n].d, sizeof(itens[n].d), "%s", (const char*)(it["d"] | ""));
+    snprintf(itens[n].h, sizeof(itens[n].h), "%s", (const char*)(it["h"] | ""));
     n++;
   }
   return n;

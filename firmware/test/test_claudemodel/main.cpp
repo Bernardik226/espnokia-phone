@@ -204,7 +204,8 @@ void test_voz_parse_rejeita_sem_resposta_ou_lixo() {
 void test_registro_parse_pagina_cheia() {
   const char* json =
       "{\"total\":14,\"pags\":3,\"pag\":1,\"itens\":["
-      "{\"q\":\"vc gosta de bolo?\",\"r\":\"adoro! só nunca comi\"},"
+      "{\"q\":\"vc gosta de bolo?\",\"r\":\"adoro! só nunca comi\","
+      "\"d\":\"12/06\",\"h\":\"14:32\"},"
       "{\"q\":\"é?\",\"r\":\"moro num nokia, né\"}]}";
   RegPar itens[6];
   uint16_t total; uint8_t pags, pag;
@@ -215,7 +216,10 @@ void test_registro_parse_pagina_cheia() {
   TEST_ASSERT_EQUAL_UINT8(1, pag);
   TEST_ASSERT_EQUAL_STRING("vc gosta de bolo?", itens[0].q);
   TEST_ASSERT_EQUAL_STRING("adoro! só nunca comi", itens[0].r);
+  TEST_ASSERT_EQUAL_STRING("12/06", itens[0].d);
+  TEST_ASSERT_EQUAL_STRING("14:32", itens[0].h);
   TEST_ASSERT_EQUAL_STRING("moro num nokia, né", itens[1].r);
+  TEST_ASSERT_EQUAL_STRING("", itens[1].d);   // sem d/h: vazio, sem lixo
 }
 void test_registro_parse_vazio_e_lixo() {
   RegPar itens[6];
