@@ -151,6 +151,14 @@ def test_pares_pagina_mais_recente_primeiro(tmp_path):
     assert p2["itens"][-1]["q"] == "pergunta 0"   # o mais antigo no fim
 
 
+def test_pares_tem_data_e_hora(tmp_path):
+    m = svc(tmp_path)
+    m.grava_par("k1", "oi", "olá")
+    it = m.pares("k1", 0)["itens"][0]
+    assert len(it["d"]) == 5 and it["d"][2] == "/"   # dd/mm
+    assert len(it["h"]) == 5 and it["h"][2] == ":"   # hh:mm
+
+
 def test_pares_vazio(tmp_path):
     assert svc(tmp_path).pares("k1", 0) == {
         "total": 0, "pags": 0, "pag": 0, "itens": []}

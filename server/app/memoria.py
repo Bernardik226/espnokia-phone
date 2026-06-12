@@ -138,8 +138,11 @@ class MemoriaService:
         total = len(todos)
         pags = (total + PARES_POR_PAG - 1) // PARES_POR_PAG
         ini = pag * PARES_POR_PAG
+        # d/h prontos pro display (fuso = TZ do ambiente do server)
         itens = [{"q": _corta_utf8(p["q"], MAX_Q_BYTES),
-                  "r": _corta_utf8(p["r"], MAX_R_BYTES)}
+                  "r": _corta_utf8(p["r"], MAX_R_BYTES),
+                  "d": time.strftime("%d/%m", time.localtime(p["ts"])),
+                  "h": time.strftime("%H:%M", time.localtime(p["ts"]))}
                  for p in todos[ini:ini + PARES_POR_PAG]]
         return {"total": total, "pags": pags, "pag": pag, "itens": itens}
 
