@@ -43,4 +43,13 @@ uint16_t linhas_total(const char* texto, uint8_t cols);
 bool linha_texto(const char* texto, uint16_t n, uint8_t cols,
                  char* out, size_t out_len);
 
+// ---- bitspeech: um chirp por caractere, deterministico ----
+struct Tom {
+  uint16_t freq;    // Hz; 0 = pausa (respiro)
+  uint16_t dur_ms;
+};
+// Tom do caractere em texto[pos]; *prox recebe a posicao do proximo
+// caractere (pula UTF-8 inteiro). false = fim do texto.
+bool bitspeech_next(const char* texto, size_t pos, Tom& t, size_t* prox);
+
 }  // namespace claude
