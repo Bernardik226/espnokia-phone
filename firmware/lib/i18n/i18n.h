@@ -40,7 +40,7 @@ enum StrId : uint8_t {
   // app claude
   STR_APP_CLAUDE, STR_TALK, STR_LISTENING, STR_THINKING, STR_SAY_AGAIN,
   // registro de conversa do claude
-  STR_LOG, STR_NO_TALKS, STR_ME,
+  STR_NO_TALKS, STR_ME,
   STR_COUNT
 };
 

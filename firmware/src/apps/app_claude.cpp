@@ -35,9 +35,10 @@ static uint32_t pausa_ate_ = 0;   // respiro do bitspeech (freq 0)
 static bool fala_viva_ = false;   // typewriter rodando (so na 1a passada)
 static uint8_t pag_ = 0;
 
-// ---- registro de conversa (fluxo do server, paginado) ----
+// ---- registro de conversa (lista de registros -> leitura do par) ----
 enum RegFetch : uint8_t { REG_PENDING, REG_OK, REG_ERR, REG_NONET };
 static bool registro_ = false;
+static bool reg_lendo_ = false;       // false = lista, true = leitura
 static RegFetch reg_fetch_ = REG_OK;
 static uint32_t reg_fetch_ms_ = 0;
 static char reg_buf_[4096];           // pagina de 6 pares (~2,6 KB no pior)
@@ -45,12 +46,13 @@ static claude::RegPar reg_itens_[6];
 static uint8_t reg_n_ = 0;
 static uint16_t reg_total_ = 0;
 static uint8_t reg_pags_ = 0, reg_pag_ = 0, reg_alvo_ = 0;
-static uint16_t reg_linha_ = 0, reg_nlinhas_ = 0;
-static bool reg_no_fim_ = false;      // subiu de pagina: entra pelo fim
+static uint8_t reg_sel_ = 0;          // registro selecionado na lista
+static bool reg_sel_fim_ = false;     // subiu de pagina: seleciona o ultimo
+static uint16_t reg_linha_ = 0, reg_nlinhas_ = 0;  // rolagem da leitura
 
-static void reg_pede_pagina(uint8_t pag, bool no_fim) {
+static void reg_pede_pagina(uint8_t pag, bool sel_fim) {
   reg_alvo_ = pag;
-  reg_no_fim_ = no_fim;
+  reg_sel_fim_ = sel_fim;
   reg_fetch_ = wifi::connected() ? REG_PENDING : REG_NONET;
   reg_fetch_ms_ = millis();
 }
@@ -124,15 +126,31 @@ static bool input(Button b, BtnEvent e) {
   uint32_t now = millis();
   if (registro_) {  // a tela de registro engole tudo menos o C
     if (e != EV_PRESS) return true;
+    if (reg_fetch_ != REG_OK) {  // buscando/erro: so C sai
+      if (b == BTN_C) registro_ = false;
+      return true;
+    }
+    if (reg_lendo_) {  // leitura do par: rola linha a linha, C volta a lista
+      if (b == BTN_C) { reg_lendo_ = false; return true; }
+      if (b == BTN_DOWN && reg_linha_ + 4 < reg_nlinhas_) reg_linha_++;
+      if (b == BTN_UP && reg_linha_ > 0) reg_linha_--;
+      return true;
+    }
     if (b == BTN_C) { registro_ = false; return true; }
-    if (reg_fetch_ != REG_OK) return true;  // buscando/erro: so C sai
+    if (b == BTN_OK && reg_n_) {  // abre a leitura do registro selecionado
+      reg_lendo_ = true;
+      reg_linha_ = 0;
+      reg_nlinhas_ = claude::registro_linhas_total(&reg_itens_[reg_sel_], 1,
+                                                   tr(STR_ME));
+      return true;
+    }
     if (b == BTN_DOWN) {
-      if (reg_linha_ + 4 < reg_nlinhas_) reg_linha_++;
+      if (reg_sel_ + 1 < reg_n_) reg_sel_++;
       else if (reg_pag_ + 1 < reg_pags_) reg_pede_pagina(reg_pag_ + 1, false);
       return true;
     }
     if (b == BTN_UP) {
-      if (reg_linha_ > 0) reg_linha_--;
+      if (reg_sel_ > 0) reg_sel_--;
       else if (reg_pag_ > 0) reg_pede_pagina(reg_pag_ - 1, true);
       return true;
     }
@@ -155,13 +173,14 @@ static bool input(Button b, BtnEvent e) {
       buzzer::stop();  // mata o bip da tecla OK: vazaria pro inicio da gravacao
       mic::start();
       gravando_ = true;
-      grava_t0_ = now;
+      grava_t0_ = millis();  // o begin bloqueia: conta so a gravacao real
       nivel_ = 0;
       claude::maquina_evento(maq_, claude::EV_OK_APERTA, now);
       return true;
     }
     if (e == EV_PRESS && b == BTN_DOWN) {  // pra baixo: registro de conversa
       registro_ = true;
+      reg_lendo_ = false;
       reg_pede_pagina(0, false);
       return true;
     }
@@ -169,6 +188,13 @@ static bool input(Button b, BtnEvent e) {
   }
   if (maq_.st == claude::E_OUVINDO) {
     if (e == EV_RELEASE && b == BTN_OK) {
+      if (now - grava_t0_ < 500) {  // clique seco: cancela e ensina a segurar
+        mic::stop();
+        gravando_ = false;
+        voicecli::abort();
+        mostra_aviso(STR_TALK, now);
+        return true;
+      }
       claude::maquina_evento(maq_, claude::EV_OK_SOLTA, now);
       encerra_gravacao(now);
     }
@@ -209,9 +235,7 @@ static void tick(uint32_t now) {
     if (code == 200) {
       reg_n_ = claude::registro_parse(reg_buf_, reg_itens_, 6, &reg_total_,
                                       &reg_pags_, &reg_pag_);
-      reg_nlinhas_ =
-          claude::registro_linhas_total(reg_itens_, reg_n_, tr(STR_ME));
-      reg_linha_ = (reg_no_fim_ && reg_nlinhas_ > 4) ? reg_nlinhas_ - 4 : 0;
+      reg_sel_ = (reg_sel_fim_ && reg_n_) ? (uint8_t)(reg_n_ - 1) : 0;
       reg_fetch_ = REG_OK;
     } else {
       reg_fetch_ = REG_ERR;
@@ -322,7 +346,15 @@ static void render_pet(U8G2& g, uint32_t now) {
     hhmm_format(dt.hour, dt.min, hh);
     g.drawStr(83 - g.getStrWidth(hh), 7, hh);
   }
-  nokia_ui::softkey(g, tr(STR_TALK));
+  // instrucao do push-to-talk com o mic no fim (fonte normal: precisa
+  // caber), centrada fora da coluna da setinha do registro
+  int w = (int)g.getUTF8Width(tr(STR_TALK));
+  int x = (76 - (w + 2 + MINI_MIC_W)) / 2;
+  if (x < 1) x = 1;
+  g.drawUTF8(x, 47, tr(STR_TALK));
+  g.drawXBMP(x + w + 2, 41, MINI_MIC_W, MINI_MIC_H, mini_mic_bits);
+  // setinha pra baixo: o registro de conversa mora ali
+  g.drawXBMP(78, 42, MINI_DOWN_W, MINI_DOWN_H, mini_down_bits);
 }
 
 static void render_ouvindo(U8G2& g, uint32_t now) {
@@ -377,7 +409,8 @@ static void render_falando(U8G2& g) {
   }
 }
 
-// registro: fluxo "EU:/CLAWD:" rolavel, contador do par no header
+// registro em dois passos: lista de registros (data + hora do selecionado
+// no header) e, no OK, a leitura do fluxo "EU:/CLAWD:" daquele par
 static void render_registro(U8G2& g) {
   g.setFont(u8g2_font_3310_small);
   if (reg_fetch_ == REG_NONET) { nokia_ui::no_network(g); return; }
@@ -391,23 +424,46 @@ static void render_registro(U8G2& g) {
     g.drawUTF8(42 - (int)g.getUTF8Width(s) / 2, 24, s);
     return;
   }
-  g.drawUTF8(2, 7, tr(STR_LOG));
-  char linha[49];  // 16 colunas com folga pra UTF-8 multibyte
-  uint8_t par_topo = 0;
-  for (uint8_t i = 0; i < 4; i++) {
-    if (!claude::registro_linha(reg_itens_, reg_n_, tr(STR_ME),
-                                reg_linha_ + i, linha, sizeof(linha),
-                                i == 0 ? &par_topo : nullptr))
-      break;
-    g.drawUTF8(2, 17 + i * 8, linha);
-  }
-  char cont[12];  // contador global: pagina*6 + par no topo da tela
+  // header do registro selecionado: data | reloginho + hora | contador
+  const claude::RegPar& sel = reg_itens_[reg_sel_];
+  g.drawStr(2, 7, sel.d);
+  int hw = (int)g.getStrWidth(sel.h);
+  int hx = 42 - (MINI_CLOCK_W + 2 + hw) / 2;
+  g.drawXBMP(hx, 1, MINI_CLOCK_W, MINI_CLOCK_H, mini_clock_bits);
+  g.drawStr(hx + MINI_CLOCK_W + 2, 7, sel.h);
+  char cont[12];
   snprintf(cont, sizeof(cont), "%u/%u",
-           (unsigned)(reg_pag_ * 6 + par_topo + 1), (unsigned)reg_total_);
+           (unsigned)(reg_pag_ * 6 + reg_sel_ + 1), (unsigned)reg_total_);
   g.drawStr(83 - g.getStrWidth(cont), 7, cont);
   g.drawHLine(0, 9, 84);
-  if (reg_linha_ > 0 || reg_pag_ > 0) g.drawStr(79, 15, "^");
-  if (reg_linha_ + 4 < reg_nlinhas_ || reg_pag_ + 1 < reg_pags_)
+  char linha[49];  // 16 colunas com folga pra UTF-8 multibyte
+  if (reg_lendo_) {  // leitura: o fluxo do par, rolavel linha a linha
+    for (uint8_t i = 0; i < 4; i++) {
+      if (!claude::registro_linha(&reg_itens_[reg_sel_], 1, tr(STR_ME),
+                                  reg_linha_ + i, linha, sizeof(linha),
+                                  nullptr))
+        break;
+      g.drawUTF8(2, 17 + i * 8, linha);
+    }
+    if (reg_linha_ > 0) g.drawStr(79, 15, "^");
+    if (reg_linha_ + 4 < reg_nlinhas_) g.drawStr(79, 47, "v");
+    return;
+  }
+  // lista: janela de 4 registros, preview da fala, selecionado invertido
+  uint8_t topo = reg_sel_ < 4 ? 0 : (uint8_t)(reg_sel_ - 3);
+  for (uint8_t i = 0; i < 4 && topo + i < reg_n_; i++) {
+    uint8_t idx = (uint8_t)(topo + i);
+    claude::linha_texto(reg_itens_[idx].q, 0, 14, linha, sizeof(linha));
+    int y = 11 + i * 9;
+    if (idx == reg_sel_) {  // barra invertida, padrao das listas do sistema
+      g.drawBox(0, y, 76, 9);
+      g.setDrawColor(0);
+    }
+    g.drawUTF8(3, y + 8, linha);
+    g.setDrawColor(1);
+  }
+  if (reg_sel_ > 0 || reg_pag_ > 0) g.drawStr(79, 17, "^");
+  if (reg_sel_ + 1 < reg_n_ || reg_pag_ + 1 < reg_pags_)
     g.drawStr(79, 47, "v");
 }
 
