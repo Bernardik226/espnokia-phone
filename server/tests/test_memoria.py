@@ -52,3 +52,81 @@ def test_registro_corrompido_vira_vazio(tmp_path):
     d = next((tmp_path / "claw").iterdir())
     (d / "registro.json").write_text("{lixo", encoding="utf-8")
     assert m._carrega("k1") == {"pares": [], "resumidos": 0}
+
+
+CFG_FAKE = {"persona": "Você é o Claude, um bichinho.",
+            "anthropic_api_key": "x", "claude_model": "m"}
+
+
+def chat_resumo(cfg, system, mensagens):
+    return "## minhas memorias\n- gosta de bolo"
+
+
+def enche(m, device, n):
+    for i in range(n):
+        m.grava_par(device, f"pergunta {i}", f"resposta {i}")
+
+
+def test_precisa_resumo_no_limiar(tmp_path):
+    m = svc(tmp_path)
+    enche(m, "k1", MAX_PARES - 1)
+    assert not m.precisa_resumo("k1")
+    m.grava_par("k1", "a", "b")
+    assert m.precisa_resumo("k1")
+
+
+def test_resumir_funde_e_varre(tmp_path):
+    prompts = []
+
+    def chat_spy(cfg, system, mensagens):
+        prompts.append((system, mensagens[0]["content"]))
+        return "memoria nova"
+
+    m = svc(tmp_path, chat_fn=chat_spy)
+    enche(m, "k1", MAX_PARES)
+    m.resumir("k1", "pt", CFG_FAKE)
+    system, user = prompts[0]
+    assert CFG_FAKE["persona"] in system
+    assert "(ainda vazia)" in user          # primeira memória
+    assert "pergunta 0" in user             # os antigos entram
+    assert f"pergunta {VARRE - 1}" in user
+    assert f"pergunta {VARRE}" not in user  # os recentes não
+    reg = m._carrega("k1")
+    assert len(reg["pares"]) == MAX_PARES - VARRE
+    assert reg["pares"][0]["q"] == f"pergunta {VARRE}"
+    assert reg["resumidos"] == VARRE
+    assert m.memoria_texto("k1") == "memoria nova"
+
+
+def test_resumir_acumula_memoria_anterior(tmp_path):
+    user_prompts = []
+
+    def chat_spy(cfg, system, mensagens):
+        user_prompts.append(mensagens[0]["content"])
+        return "memoria v2"
+
+    m = svc(tmp_path, chat_fn=chat_spy)
+    enche(m, "k1", MAX_PARES)
+    m.resumir("k1", "pt", CFG_FAKE)
+    enche(m, "k1", VARRE)               # enche de novo até 30
+    m.resumir("k1", "pt", CFG_FAKE)
+    assert "memoria v2" in user_prompts[1] or "memoria nova" in user_prompts[1]
+    reg = m._carrega("k1")
+    assert reg["resumidos"] == 2 * VARRE
+
+
+def test_resumir_corta_no_limite(tmp_path):
+    m = svc(tmp_path, chat_fn=lambda *a: "x" * 4000)
+    enche(m, "k1", MAX_PARES)
+    m.resumir("k1", "pt", CFG_FAKE)
+    assert len(m.memoria_texto("k1")) == 1500
+
+
+def test_registro_com_shape_errado_vira_vazio(tmp_path):
+    m = svc(tmp_path)
+    m.grava_par("k1", "a", "b")
+    d = next((tmp_path / "claw").iterdir())
+    (d / "registro.json").write_text('{"pares": null}', encoding="utf-8")
+    assert m._carrega("k1") == {"pares": [], "resumidos": 0}
+    (d / "registro.json").write_text("[]", encoding="utf-8")
+    assert m._carrega("k1") == {"pares": [], "resumidos": 0}
