@@ -1,4 +1,5 @@
 #include "claudemodel.h"
+#include <string.h>
 
 namespace claude {
 
@@ -63,6 +64,52 @@ bool maquina_tick(Maquina& m, uint32_t now_ms) {
   if (m.st == E_FALANDO && dt >= kFalandoMaxMs) {
     muda(m, E_PET, now_ms);
     return true;
+  }
+  return false;
+}
+
+// avanca uma linha a partir de t[ini]; poe em *fim o byte logo apos o
+// ultimo char visivel e devolve onde a proxima linha comeca
+static size_t avanca_linha(const char* t, size_t ini, uint8_t cols,
+                           size_t* fim) {
+  size_t i = ini, ultimo_espaco = ini, colunas = 0;
+  while (t[i] && colunas < cols) {
+    if (t[i] == '\n') { *fim = i; return i + 1; }
+    if (t[i] == ' ') ultimo_espaco = i;
+    i++;
+    while ((t[i] & 0xC0) == 0x80) i++;  // pula continuacao UTF-8
+    colunas++;
+  }
+  if (!t[i]) { *fim = i; return i; }                 // acabou o texto
+  if (t[i] == '\n') { *fim = i; return i + 1; }
+  if (t[i] == ' ') { *fim = i; return i + 1; }       // quebra exata
+  if (ultimo_espaco > ini) { *fim = ultimo_espaco; return ultimo_espaco + 1; }
+  *fim = i;                                          // palavrao: corta seco
+  return i;
+}
+
+uint16_t linhas_total(const char* texto, uint8_t cols) {
+  if (!texto || !texto[0] || cols == 0) return 0;
+  uint16_t n = 0;
+  size_t i = 0, fim;
+  while (texto[i]) { i = avanca_linha(texto, i, cols, &fim); n++; }
+  return n;
+}
+
+bool linha_texto(const char* texto, uint16_t n, uint8_t cols,
+                 char* out, size_t out_len) {
+  if (!texto || !texto[0] || cols == 0 || out_len == 0) return false;
+  size_t i = 0, fim = 0;
+  for (uint16_t k = 0; texto[i]; k++) {
+    size_t prox = avanca_linha(texto, i, cols, &fim);
+    if (k == n) {
+      size_t len = fim - i;
+      if (len >= out_len) len = out_len - 1;
+      memcpy(out, texto + i, len);
+      out[len] = '\0';
+      return true;
+    }
+    i = prox;
   }
   return false;
 }
