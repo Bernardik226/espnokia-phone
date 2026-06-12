@@ -144,7 +144,10 @@ aparelho entra em **modo config**:
    de 8 dígitos** — sorteada a cada entrada no modo config, só existe ali.
 2. Conecte o celular nessa rede. O captive portal abre a página sozinho
    (se não abrir, vá em `http://192.168.4.1`).
-3. Escolha sua rede na lista do scan, digite a senha e **SALVAR**.
+3. Toque na sua rede na lista (cadeado = protegida; as barras mostram a
+   intensidade do sinal). **Rede oculta?** Digite o nome dela no campo
+   manual. Aí é só pôr a senha e **SALVAR** — o botão de buscar de novo
+   refaz o scan na hora.
 4. O aparelho reinicia e conecta. Pronto — a partir daqui é só usar.
 
 <p align="center">
@@ -163,7 +166,7 @@ eFuse do próprio chip. Pra apagar: **Config → Wifi → Esquecer rede**.
 | `pio run -t upload` não acha a porta | Linux: entre no grupo `dialout` (`sudo usermod -aG dialout $USER`, relogue). Confira o driver do USB‑serial da sua placa (CP2102/CH340) |
 | Display liga mas não mostra nada | Contraste/conexões: confira CLK/DIN/DC/CE/RST contra a [pinagem](#-pinagem); 5110 é sensível a jumper frouxo |
 | App da Copa pede "Conecte o WiFi" | O aparelho não tem rede configurada — faça o [provisionamento](#-conectando-no-wifi) |
-| App da Copa mostra "REDE OCUPADA" | O firmware não obteve um 200 do server: confira `SERVER_URL` (IP certo? porta certa? sem barra no fim?), se o server está de pé (`curl .../health`) e se `DEVICE_KEY` bate com `DEVICE_KEYS` (chave errada = 401) |
+| App da Copa mostra "SEM RESPOSTA" | O firmware não obteve um 200 do server: confira `SERVER_URL` (IP certo? porta certa? sem barra no fim?), se o server está de pé (`curl .../health`) e se `DEVICE_KEY` bate com `DEVICE_KEYS` (chave errada = 401) |
 | Relógio sem hora / sem alarme | DS3231 ausente ou SDA/SCL trocados; sem RTC o relógio funciona, mas alarme não |
 | Toques sem som ou som contínuo | Buzzer ativo no lugar do passivo, ou polaridade invertida |
 

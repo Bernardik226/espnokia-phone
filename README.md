@@ -19,6 +19,10 @@
   📟 Conhecer o projeto&nbsp;&nbsp;·&nbsp;&nbsp;<a href="docs/INSTALL.md">🔧 Montar o seu</a>
 </h3>
 
+<p align="center">
+  🇧🇷 Português&nbsp;&nbsp;·&nbsp;&nbsp;<a href="README.en.md">🇬🇧 English</a>
+</p>
+
 ---
 
 Um "celular" estilo Nokia 3310 construído do zero: ESP32 + display Nokia 5110
@@ -32,12 +36,11 @@ uma API pública sem chave de um lado, uma API própria autenticada por chave de
 device do outro, e um ESP32 com 520 KB de RAM no meio aguentando o tranco.
 [A seção de APIs](#-o-estudo-por-trás-apis-com-chave-e-sem-chave) conta como.
 
-<!-- fotos do aparelho montado entram aqui
 <p align="center">
-  <img src="docs/assets/photo-device.jpg" width="420" alt="espnokia montado">
-  <img src="docs/assets/photo-standby.jpg" width="420" alt="tela de standby">
+  <img src="docs/assets/photo-standby.jpg" width="255" alt="standby com o emblema espnokia e backlight azul">
+  <img src="docs/assets/photo-copa-splash.jpg" width="262" alt="splash do app Copa 2026 com o troféu em pixel art">
+  <img src="docs/assets/photo-copa-menu.jpg" width="250" alt="menu do app Copa 2026: Próximos, Brasil, Ao vivo">
 </p>
--->
 
 ## ✨ O que ele faz
 
@@ -131,11 +134,13 @@ LiPo com leitura de tensão.
 Trocar de rede WiFi não pede cabo USB nem reflash. O aparelho sobe um **modo
 config**: vira um access point (`espnokia-XXXX`) com **senha numérica
 sorteada na hora** (hardware RNG, exibida só na telinha) e um **captive
-portal** — conectou, a página de configuração abre sozinha, com as redes
-encontradas pelo scan:
+portal** — conectou, a página de configuração abre sozinha. Ela **busca as
+redes próximas** com cadeado nas protegidas e barras de intensidade de sinal;
+toque numa rede pra escolher, ou digite o nome no campo manual se a sua for
+**oculta**:
 
 <p align="center">
-  <img src="docs/assets/prov-scan.png" width="340" alt="página de configuração com o scan de redes">
+  <img src="docs/assets/prov-scan.png" width="340" alt="página de configuração com o scan de redes: cadeado e intensidade de sinal">
   &nbsp;&nbsp;
   <img src="docs/assets/prov-saved.png" width="340" alt="rede salva, o aparelho vai reiniciar">
 </p>
@@ -143,12 +148,6 @@ encontradas pelo scan:
 A senha da sua rede é cifrada na NVS com chave derivada do MAC gravado em
 eFuse do próprio chip: um dump da flash de outro aparelho não decifra a sua
 rede. 🔐
-
-<!-- telas do aparelho durante o provisionamento entram aqui
-<p align="center">
-  <img src="docs/assets/photo-config-mode.jpg" width="280" alt="modo config no LCD">
-</p>
--->
 
 ## 🧪 Qualidade
 
