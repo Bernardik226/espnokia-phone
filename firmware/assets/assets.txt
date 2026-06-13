@@ -970,3 +970,13 @@ name: mini_down
 #####
 .###.
 ..#..
+
+// taca da copa em miniatura (globo, corpo, base): header do app Copa
+name: mini_cup
+.###.
+#####
+.###.
+..#..
+..#..
+.###.
+#####
