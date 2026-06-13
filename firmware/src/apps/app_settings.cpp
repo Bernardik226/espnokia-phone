@@ -9,7 +9,9 @@
 #include "drivers/backlight.h"
 #include "drivers/buzzer.h"
 #include "drivers/rtc.h"
+#include "net/conn.h"
 #include "net/wifi.h"
+#include "qrcode.h"
 #include "ui/assets.h"
 #include "ui/fonts3310.h"
 #include "ui/nokia_ui.h"
@@ -22,15 +24,15 @@
 // Esquecer/Trocar rede (ambos reiniciam); V_VOL ajusta o volume com demo ao
 // vivo (so persiste no OK, como o backlight); V_LANG troca o idioma do
 // sistema (vale na hora e persiste); V_ABOUT tem 3 paginas (UP/DOWN).
-enum View : uint8_t { V_ROOT, V_DISPLAY, V_DATETIME, V_DT_EDIT, V_WIFI,
-                      V_WIFI_MENU, V_VOL, V_LANG, V_ABOUT };
+enum View : uint8_t { V_ROOT, V_DISPLAY, V_DATETIME, V_DT_EDIT, V_CONN,
+                      V_WIFI, V_WIFI_MENU, V_QR, V_VOL, V_LANG, V_ABOUT };
 static const uint8_t kAboutPages = 3;
 static View view = V_ROOT;
 static uint8_t cur = 0;         // cursor da lista corrente
 static uint8_t about_page = 0;  // 0..kAboutPages-1
 
-static const StrId kRoot[] = {STR_DISPLAY, STR_DATETIME, STR_WIFI, STR_VOLUME,
-                              STR_LANGUAGE, STR_ABOUT};
+static const StrId kRoot[] = {STR_DISPLAY, STR_DATETIME, STR_CONNECTIONS,
+                              STR_VOLUME, STR_LANGUAGE, STR_ABOUT};
 static const uint8_t kRootCount = sizeof(kRoot) / sizeof(kRoot[0]);
 
 // toggle "Sincronizar" persistido na NVS; a F2 le pra decidir NTP no boot.
@@ -104,7 +106,7 @@ static bool input(Button b, BtnEvent e) {
       if (b == BTN_OK) {
         if (cur == 0) { view = V_DISPLAY; cur = backlight::level(); }
         else if (cur == 1) { view = V_DATETIME; cur = 0; }
-        else if (cur == 2) { view = V_WIFI; }
+        else if (cur == 2) { view = V_CONN; cur = 0; }
         else if (cur == 3) { view = V_VOL; cur = sound::volume(); }
         else if (cur == 4) { view = V_LANG; cur = (uint8_t)i18n_lang(); }
         else { view = V_ABOUT; about_page = 0; }
@@ -151,9 +153,21 @@ static bool input(Button b, BtnEvent e) {
       if (dt_field_ > 0) dt_field_--;
       else { view = V_DATETIME; cur = 1; }
       return true;
+    case V_CONN:
+      if (b == BTN_UP || b == BTN_DOWN) { cur ^= 1; return true; }  // 2 itens
+      if (b == BTN_OK) {
+        if (cur == 0) view = V_WIFI;     // WiFi/Servidor: status + reconfig
+        else view = V_QR;                // QR pra logar no painel
+        return true;
+      }
+      view = V_ROOT; cur = 2;  // C volta pro root
+      return true;
     case V_WIFI:
       if (b == BTN_OK && !wifi::provisioning()) { view = V_WIFI_MENU; cur = 0; return true; }
-      view = V_ROOT; cur = 2;  // C (ou OK no modo config) volta
+      view = V_CONN; cur = 0;  // C (ou OK no modo config) volta pro submenu
+      return true;
+    case V_QR:
+      view = V_CONN; cur = 1;  // qualquer tecla fecha o QR
       return true;
     case V_WIFI_MENU:
       if (b == BTN_UP || b == BTN_DOWN) { cur ^= 1; return true; }  // 2 itens
@@ -290,6 +304,12 @@ static void render(void* gfx) {
       nokia_ui::softkey(g, tr(dt_field_ < 4 ? STR_OK : STR_SAVE));
       break;
     }
+    case V_CONN: {
+      const char* items[] = {tr(STR_WIFI_SERVER), tr(STR_DEVICE_QR)};
+      draw_list(g, tr(STR_CONNECTIONS), items, 2, cur);
+      nokia_ui::softkey(g, tr(STR_SELECT));
+      break;
+    }
     case V_WIFI: {
       char ip[16], buf2[20];
       wifi::ip_str(ip, sizeof(ip));
@@ -307,14 +327,36 @@ static void render(void* gfx) {
         g.drawUTF8(2, 19, buf2);
         if (wifi::connected()) g.drawStr(2, 28, ip);
         else g.drawUTF8(2, 28, tr(STR_CONNECTING));
+        const char* u = conn::server_url();       // host do server configurado
+        const char* host = strstr(u, "://");
+        snprintf(buf2, sizeof(buf2), "%.18s", host ? host + 3 : u);
+        g.drawStr(2, 37, buf2);
         nokia_ui::softkey(g, tr(STR_OPTIONS));
       }
       break;
     }
     case V_WIFI_MENU: {
       const char* items[] = {tr(STR_FORGET_NET), tr(STR_SWITCH_NET)};
-      draw_list(g, tr(STR_WIFI), items, 2, cur);
+      draw_list(g, tr(STR_WIFI_SERVER), items, 2, cur);
       nokia_ui::softkey(g, tr(STR_OK));
+      break;
+    }
+    case V_QR: {
+      // QR do "endereco do server/#k=chave": a camera do celular abre o
+      // dashboard ja logado. 1 px por modulo, centralizado (quiet zone = o
+      // fundo claro do LCD). Versao escolhida pelo tamanho do link.
+      char link[120];
+      conn::pair_link(link, sizeof(link));
+      static uint8_t qrbuf[256];  // qrcode_getBufferSize(6) = 211, com folga
+      QRCode qr;
+      size_t L = strlen(link);
+      uint8_t ver = L <= 78 ? 4 : (L <= 106 ? 5 : 6);
+      qrcode_initText(&qr, qrbuf, ver, ECC_LOW, link);
+      int x0 = (84 - qr.size) / 2, y0 = (48 - qr.size) / 2;
+      if (y0 < 0) y0 = 0;
+      for (uint8_t y = 0; y < qr.size; y++)
+        for (uint8_t x = 0; x < qr.size; x++)
+          if (qrcode_getModule(&qr, x, y)) g.drawPixel(x0 + x, y0 + y);
       break;
     }
     case V_VOL: {

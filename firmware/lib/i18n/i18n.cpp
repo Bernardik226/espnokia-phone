@@ -125,6 +125,14 @@ static const char* const kStr[STR_COUNT][LANG_COUNT] = {
   /* GAMES */ {"Jogos", "Games", "Partidos", "Matchs", "Spiele", "Ottelut"},
   /* TABLE */ {"Tabela", "Table", "Tabla", "Classement", "Tabelle",
                "Sarjataulukko"},
+  /* CONNECTIONS */ {"Conexões", "Connections", "Conexiones", "Connexions",
+                     "Verbindungen", "Yhteydet"},
+  /* WIFI_SERVER */ {"WiFi/Servidor", "WiFi/Server", "WiFi/Servidor",
+                     "WiFi/Serveur", "WiFi/Server", "WiFi/Palvelin"},
+  /* DEVICE_QR */ {"QR do aparelho", "Device QR", "QR del equipo",
+                   "QR appareil", "Geräte-QR", "Laitteen QR"},
+  /* SCAN_TO_PAIR */ {"Escaneie p/ logar", "Scan to log in", "Escanea p/ entrar",
+                      "Scan pour login", "Scannen z. Login", "Skannaa kirjautuaksesi"},
 };
 
 static const char* const kDay[LANG_COUNT][7] = {
