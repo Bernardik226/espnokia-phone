@@ -6,12 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if __has_include("espnokia_config.h")
-#include "espnokia_config.h"
-#else
-#define SERVER_URL ""
-#define DEVICE_KEY ""
-#endif
+#include "net/conn.h"   // endereco do server + chave (NVS, runtime)
 
 namespace voicecli {
 
@@ -22,10 +17,10 @@ static WiFiClientSecure tls_;
 static WiFiClient* cli_ = nullptr;
 static size_t enviados_ = 0;  // bytes de audio ja subidos (diagnostico)
 
-// SERVER_URL = "http[s]://host[:porta]" (sem barra no fim)
+// server_url = "http[s]://host[:porta]" (sem barra no fim)
 static bool parse_url(bool& https, char* host, size_t host_len,
                       uint16_t& porta) {
-  const char* u = SERVER_URL;
+  const char* u = conn::server_url();
   https = strncmp(u, "https://", 8) == 0;
   if (!https && strncmp(u, "http://", 7) != 0) return false;
   u += https ? 8 : 7;
@@ -70,11 +65,11 @@ bool begin(const char* path) {
   snprintf(cab, sizeof(cab),
            "POST %s HTTP/1.1\r\n"
            "Host: %s\r\n"
-           "X-Device-Key: " DEVICE_KEY "\r\n"
+           "X-Device-Key: %s\r\n"
            "Content-Type: application/octet-stream\r\n"
            "Transfer-Encoding: chunked\r\n"
            "Connection: keep-alive\r\n\r\n",
-           path, host);
+           path, host, conn::device_key());
   cli_->print(cab);
   return true;
 }
