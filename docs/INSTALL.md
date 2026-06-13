@@ -12,6 +12,7 @@ From zero to a phone that's powered on, following the World Cup and talking to
 Claude: **build the hardware → run the server → flash the firmware → join WiFi →
 pair Claw'd**. In that order.
 
+---
 ## 🧰 Bill of materials
 
 | Qty | Item | Notes |
@@ -25,6 +26,7 @@ pair Claw'd**. In that order.
 | 1 | INMP441 I2S microphone | For Claw'd (push-to-talk to Claude) — optional if you skip voice |
 | 1 | Breadboard (830 pts) + jumpers | Solderless build |
 
+---
 ## 🔌 Pinout
 
 The source of truth is [`firmware/include/pins.h`](../firmware/include/pins.h):
@@ -53,6 +55,13 @@ The source of truth is [`firmware/include/pins.h`](../firmware/include/pins.h):
 - Passive buzzer: positive on GPIO 25, negative on GND.
 - INMP441 on **3V3**; tie its `L/R` pin to GND (left channel).
 
+<p align="center">
+  <img src="assets/photos/protoboard.png" width="360" alt="the breadboard build with all components wired up">
+</p>
+
+<sub>The full solderless build — every module on the breadboard.</sub>
+
+---
 ## 🐍 Companion server
 
 The server feeds the World Cup, the leagues and Claw'd. Run it on your machine,
@@ -112,6 +121,7 @@ pip install -r requirements-dev.txt
 python -m pytest tests/        # 157 tests
 ```
 
+---
 ## 📟 Firmware
 
 Prerequisite: [PlatformIO](https://platformio.org/install/cli) (CLI or the
@@ -150,6 +160,7 @@ pio run -e esp32dev -t upload
 pio device monitor      # 115200 baud, to watch the boot
 ```
 
+---
 ## 📶 Joining WiFi
 
 On first power-up (or after **Settings → Connections → WiFi/Server → switch
@@ -174,6 +185,7 @@ network**) the device enters **config mode**:
 Your WiFi password is **encrypted in NVS** with a key derived from the chip's
 own eFuse MAC. To wipe it: **Settings → Connections → WiFi/Server → forget**.
 
+---
 ## 🐾 Pairing Claw'd &amp; the dashboard
 
 Once the device is online and the server has an `ANTHROPIC_API_KEY`:
@@ -189,6 +201,7 @@ Once the device is online and the server has an `ANTHROPIC_API_KEY`:
 4. Open **Claw'd** on the phone, **hold the button and speak**, let go — the pet
    listens, thinks (the ✶ pulses) and reads Claude's reply back, page by page.
 
+---
 ## 🚑 Common problems
 
 | Symptom | Likely cause / fix |
