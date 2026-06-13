@@ -67,7 +67,7 @@ ali na telinha monocromática.
 - [Copa 26](#-copa-26--ao-vivo-na-sua-mesa) · [Ligas](#-ligas--tabela-adaptativa) · [Claw'd](#-clawd--falar-com-o-claude-num-nokia)
 - [Pareamento & dashboard](#-pareamento--o-dashboard) · [APIs com & sem chave](#-o-estudo-por-trás-apis-com-chave-e-sem-chave) · [WiFi sem recompilar](#-wifi-sem-recompilar)
 - [Por trás da arte](#-por-trás-da-arte) · [Hardware](#-hardware) · [Qualidade](#-qualidade)
-- [Créditos & atribuições](#-créditos--atribuições) · [Marcas & autoria](#️-marcas--autoria)
+- [Crie seu próprio app](#-crie-seu-próprio-app) · [Créditos & atribuições](#-créditos--atribuições) · [Marcas & autoria](#️-marcas--autoria)
 
 ---
 
@@ -161,10 +161,10 @@ atualiza sozinho e **"GOL!" pisca na tela** no instante em que muda — com o no
 do autor quando a fonte tem.
 
 <p align="center">
-  <img src="docs/assets/photos/copa-menu.png" width="208" alt="menu da Copa: Próximos, Brasil, Ao vivo">
-  <img src="docs/assets/photos/copa-upcoming.png" width="208" alt="lista de próximos jogos com datas">
-  <img src="docs/assets/photos/copa-list.png" width="208" alt="lista de jogos">
-  <img src="docs/assets/photos/copa-notify.png" width="208" alt="alerta de gol piscando na tela">
+  <img src="docs/assets/photos/copa-upcoming.png" width="168" alt="próximos jogos com datas">
+  <img src="docs/assets/photos/copa-list.png" width="168" alt="lista de jogos">
+  <img src="docs/assets/photos/copa-detail.png" width="168" alt="detalhe do jogo com goleadores">
+  <img src="docs/assets/photos/copa-notify.png" width="168" alt="alerta de gol piscando na tela">
 </p>
 
 <p align="center"><b>Fluxo</b> &nbsp;·&nbsp; splash → menu → detalhe do jogo → gol ao vivo</p>
@@ -266,9 +266,12 @@ e as **conversas** recentes (ou limpa), escolhe a **persona** (Fofo, Sarcástico
 Animado, Poeta, Durão, Sábio — o prompt fica no código), escolhe o **motor de
 STT**, define o **limite de resposta** e coloca suas **chaves de API**.
 
+<p align="center">
+  <img src="docs/assets/dash-status.png" width="300" alt="EspNokia Dash rodando como PWA no celular: aba de status com versão, conversas, motor de STT, modelo, busca web e a chave da Anthropic">
+</p>
+
 > Chave definida pelo dashboard vale enquanto o server roda; pra chave
-> permanente, use a env `ANTHROPIC_API_KEY`. Os prints do painel no celular
-> entram na próxima leva de capturas.
+> permanente, use a env `ANTHROPIC_API_KEY`.
 
 ---
 
@@ -379,6 +382,13 @@ estrela laranja de seis pontas abaixo é a marca de maker que saiu disso.
 - Camadas bem separadas: `drivers/` (hardware) · `lib/` (lógica pura portável) ·
   `apps/` (UI). Essa separação é o que permite testar no PC o que roda no ESP32.
 
+E cabe tudo com folga — o NokiaOS inteiro, os apps, WiFi/TLS e o pipeline de voz
+ocupam **um terço da flash** e um quarto da RAM:
+
+<p align="center">
+  <img src="docs/assets/footprint.png" width="660" alt="footprint do firmware: flash 35.8% usada (64% livre), RAM 25.3% usada (75% livre) na partição huge_app">
+</p>
+
 ```
 firmware/   NokiaOS em C++/Arduino (PlatformIO: esp32dev + native)
   lib/      lógica pura testável: shell, btnlogic, rtttl, i18n, copamodel, claudemodel...
@@ -387,6 +397,18 @@ server/     companion FastAPI: /copa /futebol /claude /admin + o dashboard PWA
 docs/       instalação, assets do README
 tools/      utilitários de pixel art (grid → XBM)
 ```
+
+---
+
+## 🧩 Crie seu próprio app
+
+O NokiaOS é um app shell — uma tela nova é uma struct pequena de callbacks mais
+uma linha no launcher. Tem um **direcionamento passo a passo** pra isso (uma
+sugestão, não uma regra), com um app mínimo pra você copiar:
+
+<p align="center">
+  <b><a href="docs/MAKE_AN_APP.pt-br.md">🧩 Crie seu próprio app →</a></b>
+</p>
 
 ---
 

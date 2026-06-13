@@ -67,7 +67,7 @@ the monochrome screen.
 - [World Cup 26](#-world-cup-26--live-on-your-desk) · [Leagues](#-leagues--adaptive-standings) · [Claw'd](#-clawd--talk-to-claude-from-a-nokia)
 - [Pairing & dashboard](#-pairing--the-dashboard) · [APIs with & without keys](#-the-study-underneath-apis-with-and-without-keys) · [WiFi without recompiling](#-wifi-without-recompiling)
 - [Behind the art](#-behind-the-art) · [Hardware](#-hardware) · [Quality](#-quality)
-- [Credits & attributions](#-credits--attributions) · [Trademarks & authorship](#-trademarks--authorship)
+- [Make your own app](#-make-your-own-app) · [Credits & attributions](#-credits--attributions) · [Trademarks & authorship](#-trademarks--authorship)
 
 ---
 
@@ -160,10 +160,10 @@ by itself and **"GOAL!" flashes on screen** the instant it changes — with the
 scorer's name when the source has it.
 
 <p align="center">
-  <img src="docs/assets/photos/copa-menu.png" width="208" alt="World Cup menu: Upcoming, Brazil, Live">
-  <img src="docs/assets/photos/copa-upcoming.png" width="208" alt="upcoming matches list with dates">
-  <img src="docs/assets/photos/copa-list.png" width="208" alt="match list">
-  <img src="docs/assets/photos/copa-notify.png" width="208" alt="goal alert flashing on screen">
+  <img src="docs/assets/photos/copa-upcoming.png" width="168" alt="upcoming matches with dates">
+  <img src="docs/assets/photos/copa-list.png" width="168" alt="match list">
+  <img src="docs/assets/photos/copa-detail.png" width="168" alt="match detail with scorers">
+  <img src="docs/assets/photos/copa-notify.png" width="168" alt="goal alert flashing on screen">
 </p>
 
 <p align="center"><b>Flow</b> &nbsp;·&nbsp; splash → menu → match detail → live goal</p>
@@ -265,9 +265,12 @@ languages, sharing the phone's palette and logo. From it you read the pet's
 (Cuddly, Sarcastic, Hyped, Poet, Tough, Wise — the prompt stays in the code),
 choose the **STT engine**, set the **reply length** and drop in your **API keys**.
 
+<p align="center">
+  <img src="docs/assets/dash-status.png" width="300" alt="EspNokia Dash running as a PWA on a phone: status tab with version, conversations, STT engine, model, web search and the Anthropic key">
+</p>
+
 > Set a key from the dashboard and it lives as long as the server runs; for a
-> permanent key, use the `ANTHROPIC_API_KEY` env. Screenshots of the panel on a
-> phone are coming with the next capture pass.
+> permanent key, use the `ANTHROPIC_API_KEY` env.
 
 ---
 
@@ -378,6 +381,13 @@ six-pointed star below is the maker's mark that came out of it.
 - Clean layering: `drivers/` (hardware) · `lib/` (pure portable logic) ·
   `apps/` (UI). That separation is what lets the PC test what runs on the ESP32.
 
+And it all fits with room to spare — the whole NokiaOS, the apps, WiFi/TLS and
+the voice pipeline land at **a third of the flash** and a quarter of the RAM:
+
+<p align="center">
+  <img src="docs/assets/footprint.png" width="660" alt="firmware footprint: flash 35.8% used (64% free), RAM 25.3% used (75% free) on the huge_app partition">
+</p>
+
 ```
 firmware/   NokiaOS in C++/Arduino (PlatformIO: esp32dev + native)
   lib/      pure testable logic: shell, btnlogic, rtttl, i18n, copamodel, claudemodel...
@@ -386,6 +396,18 @@ server/     FastAPI companion: /copa /futebol /claude /admin + the dashboard PWA
 docs/       install guide, README assets
 tools/      pixel-art utilities (grid → XBM)
 ```
+
+---
+
+## 🧩 Make your own app
+
+NokiaOS is an app shell — a new screen is a small struct of callbacks plus one
+line in the launcher. There's a **step-by-step pointer** for it (a suggestion,
+not a rulebook), with a minimal app you can copy:
+
+<p align="center">
+  <b><a href="docs/MAKE_AN_APP.md">🧩 Make your own app →</a></b>
+</p>
 
 ---
 
