@@ -152,11 +152,29 @@ static int le_resposta(char* resp, size_t resp_len, uint32_t timeout_ms) {
   return status;
 }
 
-int finish(char* resp, size_t resp_len) {
-  if (!cli_ || resp_len == 0) return -1;
+static uint32_t espera_t0_ = 0;  // inicio da espera do finish_poll
+
+bool finish_begin() {
+  if (!cli_) return false;
   size_t fim_ok = cli_->print("0\r\n\r\n");  // fim do corpo chunked
   Serial.printf("[voz] finish: %u bytes subidos, fim=%u conn=%d\n",
                 (unsigned)enviados_, (unsigned)fim_ok, cli_->connected());
+  espera_t0_ = millis();
+  return fim_ok > 0;
+}
+
+int finish_poll(char* resp, size_t resp_len) {
+  if (!cli_ || resp_len == 0) return -1;
+  if (!cli_->available()) {  // nada ainda: devolve o loop pra tela animar
+    if (millis() - espera_t0_ <= kRespTimeoutMs && cli_->connected())
+      return kEsperando;
+    Serial.printf("[voz] sem resposta (%s apos %u ms)\n",
+                  cli_->connected() ? "timeout" : "conexao caiu",
+                  (unsigned)(millis() - espera_t0_));
+    abort();
+    return -2;
+  }
+  // o status chegou; headers + corpo vem juntos (JSON pequeno) em ms
   return le_resposta(resp, resp_len, kRespTimeoutMs);
 }
 
