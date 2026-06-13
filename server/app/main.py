@@ -12,6 +12,7 @@ from app.copa import JANELA_S, CopaService
 from app.fetcher import CachedFetcher
 from app.futebol import LIGAS, FutebolService
 from app.futebol import payload as fut_payload
+from app.futebol import tabela_payload as fut_tabela_payload
 from app.sources import openfootball
 from app.sources.cadeia import CadeiaDeFontes
 from app.sources.espn import EspnScores
@@ -128,6 +129,10 @@ def create_app(copa_service=None, live_scores=None, device_keys=None,
     @app.get("/futebol/live", dependencies=[auth])
     def futebol_live(liga: str):
         return fut_payload(futebol.live(liga), nomes_ligas.get(liga, ""))
+
+    @app.get("/futebol/tabela", dependencies=[auth])
+    def futebol_tabela(liga: str):
+        return fut_tabela_payload(futebol.tabela(liga))
 
     @app.post("/claude/voz", dependencies=[auth])
     async def claude_voz(request: Request, background_tasks: BackgroundTasks,

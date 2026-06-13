@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from app.futebol import FutebolService, payload
+from app.futebol import FutebolService, payload, tabela_payload
 
 AGORA = datetime(2026, 6, 12, 20, 30, tzinfo=timezone.utc)
 
@@ -90,6 +90,59 @@ def test_live_pega_rolando_e_fim_recente():
     ])})
     assert [(p["t1"], p["t2"]) for p in svc.live("bra.1")] == \
         [("PAL", "COR"), ("FLA", "VAS")]
+
+
+class FonteComTabela:
+    """Fonte que, além da agenda, responde a classificação (grupos())."""
+
+    def __init__(self, grupos, explode=False):
+        self._grupos, self.explode = grupos, explode
+
+    def partidas(self):
+        return []
+
+    def grupos(self):
+        if self.explode:
+            raise RuntimeError("standings fora do ar")
+        return self._grupos
+
+
+def test_tabela_repassa_a_classificacao_da_fonte():
+    g = [{"n": "2026", "t": [{"c": "FLA", "pts": 9, "j": 3, "sg": 5}]}]
+    assert monta({"bra.1": FonteComTabela(g)}).tabela("bra.1") == g
+
+
+def test_tabela_liga_desconhecida_volta_vazio():
+    assert monta({}).tabela("xyz.9") == []
+
+
+def test_tabela_fonte_quebrada_volta_vazio():
+    svc = monta({"bra.1": FonteComTabela([], explode=True)})
+    assert svc.tabela("bra.1") == []
+
+
+def test_tabela_payload_unica_zera_nome_e_renomeia_chaves():
+    # pontos corridos chega como 1 bloco de nome inútil: vira tabela única
+    g = [{"n": "English Premier League 2025-2026",
+          "t": [{"c": "ARS", "pts": 9, "j": 3, "sg": 5},
+                {"c": "LIV", "pts": 7, "j": 3, "sg": 2}]}]
+    assert tabela_payload(g) == {
+        "grupos": [{"n": "", "t": [
+            {"c": "ARS", "p": 9, "j": 3, "s": 5},
+            {"c": "LIV", "p": 7, "j": 3, "s": 2}]}],
+        "atualizado_s": 0}
+
+
+def test_tabela_payload_varios_grupos_preserva_nome():
+    g = [{"n": "A", "t": [{"c": "FLA", "pts": 9, "j": 3, "sg": 5}]},
+         {"n": "B", "t": [{"c": "BOC", "pts": 6, "j": 3, "sg": 1}]}]
+    out = tabela_payload(g)
+    assert [grp["n"] for grp in out["grupos"]] == ["A", "B"]
+    assert out["grupos"][0]["t"][0] == {"c": "FLA", "p": 9, "j": 3, "s": 5}
+
+
+def test_tabela_payload_vazia():
+    assert tabela_payload([]) == {"grupos": [], "atualizado_s": 0}
 
 
 def test_payload_no_contrato_da_copa():
