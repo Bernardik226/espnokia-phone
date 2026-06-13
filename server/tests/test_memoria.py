@@ -58,7 +58,7 @@ def test_registro_corrompido_vira_vazio(tmp_path):
     assert m._carrega("k1") == {"pares": [], "resumidos": 0}
 
 
-CFG_FAKE = {"persona": "Você é o Claude, um bichinho.",
+CFG_FAKE = {"persona_id": "fofo",
             "anthropic_api_key": "x", "claude_model": "m"}
 
 
@@ -86,7 +86,7 @@ def test_resumir_funde_e_varre(tmp_path):
     enche(m, "k1", MAX_PARES)
     m.resumir("k1", "pt", CFG_FAKE)
     system, user = prompts[0]
-    assert CFG_FAKE["persona"] in system
+    assert "Claw'd" in system and "carinhoso" in system   # persona resolvida
     assert "(ainda vazia)" in user          # primeira memória
     assert "pergunta 0" in user             # os antigos entram
     assert f"pergunta {VARRE - 1}" in user

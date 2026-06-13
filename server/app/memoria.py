@@ -124,8 +124,8 @@ class MemoriaService:
             memoria=self.memoria_texto(device) or "(ainda vazia)",
             conversas=conversas, lang=lang or "pt",
             max_chars=MAX_MEMORIA_CHARS)
-        system = cfg["persona"] + (" Você vai atualizar suas memórias "
-                                   "das conversas.")
+        system = config.persona_prompt(cfg) + (" Você vai atualizar suas "
+                                               "memórias das conversas.")
         nova = (self.chat_fn or _chat_anthropic)(
             cfg, system, [{"role": "user", "content": user}])
         nova = nova[:MAX_MEMORIA_CHARS]

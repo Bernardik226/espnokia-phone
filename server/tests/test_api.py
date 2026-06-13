@@ -235,14 +235,30 @@ def test_admin_config_nunca_vaza_a_chave_crua(tmp_path, monkeypatch):
     assert cfg["tem_anthropic_key"] is True
 
 
-def test_admin_config_salva_e_vale_na_hora(tmp_path, monkeypatch):
+def test_admin_config_lista_personas_sem_vazar_o_prompt(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    c = monta(device_keys="segredo")
+    cfg = c.get("/admin/config", headers={"X-Device-Key": "segredo"}).json()
+    assert cfg["persona_id"] == "fofo"
+    ids = {p["id"] for p in cfg["personas"]}
+    assert {"fofo", "sarcastico"} <= ids
+    # o combobox traz só id + nome, nunca o prompt/traço
+    assert all(set(p) == {"id", "nome"} for p in cfg["personas"])
+
+
+def test_admin_config_salva_persona_id_valida(tmp_path, monkeypatch):
     monkeypatch.setenv("DATA_DIR", str(tmp_path))
     c = monta(device_keys="segredo")
     r = c.post("/admin/config", headers={"X-Device-Key": "segredo"},
-               json={"persona": "novo eu", "max_resposta_chars": 99})
+               json={"persona_id": "poeta", "max_resposta_chars": 99})
     assert r.status_code == 200
     cfg = c.get("/admin/config", headers={"X-Device-Key": "segredo"}).json()
-    assert cfg["persona"] == "novo eu" and cfg["max_resposta_chars"] == 99
+    assert cfg["persona_id"] == "poeta" and cfg["max_resposta_chars"] == 99
+    # id inexistente é ignorado (não corrompe a config)
+    c.post("/admin/config", headers={"X-Device-Key": "segredo"},
+           json={"persona_id": "hacker"})
+    cfg = c.get("/admin/config", headers={"X-Device-Key": "segredo"}).json()
+    assert cfg["persona_id"] == "poeta"
 
 
 def test_memoria_limpar_exige_chave_e_responde_ok(tmp_path, monkeypatch):

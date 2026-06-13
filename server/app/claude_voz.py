@@ -59,7 +59,7 @@ class VozService:
             return 422, {"erro": "nao entendi"}
         if self.chat_fn is None and not cfg.get("anthropic_api_key"):
             return 502, {"erro": "sem chave anthropic no config"}
-        system = (f"{cfg['persona']} Responda em ate "
+        system = (f"{config.persona_prompt(cfg)} Responda em ate "
                   f"{cfg['max_resposta_chars']} caracteres, no idioma "
                   f"{lang or 'pt'}, sem markdown.")
         if t:  # hora local mandada pelo device (RTC): o pet sabe que horas sao

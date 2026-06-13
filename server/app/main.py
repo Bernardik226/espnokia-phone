@@ -177,10 +177,14 @@ def create_app(copa_service=None, live_scores=None, device_keys=None,
 
     @app.get("/admin/config", dependencies=[auth])
     def admin_config_get():
-        # nunca devolve as chaves cruas — só diz se existem
+        # personalidade vai como id + catálogo de nomes (o prompt fica no
+        # código); chaves de API nunca saem cruas — só "tem/não tem"
         cfg = config.load()
-        return {"persona": cfg["persona"], "claude_model": cfg["claude_model"],
-                "stt": cfg["stt"], "max_resposta_chars": cfg["max_resposta_chars"],
+        return {"persona_id": cfg["persona_id"],
+                "personas": [{"id": k, "nome": v["nome"]}
+                             for k, v in config.PERSONAS.items()],
+                "claude_model": cfg["claude_model"], "stt": cfg["stt"],
+                "max_resposta_chars": cfg["max_resposta_chars"],
                 "web_search": cfg["web_search"],
                 "tem_anthropic_key": bool(cfg["anthropic_api_key"]),
                 "tem_stt_key": bool(cfg["stt_api_key"])}
@@ -189,8 +193,10 @@ def create_app(copa_service=None, live_scores=None, device_keys=None,
     async def admin_config_post(request: Request):
         body = await request.json()
         muda = {k: body[k] for k in
-                ("persona", "claude_model", "stt", "max_resposta_chars",
-                 "web_search") if k in body}
+                ("claude_model", "stt", "max_resposta_chars", "web_search")
+                if k in body}
+        if body.get("persona_id") in config.PERSONAS:   # só id conhecido entra
+            muda["persona_id"] = body["persona_id"]
         for k in ("anthropic_api_key", "stt_api_key"):
             if body.get(k):     # vazio nao apaga a chave existente sem querer
                 muda[k] = body[k]
