@@ -9,6 +9,7 @@
 #include "net/wifi.h"
 #include "sound.h"
 #include "drivers/buzzer.h"
+#include "drivers/rtc.h"
 #include "ui/assets.h"
 #include "ui/fonts3310.h"
 #include "ui/goal_fx.h"
@@ -207,12 +208,36 @@ static bool input(Button b, BtnEvent e) {
   return false;
 }
 
+// dias no calendario civil (Howard Hinnant): diferenca de datas sem laco
+static int32_t dias_civil(int y, int m, int d) {
+  y -= m <= 2;
+  int era = y / 400;
+  int yoe = y - era * 400;
+  int doy = (153 * (m + (m > 2 ? -3 : 9)) + 2) / 5 + d - 1;
+  int doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+  return (int32_t)era * 146097 + doe - 719468;
+}
+
+// contagem regressiva pra final (19/07/2026), discreta no canto do titulo;
+// RTC desacertado (fora da janela da Copa) esconde em vez de mostrar absurdo
+static void desenha_final_em(U8G2& g) {
+  rtc::DateTime dt;
+  if (!rtc::now(dt)) return;
+  int32_t falta =
+      dias_civil(2026, 7, 19) - dias_civil(dt.year, dt.month, dt.day);
+  if (falta <= 0 || falta > 60) return;
+  char s[8];
+  snprintf(s, sizeof(s), "%ldd", (long)falta);
+  g.drawStr(82 - (int)g.getStrWidth(s), 8, s);
+}
+
 static void render(void* gfx) {
   U8G2& g = *(U8G2*)gfx;
   g.setFont(u8g2_font_3310_small);
   switch (view) {
     case V_MENU: {
       nokia_ui::text_bold_center(g, 8, tr(STR_APP_COPA));
+      desenha_final_em(g);
       const uint8_t kVis = 3;
       uint8_t top = cur >= kVis ? (uint8_t)(cur - kVis + 1) : 0;
       for (uint8_t i = 0; i < kVis && top + i < kAbaCount; i++) {
@@ -260,7 +285,10 @@ static void render(void* gfx) {
           g.setDrawColor(0);
         }
         g.drawStr(3, y + 8, linha);
-        if (j.live) g.drawStr(78, y + 8, "*");  // bolinha de "ao vivo"
+        if (j.live)  // bolinha de "ao vivo"
+          g.drawStr(78, y + 8, "*");
+        else if (j.s1 >= 0)  // reloginho: este ja e historico
+          g.drawXBMP(78, y + 2, MINI_CLOCK_W, MINI_CLOCK_H, mini_clock_bits);
         g.setDrawColor(1);
       }
       nokia_ui::softkey(g, tr(STR_OPEN));

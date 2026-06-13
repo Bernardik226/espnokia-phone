@@ -23,9 +23,10 @@ static const char* kFutebol =
 
 static const char* kLigas =
     "{\"ligas\":["
-    "{\"id\":\"bra.1\",\"n\":\"Brasileirão\"},"
-    "{\"id\":\"uefa.champions\",\"n\":\"Champions\"},"
-    "{\"n\":\"Sem id\"}"
+    "{\"id\":\"bra.1\",\"n\":\"Brasileirão\",\"live\":true},"
+    "{\"id\":\"uefa.champions\",\"n\":\"Champions\",\"dia\":28,\"mes\":5},"
+    "{\"n\":\"Sem id\"},"
+    "{\"id\":\"eng.1\",\"n\":\"Premier League\"}"
     "]}";
 
 static const char* kGrupos =
@@ -109,10 +110,21 @@ void test_copa_sem_n1_n2_fica_vazio() {
 void test_parse_ligas() {
   FutLiga ligas[8];
   uint8_t n = fut_parse_ligas(kLigas, ligas, 8);
-  TEST_ASSERT_EQUAL_UINT8(2, n);  // entrada sem id e descartada
+  TEST_ASSERT_EQUAL_UINT8(3, n);  // entrada sem id e descartada
   TEST_ASSERT_EQUAL_STRING("bra.1", ligas[0].id);
   TEST_ASSERT_EQUAL_STRING("Brasileirão", ligas[0].n);
   TEST_ASSERT_EQUAL_STRING("uefa.champions", ligas[1].id);
+}
+
+void test_parse_ligas_estado_rolando_ou_passada() {
+  FutLiga ligas[8];
+  fut_parse_ligas(kLigas, ligas, 8);
+  TEST_ASSERT_TRUE(ligas[0].live);             // jogo rolando agora
+  TEST_ASSERT_FALSE(ligas[1].live);            // so jogos passados...
+  TEST_ASSERT_EQUAL_UINT8(28, ligas[1].dia);   // ...com a data do ultimo
+  TEST_ASSERT_EQUAL_UINT8(5, ligas[1].mes);
+  TEST_ASSERT_FALSE(ligas[2].live);            // liga neutra: tem jogo por vir
+  TEST_ASSERT_EQUAL_UINT8(0, ligas[2].dia);
 }
 
 void test_parse_ligas_json_invalido_da_zero() {
@@ -164,6 +176,16 @@ void test_linha_com_placar_mostra_placar() {
   TEST_ASSERT_EQUAL_STRING("MEX 2x1 RSA", out);
 }
 
+void test_linha_encerrado_mostra_data_e_placar() {
+  CopaJogo jogos[8];
+  copa_parse(kPayload, jogos, 8, nullptr);
+  CopaJogo j = jogos[1];  // MEX 2x1 RSA de 11/6, agora ja encerrado
+  j.live = false;
+  char out[24];
+  copa_linha(j, out, sizeof(out));
+  TEST_ASSERT_EQUAL_STRING("11/6 MEX 2x1 RSA", out);
+}
+
 int main(int, char**) {
   UNITY_BEGIN();
   RUN_TEST(test_parse_payload_normal);
@@ -175,11 +197,13 @@ int main(int, char**) {
   RUN_TEST(test_nome_completo_do_clube_em_n1_n2);
   RUN_TEST(test_copa_sem_n1_n2_fica_vazio);
   RUN_TEST(test_parse_ligas);
+  RUN_TEST(test_parse_ligas_estado_rolando_ou_passada);
   RUN_TEST(test_parse_ligas_json_invalido_da_zero);
   RUN_TEST(test_parse_grupos);
   RUN_TEST(test_parse_grupos_json_invalido_da_zero);
   RUN_TEST(test_ultimo_gol_pega_a_ultima_linha);
   RUN_TEST(test_linha_sem_placar_mostra_data);
   RUN_TEST(test_linha_com_placar_mostra_placar);
+  RUN_TEST(test_linha_encerrado_mostra_data_e_placar);
   return UNITY_END();
 }

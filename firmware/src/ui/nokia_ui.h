@@ -15,4 +15,7 @@ void softkey(U8G2& g, const char* label);
 // tela padrao dos apps com internet sem rede: wifi cortado + instrucao
 // (titulo e softkey ficam por conta do app)
 void no_network(U8G2& g);
+// poda s in place ate caber em max_w, marcando o corte com '.' — sem partir
+// caractere UTF-8 no meio (estilo 3310: "Premier League" → "Premier Lea.")
+void poda(U8G2& g, char* s, int max_w);
 }  // namespace nokia_ui

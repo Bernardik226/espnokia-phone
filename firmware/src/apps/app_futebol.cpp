@@ -227,11 +227,28 @@ static void render(void* gfx) {
       uint8_t top = cur >= kVis ? (uint8_t)(cur - kVis + 1) : 0;
       for (uint8_t i = 0; i < kVis && top + i < n_ligas_; i++) {
         int y = 11 + i * 9;
+        const FutLiga& l = ligas_[top + i];
         if (top + i == cur) {
           g.drawBox(0, y, 84, 9);
           g.setDrawColor(0);
         }
-        g.drawUTF8(3, y + 8, ligas_[top + i].n);
+        char nome[24];
+        snprintf(nome, sizeof(nome), "%s", l.n);
+        int fim = 81;  // ate onde o nome pode ir sem invadir o marcador
+        if (l.live) {  // rolando agora: mesma bolinha da lista de jogos
+          g.drawStr(78, y + 8, "*");
+          fim = 76;
+        } else if (l.dia) {  // rodada ja passou: reloginho + ultimo jogo
+          char d[8];
+          snprintf(d, sizeof(d), "%u/%u", l.dia, l.mes);
+          int x = 81 - (int)g.getStrWidth(d);
+          g.drawStr(x, y + 8, d);
+          g.drawXBMP(x - MINI_CLOCK_W - 2, y + 2, MINI_CLOCK_W, MINI_CLOCK_H,
+                     mini_clock_bits);
+          fim = x - MINI_CLOCK_W - 5;
+        }
+        nokia_ui::poda(g, nome, fim - 3);
+        g.drawUTF8(3, y + 8, nome);
         g.setDrawColor(1);
       }
       nokia_ui::softkey(g, tr(STR_SELECT));
@@ -270,7 +287,10 @@ static void render(void* gfx) {
           g.setDrawColor(0);
         }
         g.drawStr(3, y + 8, linha);
-        if (j.live) g.drawStr(78, y + 8, "*");  // bolinha de "ao vivo"
+        if (j.live)  // bolinha de "ao vivo"
+          g.drawStr(78, y + 8, "*");
+        else if (j.s1 >= 0)  // reloginho: este ja e historico
+          g.drawXBMP(78, y + 2, MINI_CLOCK_W, MINI_CLOCK_H, mini_clock_bits);
         g.setDrawColor(1);
       }
       nokia_ui::softkey(g, tr(STR_OPEN));
