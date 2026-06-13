@@ -30,6 +30,8 @@
   .body{padding:16px}
   label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:1px;
     color:var(--ink2);margin:14px 0 4px}
+  label .ic{width:13px;height:13px;vertical-align:-2px;margin-right:7px;fill:none;
+    stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
   input,select,textarea{width:100%;border:2px solid var(--ink);padding:9px 8px;
     font:inherit;font-size:14px;background:#fff;border-radius:0;color:var(--ink)}
   textarea{min-height:96px;resize:vertical}
@@ -294,6 +296,37 @@ if(_auto){ KEY = _auto; history.replaceState(null, "", location.pathname); }
 const LOGO = `<svg viewBox="0 0 79 8" shape-rendering="crispEdges"><path fill="#e56825" d="M2 0h7v1h-7zM11 0h7v1h-7zM20 0h8v1h-8zM1 1h8v1h-8zM10 1h8v1h-8zM20 1h9v1h-9zM0 2h2v1h-2zM10 2h2v1h-2zM20 2h2v1h-2zM27 2h2v1h-2zM0 3h7v1h-7zM10 3h7v1h-7zM20 3h9v1h-9zM0 4h7v1h-7zM11 4h7v1h-7zM20 4h8v1h-8zM0 5h2v1h-2zM17 5h2v1h-2zM20 5h2v1h-2zM1 6h8v1h-8zM10 6h8v1h-8zM20 6h2v1h-2zM2 7h7v1h-7zM10 7h7v1h-7zM20 7h2v1h-2z"/><path fill="#1d4487" d="M31 0h3v1h-3zM39 0h2v1h-2zM44 0h8v1h-8zM55 0h2v1h-2zM60 0h3v1h-3zM65 0h2v1h-2zM72 0h4v1h-4zM31 1h4v1h-4zM39 1h2v1h-2zM43 1h10v1h-10zM55 1h2v1h-2zM59 1h3v1h-3zM65 1h2v1h-2zM71 1h6v1h-6zM31 2h5v1h-5zM39 2h2v1h-2zM43 2h2v1h-2zM51 2h2v1h-2zM55 2h2v1h-2zM58 2h3v1h-3zM65 2h2v1h-2zM70 2h3v1h-3zM75 2h2v1h-2zM31 3h2v1h-2zM34 3h2v1h-2zM39 3h2v1h-2zM43 3h2v1h-2zM51 3h2v1h-2zM55 3h5v1h-5zM65 3h2v1h-2zM69 3h4v1h-4zM75 3h3v1h-3zM31 4h2v1h-2zM35 4h2v1h-2zM39 4h2v1h-2zM43 4h2v1h-2zM51 4h2v1h-2zM55 4h5v1h-5zM65 4h2v1h-2zM69 4h2v1h-2zM75 4h2v1h-2zM31 5h2v1h-2zM36 5h2v1h-2zM39 5h2v1h-2zM43 5h2v1h-2zM51 5h2v1h-2zM55 5h2v1h-2zM58 5h3v1h-3zM65 5h2v1h-2zM68 5h10v1h-10zM31 6h2v1h-2zM37 6h4v1h-4zM43 6h10v1h-10zM55 6h2v1h-2zM59 6h3v1h-3zM65 6h2v1h-2zM68 6h10v1h-10zM31 7h2v1h-2zM38 7h3v1h-3zM44 7h8v1h-8zM55 7h2v1h-2zM60 7h3v1h-3zM65 7h2v1h-2zM68 7h2v1h-2zM76 7h2v1h-2z"/></svg>`;
 for(const el of document.querySelectorAll(".logo")) el.innerHTML = LOGO;
 
+// icones nos labels: ajudam a bater o olho e achar cada opcao (SVG mono que
+// herda a cor do label). Inserido antes do i18n; o texto vai num <span> pra
+// a troca de idioma nao apagar o icone.
+const _ic = p => `<svg class="ic" viewBox="0 0 16 16" aria-hidden="true">${p}</svg>`;
+const ICONS = {
+  key_lbl: _ic('<rect x="3" y="7" width="10" height="6.5" rx="1"/><path d="M5 7V5.2a3 3 0 0 1 6 0V7"/>'),
+  lbl_persona: _ic('<circle cx="8" cy="8" r="6"/><circle cx="6" cy="7" r=".6" fill="currentColor" stroke="none"/><circle cx="10" cy="7" r=".6" fill="currentColor" stroke="none"/><path d="M5.8 10.2c1.3 1.1 3.1 1.1 4.4 0"/>'),
+  lbl_stt: _ic('<rect x="6" y="2.5" width="4" height="7" rx="2"/><path d="M4 8a4 4 0 0 0 8 0M8 12v2M6 14h4"/>'),
+  lbl_max: _ic('<path d="M3 5h10M3 8h7M3 11h4"/>'),
+  lbl_model: _ic('<path d="M8 2.5v11M2.5 8h11M4.5 4.5l7 7M11.5 4.5l-7 7"/>'),
+  lbl_web: _ic('<circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2.4 2 2.4 10 0 12M8 2c-2.4 2-2.4 10 0 12"/>'),
+  lbl_anth: _ic('<circle cx="6" cy="6" r="2.6"/><path d="M7.9 7.9 13 13M11 12.3l1.6-1.6"/>'),
+  lbl_mem: _ic('<rect x="2.5" y="2.5" width="11" height="11" rx="1"/><path d="M5 2.5v3.5h6V2.5M5.5 13.5v-3.2h5v3.2"/>'),
+  lbl_talks: _ic('<path d="M2.5 3.5h11v7H7l-3 2.5v-2.5H2.5z"/>'),
+};
+function montaIcones(){
+  for(const lab of [...document.querySelectorAll("label[data-i18n]")]){
+    const key = lab.dataset.i18n, ic = ICONS[key];
+    if(!ic) continue;
+    let txt = ""; const extras = [];
+    for(const nf of [...lab.childNodes]){
+      if(nf.nodeType===3 && !txt.trim()) txt = nf.textContent;
+      else if(nf.nodeType===1) extras.push(nf);   // ex: o span #haskey
+    }
+    lab.removeAttribute("data-i18n");
+    lab.innerHTML = ic + `<span data-i18n="${key}">${txt.trim()}</span>`;
+    for(const e of extras) lab.appendChild(e);
+  }
+}
+
+montaIcones();
 montaSelects(); aplicaI18n();
 if(KEY){ document.getElementById("key").value = KEY; conectar(); }
 </script>
