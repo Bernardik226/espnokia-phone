@@ -24,7 +24,7 @@
 </p>
 
 <h3 align="center">
-  📟 Conhecer o projeto&nbsp;&nbsp;·&nbsp;&nbsp;<a href="docs/INSTALL.md">🔧 Montar o seu</a>
+  📟 Conhecer o projeto&nbsp;&nbsp;·&nbsp;&nbsp;<a href="docs/INSTALL.pt-br.md">🔧 Montar o seu</a>
 </h3>
 
 <p align="center">
@@ -182,10 +182,10 @@ numerada pros pontos corridos, grupos navegáveis pras copas — e o menu **capt
 o que está rolando**, mostrando a temporada em jogo.
 
 <p align="center">
-  <img src="docs/assets/photos/sports.png" width="208" alt="carrossel da categoria Esportes">
-  <img src="docs/assets/photos/football-leagues.png" width="208" alt="seletor de ligas">
-  <img src="docs/assets/photos/football-table.png" width="208" alt="tabela de classificação com as posições">
-  <img src="docs/assets/photos/football-game.png" width="208" alt="visão de um jogo">
+  <img src="docs/assets/photos/sports.png" width="168" alt="carrossel da categoria Esportes">
+  <img src="docs/assets/photos/football-leagues.png" width="168" alt="seletor de ligas">
+  <img src="docs/assets/photos/football-table.png" width="168" alt="tabela de classificação com as posições">
+  <img src="docs/assets/photos/football-game.png" width="168" alt="visão de um jogo">
 </p>
 
 <p align="center"><b>Fluxo</b> &nbsp;·&nbsp; ligas → menu da liga → jogos / tabela</p>
@@ -361,7 +361,7 @@ estrela laranja de seis pontas abaixo é a marca de maker que saiu disso.
 | <img src="docs/assets/components/comp-button.png" width="60" alt="botões"> | **4 botões táteis** | UP · DOWN · OK · C — navegação completa estilo 3310 |
 | <img src="docs/assets/components/comp-buzzer.png" width="60" alt="buzzer"> | **Buzzer passivo** | Toques RTTTL, beeps e o alerta de gol (volume via PWM) |
 | 🎤 | **Mic I2S INMP441** | Capta sua voz pro Claw'd |
-| <img src="docs/assets/components/comp-proto.png" width="60" alt="protoboard"> | **Protoboard + jumpers** | Montagem sem solda — pinagem completa em [`docs/INSTALL.md`](docs/INSTALL.md) |
+| <img src="docs/assets/components/comp-proto.png" width="60" alt="protoboard"> | **Protoboard + jumpers** | Montagem sem solda — pinagem completa em [`docs/INSTALL.pt-br.md`](docs/INSTALL.pt-br.md) |
 
 <p align="center">
   <img src="docs/assets/photos/protoboard.png" width="420" alt="a montagem real na protoboard com todos os componentes ligados">
@@ -431,6 +431,6 @@ Componentes de terceiros mantêm suas próprias licenças (veja cada projeto aci
 ---
 
 <p align="center">
-  Quer um na sua mesa? → <a href="docs/INSTALL.md"><b>🔧 Guia de montagem e instalação</b></a>
+  Quer um na sua mesa? → <a href="docs/INSTALL.pt-br.md"><b>🔧 Guia de montagem e instalação</b></a>
   &nbsp;·&nbsp; <img src="docs/assets/star-orange.png" width="16" alt="estrela laranja"> feito por <b>Bernardo Melo</b>
 </p>
