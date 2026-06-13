@@ -3,7 +3,7 @@ import os
 import threading
 
 from fastapi import BackgroundTasks, Depends, FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from app import config, stt
 from app.auth import make_auth
@@ -19,6 +19,8 @@ from app.sources.espn import EspnScores
 from app.sources.livescore import LiveScores
 
 TTL_TABELA_S = 15 * 60  # a tabela do openfootball muda pouco
+VERSION = "5.0"
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 
 
 def fonte_copa():
@@ -154,6 +156,49 @@ def create_app(copa_service=None, live_scores=None, device_keys=None,
     def claude_memoria(request: Request):
         device = request.headers.get("x-device-key", "")
         return voz.memoria.memoria(device)
+
+    @app.post("/claude/memoria/limpar", dependencies=[auth])
+    def claude_memoria_limpar(request: Request):
+        device = request.headers.get("x-device-key", "")
+        voz.memoria.limpar(device)
+        return {"ok": True}
+
+    # --- dashboard web (sobe junto com o server) ---
+    @app.get("/admin/status", dependencies=[auth])
+    def admin_status(request: Request):
+        device = request.headers.get("x-device-key", "")
+        cfg = config.load()
+        mem = voz.memoria.memoria(device)
+        return {"versao": VERSION, "stt": cfg["stt"],
+                "model": cfg["claude_model"], "web_search": cfg["web_search"],
+                "tem_api_key": bool(cfg["anthropic_api_key"]),
+                "conversas": voz.memoria.pares(device, 0)["total"],
+                "resumidos": mem["resumidos"], "memoria_ts": mem["ts"]}
+
+    @app.get("/admin/config", dependencies=[auth])
+    def admin_config_get():
+        # nunca devolve as chaves cruas — só diz se existem
+        cfg = config.load()
+        return {"persona": cfg["persona"], "claude_model": cfg["claude_model"],
+                "stt": cfg["stt"], "max_resposta_chars": cfg["max_resposta_chars"],
+                "web_search": cfg["web_search"],
+                "tem_anthropic_key": bool(cfg["anthropic_api_key"]),
+                "tem_stt_key": bool(cfg["stt_api_key"])}
+
+    @app.post("/admin/config", dependencies=[auth])
+    async def admin_config_post(request: Request):
+        body = await request.json()
+        muda = {k: body[k] for k in
+                ("persona", "claude_model", "stt", "max_resposta_chars",
+                 "web_search") if k in body}
+        for k in ("anthropic_api_key", "stt_api_key"):
+            if body.get(k):     # vazio nao apaga a chave existente sem querer
+                muda[k] = body[k]
+        return config.save(muda) and {"ok": True}
+
+    @app.get("/", include_in_schema=False)
+    def dashboard():
+        return FileResponse(os.path.join(STATIC_DIR, "dashboard.html"))
 
     return app
 

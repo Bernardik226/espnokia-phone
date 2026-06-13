@@ -202,3 +202,52 @@ def test_futebol_exige_chave():
     c = monta(device_keys="segredo")
     assert c.get("/futebol/ligas").status_code == 401
     assert c.get("/futebol/tabela", params={"liga": "bra.1"}).status_code == 401
+
+
+def test_dashboard_html_aberto_sem_chave():
+    c = monta(device_keys="segredo")        # a casca HTML não exige chave
+    r = c.get("/")
+    assert r.status_code == 200
+    assert "dashboard do Claw" in r.text
+
+
+def test_admin_status_exige_chave():
+    c = monta(device_keys="segredo")
+    assert c.get("/admin/status").status_code == 401
+
+
+def test_admin_status_traz_versao_e_contagem(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    c = monta(device_keys="segredo")
+    s = c.get("/admin/status", headers={"X-Device-Key": "segredo"}).json()
+    assert s["versao"] == "5.0"
+    assert s["conversas"] == 0 and s["resumidos"] == 0
+    assert "stt" in s and "model" in s
+
+
+def test_admin_config_nunca_vaza_a_chave_crua(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-secreta")
+    c = monta(device_keys="segredo")
+    cfg = c.get("/admin/config", headers={"X-Device-Key": "segredo"}).json()
+    assert "anthropic_api_key" not in cfg
+    assert cfg["tem_anthropic_key"] is True
+
+
+def test_admin_config_salva_e_vale_na_hora(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    c = monta(device_keys="segredo")
+    r = c.post("/admin/config", headers={"X-Device-Key": "segredo"},
+               json={"persona": "novo eu", "max_resposta_chars": 99})
+    assert r.status_code == 200
+    cfg = c.get("/admin/config", headers={"X-Device-Key": "segredo"}).json()
+    assert cfg["persona"] == "novo eu" and cfg["max_resposta_chars"] == 99
+
+
+def test_memoria_limpar_exige_chave_e_responde_ok(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    c = monta(device_keys="segredo")
+    assert c.post("/claude/memoria/limpar").status_code == 401
+    r = c.post("/claude/memoria/limpar", headers={"X-Device-Key": "segredo"})
+    assert r.status_code == 200 and r.json() == {"ok": True}
