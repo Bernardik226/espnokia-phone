@@ -221,7 +221,7 @@ def test_admin_status_traz_versao_e_contagem(tmp_path, monkeypatch):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     c = monta(device_keys="segredo")
     s = c.get("/admin/status", headers={"X-Device-Key": "segredo"}).json()
-    assert s["versao"] == "5.0"
+    assert s["versao"] == "0.5.0"
     assert s["conversas"] == 0 and s["resumidos"] == 0
     assert "stt" in s and "model" in s
 

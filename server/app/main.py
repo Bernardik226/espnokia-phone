@@ -20,7 +20,7 @@ from app.sources.espn import EspnScores
 from app.sources.livescore import LiveScores
 
 TTL_TABELA_S = 15 * 60  # a tabela do openfootball muda pouco
-VERSION = "5.0"
+VERSION = "0.5.0"
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 
 
