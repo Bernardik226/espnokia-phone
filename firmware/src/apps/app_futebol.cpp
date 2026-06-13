@@ -56,7 +56,8 @@ static char path_[48];         // /futebol/jogos?liga=X da liga aberta
 
 // acompanhamento ao vivo: o detail aberto refaz o GET e dispara o efeito de
 // gol; a lista refaz o GET so pra manter o placar das linhas atualizado
-static const uint32_t kLiveRefetchMs = 45000;
+static const uint32_t kLiveRefetchMs = 20000;
+static const uint32_t kAbreRefetchMs = 1500;  // rele quase na hora ao abrir
 static int8_t live_s1_, live_s2_;
 static char live_t1_[6], live_t2_[6];
 static uint32_t live_next_ = 0;    // 0 = detail nao esta acompanhando
@@ -72,7 +73,7 @@ static void live_watch(const CopaJogo& j) {
   live_s1_ = j.s1; live_s2_ = j.s2;
   strncpy(live_t1_, j.t1, sizeof(live_t1_));
   strncpy(live_t2_, j.t2, sizeof(live_t2_));
-  live_next_ = millis() + kLiveRefetchMs;
+  live_next_ = millis() + kAbreRefetchMs;  // rele quase na hora ao abrir
 }
 
 // escolher a liga abre o submenu dela (Jogos / Tabela) — sem rede ainda

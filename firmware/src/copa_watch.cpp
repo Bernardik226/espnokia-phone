@@ -12,7 +12,7 @@
 
 namespace copa_watch {
 
-static const uint32_t kPollMs = 60000;  // cadencia dentro da janela do jogo
+static const uint32_t kPollMs = 30000;  // cadencia dentro da janela do jogo
 static const int32_t kJanelaMin = 150;  // kickoff ate +150 min cobre acrescimos
 
 static Preferences prefs_;
