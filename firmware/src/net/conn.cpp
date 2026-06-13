@@ -32,7 +32,7 @@ static void gera_chave(char* out) {
 
 void init() {
   prefs_.begin("conn", false);
-  prefs_.getString("key", key_, sizeof(key_));
+  if (prefs_.isKey("key")) prefs_.getString("key", key_, sizeof(key_));
   if (strlen(key_) < 16) {           // sem chave na NVS ainda
     if (strlen(DEVICE_KEY) >= 16)    // semeia da config.h (dev/retrocompat)...
       snprintf(key_, sizeof(key_), "%s", DEVICE_KEY);
@@ -40,7 +40,7 @@ void init() {
       gera_chave(key_);
     prefs_.putString("key", key_);
   }
-  prefs_.getString("url", url_, sizeof(url_));
+  if (prefs_.isKey("url")) prefs_.getString("url", url_, sizeof(url_));
   if (!url_[0]) snprintf(url_, sizeof(url_), "%s", SERVER_URL);  // fallback
 }
 
