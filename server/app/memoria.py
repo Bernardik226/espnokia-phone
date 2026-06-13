@@ -90,9 +90,18 @@ class MemoriaService:
         tmp.write_text(json.dumps(reg, ensure_ascii=False), encoding="utf-8")
         os.replace(tmp, arq)
 
-    def grava_par(self, device, q, r):
+    def grava_par(self, device, q, r, t=""):
+        # carimbo preferindo a hora local do device (o &t= da fala, vinda do
+        # NTP dele): mktime aqui e localtime no pares() usam o mesmo fuso do
+        # servidor e se anulam — o display devolve a hora exata do device
+        ts = int(self.now_fn())
+        if t:
+            try:
+                ts = int(time.mktime(time.strptime(t, "%Y-%m-%dT%H:%M")))
+            except ValueError:
+                pass    # t torto: fica o relógio do servidor
         reg = self._carrega(device)
-        reg["pares"].append({"ts": int(self.now_fn()), "q": q, "r": r})
+        reg["pares"].append({"ts": ts, "q": q, "r": r})
         if len(reg["pares"]) > TETO:    # resumo vive falhando: não cresce
             reg["pares"] = reg["pares"][-TETO:]   # pra sempre
         self._salva(device, reg)

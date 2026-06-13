@@ -263,3 +263,21 @@ def test_resumo_falhando_nao_quebra_a_voz(tmp_path, monkeypatch):
                     headers={"X-Device-Key": "k1"})
     assert r.status_code == 200          # a resposta sai mesmo assim
     assert mem.memoria_texto("k1") == ""  # resumo não rolou, sem drama
+
+
+def test_grava_par_respeita_hora_do_device(tmp_path):
+    # o carimbo vem do &t= do device (NTP local): mktime na gravacao e
+    # localtime na exibicao se anulam, a tela mostra a hora exata do device
+    m = svc(tmp_path)
+    m.grava_par("k1", "que horas sao?", "18:30!", t="2026-06-12T18:30")
+    item = m.pares("k1", 0)["itens"][0]
+    assert item["d"] == "12/06"
+    assert item["h"] == "18:30"
+
+
+def test_grava_par_t_quebrado_cai_no_relogio_do_servidor(tmp_path):
+    m = svc(tmp_path, now=1000)
+    m.grava_par("k1", "a", "b", t="nao-e-data")
+    reg = json.loads(next((tmp_path / "claw").iterdir())
+                     .joinpath("registro.json").read_text(encoding="utf-8"))
+    assert reg["pares"][0]["ts"] == 1000

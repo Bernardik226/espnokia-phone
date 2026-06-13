@@ -80,7 +80,7 @@ class VozService:
         except Exception:
             logging.exception("claude api falhou")
             return 502, {"erro": "sem resposta do claude"}
-        self.memoria.grava_par(device, falei, resposta)
+        self.memoria.grava_par(device, falei, resposta, t)
         try:
             self._loga_uso(device, t_in, t_out)
         except OSError:
