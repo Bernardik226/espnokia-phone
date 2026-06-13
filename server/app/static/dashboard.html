@@ -19,9 +19,8 @@
     box-shadow:8px 8px 0 var(--ink);padding:0;margin-bottom:20px}
   .top{padding:14px 16px;border-bottom:3px solid var(--orange);
     display:flex;align-items:center;gap:10px}
-  .logo{font-size:18px;font-weight:bold;letter-spacing:1px}
-  .logo .e{color:var(--orange)} .logo .n{color:var(--ink)}
-  .logo small{color:var(--ink2);font-weight:normal;font-size:12px;letter-spacing:0}
+  .logo{display:flex;align-items:center}
+  .logo svg{display:block;height:18px;width:auto}
   .star{color:var(--orange);font-size:20px}
   .dot{font-size:11px;letter-spacing:1px;text-transform:uppercase}
   .dot.on{color:var(--orange)} .dot.off{color:var(--dim)}
@@ -49,6 +48,7 @@
   .tabs button:last-child{border-right:0}
   .tabs button.sel{background:var(--ink);color:#fff}
   .tabs button:active{background:var(--orange);color:#fff}
+  .tabs button .petico{height:13px;width:13px;vertical-align:-2px;margin-right:5px}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .stat{border:2px solid var(--ink);padding:10px 12px}
   .stat b{display:block;font-size:18px;color:var(--orange)}
@@ -75,8 +75,7 @@
   <div id="login" class="card">
     <div class="top">
       <span class="star">✳</span>
-      <span class="logo"><span class="e">esp</span><span class="n">nokia</span>
-        <small data-i18n="sub">· painel do Claw'd</small></span>
+      <span class="logo"></span>
       <span class="right"><select id="lang0" class="lang" onchange="setLang(this.value)"></select></span>
     </div>
     <div class="body">
@@ -92,14 +91,14 @@
     <div class="card">
       <div class="top">
         <span class="star">✳</span>
-        <span class="logo"><span class="e">esp</span><span class="n">nokia</span>
-          <small>· Claw'd</small></span>
-        <span class="right"><span id="conn" class="dot off">offline</span></span>
+        <span class="logo"></span>
+        <span class="right">
+          <select id="lang_app" class="lang" onchange="setLang(this.value)"></select>
+          <span id="conn" class="dot off">offline</span></span>
       </div>
       <div class="tabs">
         <button data-t="status" class="sel" data-i18n="tab_status" onclick="aba('status')">STATUS</button>
-        <button data-t="claude" onclick="aba('claude')">CLAW'D</button>
-        <button data-t="config" data-i18n="tab_config" onclick="aba('config')">CONFIG</button>
+        <button data-t="claude" onclick="aba('claude')"><svg class="petico" viewBox="0 0 14 14" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.1" d="M4.6 4.3 3.6 2.1M9.4 4.3 10.4 2.1"/><circle cx="3.4" cy="1.7" r="1.1" fill="currentColor"/><circle cx="10.6" cy="1.7" r="1.1" fill="currentColor"/><path fill="currentColor" d="M2.7 12.6V7a4.3 4.3 0 0 1 8.6 0v5.6L9.2 10.8 7 13 4.8 10.8Z"/></svg>CLAW'D</button>
       </div>
 
       <div class="body">
@@ -108,21 +107,7 @@
         </section>
 
         <section id="t-claude" class="hide">
-          <label data-i18n="lbl_mem">memória persistente</label>
-          <pre class="mem" id="mem">—</pre>
-          <button class="ghost" data-i18n="forget" onclick="limpar()">ESQUECER TUDO</button>
-          <label style="margin-top:20px" data-i18n="lbl_talks">conversas registradas</label>
-          <div id="talks"></div>
-          <div class="pag hide" id="pag">
-            <button onclick="pagina(-1)">‹</button>
-            <span id="paginfo"></span>
-            <button onclick="pagina(1)">›</button>
-          </div>
-        </section>
-
-        <section id="t-config" class="hide">
-          <label data-i18n="lbl_iface">idioma da interface</label>
-          <select id="lang1" class="lang" style="width:100%" onchange="setLang(this.value)"></select>
+          <!-- configuração do pet -->
           <label data-i18n="lbl_persona">persona do Claw'd</label>
           <textarea id="c_persona"></textarea>
           <div class="row">
@@ -130,7 +115,7 @@
               <select id="c_stt"><option value="local">local (whisper)</option>
                 <option value="groq">groq</option></select></div>
             <div><label data-i18n="lbl_max">limite de resposta</label>
-              <input id="c_max" type="number" min="40" max="600"></div>
+              <input id="c_max" type="number" min="40" max="240"></div>
           </div>
           <label data-i18n="lbl_model">modelo Claude</label>
           <input id="c_model" type="text">
@@ -142,6 +127,19 @@
               <input id="c_key" type="password" data-i18n-ph="ph_anth" placeholder="(vazio = manter)"></div>
           </div>
           <button data-i18n="save" onclick="salvar()">SALVAR CONFIG</button>
+          <hr style="border:0;border-top:2px solid var(--line);margin:22px 0">
+          <!-- memória persistente -->
+          <label data-i18n="lbl_mem">memória persistente</label>
+          <pre class="mem" id="mem">—</pre>
+          <button class="ghost" data-i18n="forget" onclick="limpar()">ESQUECER TUDO</button>
+          <!-- conversas -->
+          <label style="margin-top:20px" data-i18n="lbl_talks">conversas registradas</label>
+          <div id="talks"></div>
+          <div class="pag hide" id="pag">
+            <button onclick="pagina(-1)">‹</button>
+            <span id="paginfo"></span>
+            <button onclick="pagina(1)">›</button>
+          </div>
         </section>
       </div>
     </div>
@@ -167,7 +165,7 @@ let lang = localStorage.getItem("espnokia_lang")
 function t(k){ return (I18N[lang]||I18N.pt)[k] ?? I18N.pt[k] ?? k; }
 
 function montaSelects(){
-  for(const id of ["lang0","lang1"]){
+  for(const id of ["lang0","lang_app"]){
     const s = document.getElementById(id); if(!s) continue;
     s.innerHTML = LANGS.map(l=>`<option value="${l}">${I18N[l].lang}</option>`).join("");
     s.value = lang;
@@ -179,7 +177,7 @@ function aplicaI18n(){
     el.textContent = t(el.dataset.i18n);
   for(const el of document.querySelectorAll("[data-i18n-ph]"))
     el.placeholder = t(el.dataset.i18nPh);
-  for(const id of ["lang0","lang1"]){ const s=document.getElementById(id); if(s) s.value=lang; }
+  for(const id of ["lang0","lang_app"]){ const s=document.getElementById(id); if(s) s.value=lang; }
   conn(document.getElementById("conn").classList.contains("on"));
   // re-renderiza a aba aberta pra atualizar os textos dinâmicos
   const app = document.getElementById("app");
@@ -221,11 +219,10 @@ async function conectar(){
 function aba(nome){
   for(const b of document.querySelectorAll(".tabs button"))
     b.classList.toggle("sel", b.dataset.t === nome);
-  for(const s of ["status","claude","config"])
+  for(const s of ["status","claude"])
     document.getElementById("t-"+s).classList.toggle("hide", s !== nome);
   if(nome==="status") carregaStatus();
-  if(nome==="claude"){ pag=0; carregaMemoria(); carregaTalks(); }
-  if(nome==="config") carregaConfig();
+  if(nome==="claude"){ pag=0; carregaConfig(); carregaMemoria(); carregaTalks(); }
 }
 async function carregaStatus(){
   const r = await api("/admin/status"); if(r.status!==200) return conn(false);
@@ -290,6 +287,10 @@ function esc(s){ return s.replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt
 const _auto = new URLSearchParams(location.hash.slice(1)).get("k")
            || new URLSearchParams(location.search).get("k");
 if(_auto){ KEY = _auto; history.replaceState(null, "", location.pathname); }
+
+// logotipo espnokia (mesmo wordmark bicolor da pagina AP, 79x8)
+const LOGO = `<svg viewBox="0 0 79 8" shape-rendering="crispEdges"><path fill="#e56825" d="M2 0h7v1h-7zM11 0h7v1h-7zM20 0h8v1h-8zM1 1h8v1h-8zM10 1h8v1h-8zM20 1h9v1h-9zM0 2h2v1h-2zM10 2h2v1h-2zM20 2h2v1h-2zM27 2h2v1h-2zM0 3h7v1h-7zM10 3h7v1h-7zM20 3h9v1h-9zM0 4h7v1h-7zM11 4h7v1h-7zM20 4h8v1h-8zM0 5h2v1h-2zM17 5h2v1h-2zM20 5h2v1h-2zM1 6h8v1h-8zM10 6h8v1h-8zM20 6h2v1h-2zM2 7h7v1h-7zM10 7h7v1h-7zM20 7h2v1h-2z"/><path fill="#1d4487" d="M31 0h3v1h-3zM39 0h2v1h-2zM44 0h8v1h-8zM55 0h2v1h-2zM60 0h3v1h-3zM65 0h2v1h-2zM72 0h4v1h-4zM31 1h4v1h-4zM39 1h2v1h-2zM43 1h10v1h-10zM55 1h2v1h-2zM59 1h3v1h-3zM65 1h2v1h-2zM71 1h6v1h-6zM31 2h5v1h-5zM39 2h2v1h-2zM43 2h2v1h-2zM51 2h2v1h-2zM55 2h2v1h-2zM58 2h3v1h-3zM65 2h2v1h-2zM70 2h3v1h-3zM75 2h2v1h-2zM31 3h2v1h-2zM34 3h2v1h-2zM39 3h2v1h-2zM43 3h2v1h-2zM51 3h2v1h-2zM55 3h5v1h-5zM65 3h2v1h-2zM69 3h4v1h-4zM75 3h3v1h-3zM31 4h2v1h-2zM35 4h2v1h-2zM39 4h2v1h-2zM43 4h2v1h-2zM51 4h2v1h-2zM55 4h5v1h-5zM65 4h2v1h-2zM69 4h2v1h-2zM75 4h2v1h-2zM31 5h2v1h-2zM36 5h2v1h-2zM39 5h2v1h-2zM43 5h2v1h-2zM51 5h2v1h-2zM55 5h2v1h-2zM58 5h3v1h-3zM65 5h2v1h-2zM68 5h10v1h-10zM31 6h2v1h-2zM37 6h4v1h-4zM43 6h10v1h-10zM55 6h2v1h-2zM59 6h3v1h-3zM65 6h2v1h-2zM68 6h10v1h-10zM31 7h2v1h-2zM38 7h3v1h-3zM44 7h8v1h-8zM55 7h2v1h-2zM60 7h3v1h-3zM65 7h2v1h-2zM68 7h2v1h-2zM76 7h2v1h-2z"/></svg>`;
+for(const el of document.querySelectorAll(".logo")) el.innerHTML = LOGO;
 
 montaSelects(); aplicaI18n();
 if(KEY){ document.getElementById("key").value = KEY; conectar(); }
