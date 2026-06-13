@@ -2,8 +2,15 @@
 <html lang="pt-br">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>espnokia · Claw'd</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1d4487">
+<link rel="icon" href="/static/icon-192.png">
+<link rel="apple-touch-icon" href="/static/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Claw'd">
+<meta name="mobile-web-app-capable" content="yes">
 <style>
   /* mesma paleta do logo espnokia da pagina AP: azul #1d4487 / laranja #e56825 */
   :root{
@@ -69,6 +76,20 @@
     background:var(--ink);color:#fff;padding:10px 22px;font-weight:bold;letter-spacing:1px;
     box-shadow:5px 5px 0 var(--orange);opacity:0;transition:opacity .25s}
   .toast.show{opacity:1}
+  /* mobile-first: telas estreitas empilham e enxugam a sombra dura */
+  @media (max-width:520px){
+    body{padding:14px 8px}
+    .card{box-shadow:4px 4px 0 var(--ink);margin-bottom:16px}
+    .top{padding:12px}
+    .logo svg{height:16px}
+    .body{padding:14px}
+    .row{flex-direction:column;gap:0}
+    .grid{grid-template-columns:1fr 1fr;gap:8px}
+    .tabs button{padding:13px 4px;font-size:13px}
+    select.lang{font-size:12px;padding:4px 2px}
+    .toast{left:10px;right:10px;transform:none;text-align:center;
+      box-shadow:3px 3px 0 var(--orange)}
+  }
 </style>
 </head>
 <body>
@@ -329,6 +350,10 @@ function montaIcones(){
 montaIcones();
 montaSelects(); aplicaI18n();
 if(KEY){ document.getElementById("key").value = KEY; conectar(); }
+
+// PWA: instala o app shell pra abrir offline/standalone e virar app na home
+if("serviceWorker" in navigator)
+  navigator.serviceWorker.register("/sw.js").catch(()=>{});
 </script>
 </body>
 </html>

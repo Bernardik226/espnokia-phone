@@ -4,6 +4,7 @@ import threading
 
 from fastapi import BackgroundTasks, Depends, FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app import config, stt
 from app.auth import make_auth
@@ -202,10 +203,21 @@ def create_app(copa_service=None, live_scores=None, device_keys=None,
                 muda[k] = body[k]
         return config.save(muda) and {"ok": True}
 
+    @app.get("/manifest.json", include_in_schema=False)
+    def manifest():
+        return FileResponse(os.path.join(STATIC_DIR, "manifest.json"),
+                            media_type="application/manifest+json")
+
+    @app.get("/sw.js", include_in_schema=False)
+    def service_worker():
+        return FileResponse(os.path.join(STATIC_DIR, "sw.js"),
+                            media_type="application/javascript")
+
     @app.get("/", include_in_schema=False)
     def dashboard():
         return FileResponse(os.path.join(STATIC_DIR, "dashboard.html"))
 
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
     return app
 
 
