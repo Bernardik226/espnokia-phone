@@ -83,6 +83,18 @@ class FutebolService:
         return [p for p in self.jogos(liga)
                 if p["rolando"] or (p["fim"] and p["data"] >= corte)]
 
+    def tabela(self, liga):
+        """Classificação da liga. A fonte já normaliza em blocos (1 bloco =
+        pontos corridos; vários = fase de grupos). Liga desconhecida ou fonte
+        quebrada devolve vazio — o aparelho mostra 'sem classificação'."""
+        fonte = self.fontes.get(liga)
+        if fonte is None:
+            return []
+        try:
+            return fonte.grupos()
+        except Exception:
+            return []
+
 
 def payload(ps, info):
     """Mesmo contrato do /copa/*: o aparelho parseia os dois apps com o
@@ -109,3 +121,16 @@ def payload(ps, info):
                 j["g2"] = "\n".join(p["g2"])
         jogos.append(j)
     return {"jogos": jogos, "atualizado_s": 0}
+
+
+def tabela_payload(grupos):
+    """Classificação no mesmo shape do /copa/grupos (c/p/j/s). Pontos
+    corridos chega como 1 bloco de nome inútil ("2026", "Premier League
+    2025-2026"): zera o nome — o aparelho usa "1 bloco sem nome" como sinal de
+    tabela única (numerada) vs vários blocos nomeados (grupos navegáveis)."""
+    unica = len(grupos) == 1
+    out = [{"n": "" if unica else g["n"],
+            "t": [{"c": t["c"], "p": t["pts"], "j": t["j"], "s": t["sg"]}
+                  for t in g["t"]]}
+           for g in grupos]
+    return {"grupos": out, "atualizado_s": 0}

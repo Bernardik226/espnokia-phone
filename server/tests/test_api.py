@@ -38,11 +38,15 @@ def vivo(s1, s2, rolando=True, fim=False, minuto="", g1=None, g2=None, est=""):
 
 
 class FonteFutFake:
-    def __init__(self, ps=None):
+    def __init__(self, ps=None, grupos=None):
         self.ps = ps or []
+        self._grupos = grupos or []
 
     def partidas(self):
         return self.ps
+
+    def grupos(self):
+        return self._grupos
 
 
 def monta(device_keys="", agora=ANTES_DA_COPA, placares=None, grupos=None,
@@ -175,6 +179,26 @@ def test_futebol_live_so_jogo_quente():
     assert [j["t1"] for j in jogos] == ["FLA"]
 
 
+def test_futebol_tabela_pontos_corridos():
+    g = [{"n": "2026", "t": [{"c": "FLA", "pts": 9, "j": 3, "sg": 5}]}]
+    fut = FutebolService({"bra.1": FonteFutFake(grupos=g)})
+    c = monta(futebol=fut)
+    body = c.get("/futebol/tabela", params={"liga": "bra.1"}).json()
+    assert body == {"grupos": [{"n": "", "t": [
+        {"c": "FLA", "p": 9, "j": 3, "s": 5}]}], "atualizado_s": 0}
+
+
+def test_futebol_tabela_grupos():
+    g = [{"n": "A", "t": [{"c": "FLA", "pts": 9, "j": 3, "sg": 5}]},
+         {"n": "B", "t": [{"c": "BOC", "pts": 6, "j": 3, "sg": 1}]}]
+    fut = FutebolService({"conmebol.libertadores": FonteFutFake(grupos=g)})
+    c = monta(futebol=fut)
+    grupos = c.get("/futebol/tabela",
+                   params={"liga": "conmebol.libertadores"}).json()["grupos"]
+    assert [x["n"] for x in grupos] == ["A", "B"]
+
+
 def test_futebol_exige_chave():
     c = monta(device_keys="segredo")
     assert c.get("/futebol/ligas").status_code == 401
+    assert c.get("/futebol/tabela", params={"liga": "bra.1"}).status_code == 401
