@@ -434,7 +434,7 @@ static void desenha_spinner(U8G2& g, uint32_t now, int x, int y) {
 static void render_pensando(U8G2& g, uint32_t now) {
   desenha_pet(g, face_neutro_bits, 0);
   nokia_ui::text_bold(g, 2, 7, tr(STR_THINKING));
-  desenha_spinner(g, now, 50, 22);
+  desenha_spinner(g, now, 49, 21);
 }
 
 static void render_falando(U8G2& g) {
@@ -466,7 +466,7 @@ static void render_registro(U8G2& g) {
   if (reg_fetch_ == REG_NONET) { nokia_ui::no_network(g); return; }
   if (reg_fetch_ == REG_PENDING) {
     g.drawUTF8(2, 24, tr(STR_SEARCHING));
-    desenha_spinner(g, millis(), 58, 19);  // a estrela ao lado do buscando
+    desenha_spinner(g, millis(), 57, 18);  // a estrela ao lado do buscando
     return;
   }
   if (reg_fetch_ == REG_ERR || reg_total_ == 0) {
