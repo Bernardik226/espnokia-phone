@@ -409,11 +409,13 @@ static void render_ouvindo(U8G2& g, uint32_t now) {
 static void render_pensando(U8G2& g, uint32_t now) {
   desenha_pet(g, face_neutro_bits, 0);
   nokia_ui::text_bold(g, 2, 7, tr(STR_THINKING));
-  char dots[4];
-  uint8_t n = (now / 350) % 4;
-  memset(dots, '.', n);
-  dots[n] = '\0';
-  nokia_ui::text_bold(g, 48, 30, dots);
+  // a estrela da anthropic pensando: pulsa mudando de forma (· ✢ ✳ ✻ ✽),
+  // ping-pong a ~120 ms por frame, igual ao spinner do claude code
+  static const unsigned char* const kSpin[] = {
+      spin_f0_bits, spin_f1_bits, spin_f2_bits, spin_f3_bits, spin_f4_bits};
+  uint8_t i = (uint8_t)((now / 120) % 8);
+  if (i > 4) i = 8 - i;  // cresce e recolhe
+  g.drawXBMP(48, 19, SPIN_F0_W, SPIN_F0_H, kSpin[i]);
 }
 
 static void render_falando(U8G2& g) {
@@ -508,5 +510,8 @@ static void render(void* gfx) {
   }
 }
 
+// animacao de selecao: a estrela nasce do pontinho (· ✢ ✳) e abre na oficial
+static const unsigned char* const kAnim[] = {
+    icon_claude_f1_bits, icon_claude_f2_bits, icon_claude_f3_bits, nullptr};
 const App app_claude = {STR_APP_CLAUDE, on_enter, tick, input, on_exit,
-                        render, icon_claude_bits};
+                        render, icon_claude_bits, kAnim};

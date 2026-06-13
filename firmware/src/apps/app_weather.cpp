@@ -45,5 +45,8 @@ static void render(void* gfx) {
   nokia_ui::softkey(g, tr(STR_BACK));
 }
 
+// animacao de selecao: o sol recolhe os raios e cintila duas vezes
+static const unsigned char* const kAnim[] = {
+    icon_weather_f1_bits, icon_weather_bits, icon_weather_f1_bits, nullptr};
 const App app_weather = {STR_APP_WEATHER, on_enter, nullptr, nullptr, nullptr, render,
-                         icon_weather_bits};
+                         icon_weather_bits, kAnim};

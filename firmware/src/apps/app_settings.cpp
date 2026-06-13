@@ -355,5 +355,8 @@ static void render(void* gfx) {
   }
 }
 
+// animacao de selecao: engrenagem gira dente a dente (meio passo por frame)
+static const unsigned char* const kAnim[] = {
+    icon_settings_f1_bits, icon_settings_bits, icon_settings_f1_bits, nullptr};
 const App app_settings = {STR_APP_SETTINGS, on_enter, nullptr, input, nullptr, render,
-                          icon_settings_bits};
+                          icon_settings_bits, kAnim};

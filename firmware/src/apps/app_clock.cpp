@@ -210,5 +210,8 @@ static void render(void* gfx) {
     }
   }
 }
+// animacao de selecao: ponteiros giram (12h15 -> 6h45) e voltam pro 10h08
+static const unsigned char* const kAnim[] = {icon_clock_f1_bits,
+                                             icon_clock_f2_bits, nullptr};
 const App app_clock = {STR_APP_CLOCK, on_enter, nullptr, input, nullptr, render,
-                       icon_clock_bits};
+                       icon_clock_bits, kAnim};

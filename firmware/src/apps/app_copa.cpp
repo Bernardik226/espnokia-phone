@@ -314,5 +314,8 @@ static void render(void* gfx) {
   }
 }
 
+// animacao de selecao: sparkle percorrendo o trofeu
+static const unsigned char* const kAnim[] = {icon_copa_f1_bits,
+                                             icon_copa_f2_bits, nullptr};
 const App app_copa = {STR_APP_COPA, on_enter, tick, input, nullptr, render,
-                      icon_copa_bits};
+                      icon_copa_bits, kAnim};
