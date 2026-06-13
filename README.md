@@ -181,10 +181,10 @@ for round-robin leagues, navigable groups for cups — and the menu **captures
 whatever is currently running**, showing the season in play.
 
 <p align="center">
-  <img src="docs/assets/photos/sports.png" width="208" alt="Sports category carousel">
-  <img src="docs/assets/photos/football-leagues.png" width="208" alt="league picker">
-  <img src="docs/assets/photos/football-table.png" width="208" alt="standings table with positions">
-  <img src="docs/assets/photos/football-game.png" width="208" alt="a single match view">
+  <img src="docs/assets/photos/sports.png" width="168" alt="Sports category carousel">
+  <img src="docs/assets/photos/football-leagues.png" width="168" alt="league picker">
+  <img src="docs/assets/photos/football-table.png" width="168" alt="standings table with positions">
+  <img src="docs/assets/photos/football-game.png" width="168" alt="a single match view">
 </p>
 
 <p align="center"><b>Flow</b> &nbsp;·&nbsp; leagues → league menu → games / table</p>
