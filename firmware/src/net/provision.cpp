@@ -4,6 +4,7 @@
 #include <WebServer.h>
 #include <WiFi.h>
 #include <esp_wifi.h>
+#include "net/conn.h"
 #include "net/credstore.h"
 
 namespace provision {
@@ -70,6 +71,9 @@ font-size:14px;border-bottom:1px solid #dde3f0}
 <p class="hint">rede oculta? digite o nome dela acima</p>
 <label for="p">Senha</label>
 <input id="p" name="pass" type="password" maxlength="64" autocomplete="off">
+<label for="u">Endereço do servidor</label>
+<input id="u" name="url" maxlength="90" autocomplete="off"
+ placeholder="https://... (vazio = padrão)">
 <button type="submit">SALVAR</button>
 </form>
 <p class="foot">espnokia-phone · a senha fica cifrada no aparelho</p>
@@ -202,6 +206,9 @@ static void salvar() {
     return;
   }
   credstore::save(ssid.c_str(), pass.c_str());
+  String url = server_.arg("url");
+  url.trim();
+  if (url.length()) conn::set_server_url(url.c_str());  // vazio mantem o padrao
   String html = FPSTR(kSaved);
   html.replace("%SSID%", ssid);
   server_.send(200, "text/html", html);

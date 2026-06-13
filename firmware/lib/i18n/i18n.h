@@ -43,6 +43,8 @@ enum StrId : uint8_t {
   STR_NO_TALKS, STR_ME,
   // tabela do futebol (submenu da liga + titulo da tabela unica)
   STR_GAMES, STR_TABLE,
+  // conexoes (menu de settings + QR de pareamento do dashboard)
+  STR_CONNECTIONS, STR_WIFI_SERVER, STR_DEVICE_QR, STR_SCAN_TO_PAIR,
   STR_COUNT
 };
 
