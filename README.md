@@ -10,167 +10,426 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/testes-34_no_PC,_sem_hardware-1e5aa8?style=flat-square" alt="34 testes">
-  <img src="https://img.shields.io/badge/i18n-6_idiomas-f47b20?style=flat-square" alt="6 idiomas">
+  <a href="#-clawd--talk-to-claude-from-a-nokia">
+    <img src="https://img.shields.io/badge/Claude-app-d97757?style=for-the-badge&logo=anthropic&logoColor=white" alt="Claude app">
+  </a>
+  &nbsp;<img src="docs/assets/star-orange.png" width="22" alt="orange pixel star — the maker's mark">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/tests-82_firmware_+_157_server-1e5aa8?style=flat-square" alt="tests">
+  <img src="https://img.shields.io/badge/i18n-9_languages-f47b20?style=flat-square" alt="9 languages">
   <img src="https://img.shields.io/badge/display-Nokia_5110_·_84×48-1e5aa8?style=flat-square" alt="Nokia 5110">
+  <img src="https://img.shields.io/badge/version-0.5.0-f47b20?style=flat-square" alt="v0.5.0">
 </p>
 
 <h3 align="center">
-  📟 Conhecer o projeto&nbsp;&nbsp;·&nbsp;&nbsp;<a href="docs/INSTALL.md">🔧 Montar o seu</a>
+  📟 Meet the project&nbsp;&nbsp;·&nbsp;&nbsp;<a href="docs/INSTALL.md">🔧 Build your own</a>
 </h3>
 
 <p align="center">
-  🇧🇷 Português&nbsp;&nbsp;·&nbsp;&nbsp;<a href="README.en.md">🇬🇧 English</a>
+  🇬🇧 English&nbsp;&nbsp;·&nbsp;&nbsp;<a href="README.pt-br.md">🇧🇷 Português</a>
 </p>
 
 ---
 
-Um "celular" estilo Nokia 3310 construído do zero: ESP32 + display Nokia 5110
-rodando um **NokiaOS próprio** — shell de apps, fontes pixel recriadas, boot com
-as mãozinhas se encontrando, toques de fábrica em RTTTL e menus em 6 idiomas.
-Estética de 2000, recursos de 2026: ele acompanha a **Copa 2026 ao vivo** e
-avisa o gol no segundo em que sai. ⚽
+A Nokia 3310-style "phone" built from scratch: an **ESP32 + Nokia 5110 display**
+running a homemade **NokiaOS** — an app shell, the Nokia 3310 pixel fonts, the
+boot animation with the little hands meeting, factory ringtones in RTTTL and
+menus in 9 languages.
 
-O tema de estudo por trás é **consumo de APIs em dispositivos embarcados**:
-uma API pública sem chave de um lado, uma API própria autenticada por chave de
-device do outro, e um ESP32 com 520 KB de RAM no meio aguentando o tranco.
-[A seção de APIs](#-o-estudo-por-trás-apis-com-chave-e-sem-chave) conta como.
+**Y2K looks, 2026 features.** It follows the **2026 World Cup live** and rings
+the very second a goal is scored ⚽, tracks **club leagues** with adaptive
+standings tables, and — the headline act — it lets you **hold a button and talk
+to Claude** 🐾: a pixel-art pet that listens, thinks and answers right there on
+the monochrome screen.
 
-<p align="center">
-  <img src="docs/assets/photo-standby.jpg" width="255" alt="standby com o emblema espnokia e backlight azul">
-  <img src="docs/assets/photo-copa-splash.jpg" width="262" alt="splash do app Copa 2026 com o troféu em pixel art">
-  <img src="docs/assets/photo-copa-menu.jpg" width="250" alt="menu do app Copa 2026: Próximos, Brasil, Ao vivo">
-</p>
+### ▶️ See it move
 
-## ✨ O que ele faz
+<table align="center">
+<tr>
+<td align="center" width="50%">
+  <img src="docs/assets/clawd-voice.gif" width="380" alt="push-to-talk with Claw'd: listening, thinking, answering"><br>
+  <b>🐾 Claw'd</b> — hold, speak, let Claude answer
+</td>
+<td align="center" width="50%">
+  <img src="docs/assets/copa-nav.gif" width="380" alt="navigating the World Cup app on the device"><br>
+  <b>🏆 World Cup 26</b> — live on a 84×48 screen
+</td>
+</tr>
+</table>
 
-| App | O que tem dentro |
-|---|---|
-| ⏰ **Relógio** | Hora grande estilo 3310 (RTC DS3231), **alarme** que sobrevive a reboot (NVS) e **timer** regressivo |
-| 🏆 **Copa 2026** | Próximos jogos, jogos do Brasil e jogos ao vivo. Marque um jogo e o aparelho toca quando começar — e durante o jogo, **"GOL!" pisca na tela** quando o placar muda |
-| 🌡️ **Clima** | Temperatura ambiente pelo termômetro embutido do DS3231 (resolução 0.25 °C) |
-| 🎵 **Toques** | 9 toques originais de fábrica da Nokia transcritos em RTTTL (parser próprio) — navegue para ouvir o preview, OK define o toque padrão |
-| ⚙️ **Config.** | Backlight em 3 níveis, data/hora, WiFi, volume do piezo (3 níveis via duty PWM), idioma e sobre |
+---
 
-E os detalhes que fazem parecer um Nokia de verdade: boot fiel ao Nokia 1100
-(pixel art + startup chime), standby com hora piscando o `:`, softkeys,
-beep de tecla e bips de sistema distintos para confirmação, erro e alerta.
+## 📑 Contents
 
-## 🏗️ Como funciona
+- [The apps](#️-the-apps) · [System architecture](#-system-architecture)
+- [World Cup 26](#-world-cup-26--live-on-your-desk) · [Leagues](#-leagues--adaptive-standings) · [Claw'd](#-clawd--talk-to-claude-from-a-nokia)
+- [Pairing & dashboard](#-pairing--the-dashboard) · [APIs with & without keys](#-the-study-underneath-apis-with-and-without-keys) · [WiFi without recompiling](#-wifi-without-recompiling)
+- [Behind the art](#-behind-the-art) · [Hardware](#-hardware) · [Quality](#-quality)
+- [Credits & attributions](#-credits--attributions) · [Trademarks & authorship](#-trademarks--authorship)
 
-Duas peças: o **aparelho** (firmware C++/Arduino) e um **server companion**
-(FastAPI) que mastiga as fontes de dados e entrega JSON enxuto que o ESP32
-consegue parsear sem sofrer.
+---
+
+## 🗺️ The apps
+
+Everything lives behind a Nokia-faithful launcher: softkeys, key beeps, a
+blinking `:` on standby and distinct system tones for confirm, error and alert.
 
 ```mermaid
-flowchart LR
-    subgraph device["📟 espnokia · ESP32"]
-        FW["NokiaOS<br/>shell + apps"]
-    end
-    subgraph srv["🐍 server companion · FastAPI"]
-        API["/copa/proximos<br/>/copa/brasil<br/>/copa/live"]
-    end
-    OF["openfootball<br/>tabela da Copa<br/><i>API pública, sem chave</i>"]
-    LIVE["placar ao vivo<br/><i>fonte configurável</i>"]
-
-    FW -->|"HTTP + X-Device-Key"| API
-    API -->|"cache 15 min"| OF
-    API -->|"cache 60 s"| LIVE
+flowchart TD
+    S["📟 standby"] --> M{{"menu"}}
+    M --> CL["⏰ Clock<br/>alarm · timer"]
+    M --> SP["🏟️ Sports"]
+    M --> CW["🌡️ Weather"]
+    M --> TN["🎵 Tones"]
+    M --> CD["🐾 Claw'd"]
+    M --> ST["⚙️ Settings"]
+    SP --> CP["🏆 World Cup 26"]
+    SP --> FB["⚽ Leagues"]
+    ST --> CN["📶 Connections<br/>WiFi · device QR"]
+    classDef hi fill:#f47b20,stroke:#b85c10,color:#fff;
+    classDef bl fill:#1e5aa8,stroke:#143a6b,color:#fff;
+    class CP,FB hi;
+    class CD,CN bl;
 ```
 
-Durante um jogo ao vivo, o firmware refaz a busca a cada 45 s, reencontra o
-jogo pelo par de seleções (a lista pode mudar de ordem) e compara o placar —
-subiu, toca o alerta e pisca o GOL!.
+<details>
+<summary><b>The full app list</b> (click to expand)</summary>
 
-## 🔑 O estudo por trás: APIs com chave e sem chave
+| App | What's inside |
+|---|---|
+| ⏰ **Clock** | Big 3310-style time (DS3231 RTC), an **alarm** that survives reboots (NVS) and a countdown **timer** |
+| 🏆 **World Cup 26** | Upcoming, Brazil and live matches; rings at kickoff and **flashes "GOAL!"** when the score changes |
+| ⚽ **Leagues** | Club football (Champions, Libertadores…) with an **adaptive standings table** |
+| 🐾 **Claw'd** | Push-to-talk to **Claude**, a pixel-art pet with conversation log and persistent memory |
+| 🌡️ **Weather** | Ambient temperature from the DS3231's onboard thermometer (0.25 °C) |
+| 🎵 **Tones** | 9 original Nokia ringtones transcribed to RTTTL — browse to preview, OK to set |
+| ⚙️ **Settings** | Backlight, date/time, **Connections** (WiFi + device QR), volume, language, about |
 
-O recheio do projeto é este fluxo completo de dados, de uma fonte pública na
-internet até um display de 84×48 pixels:
+</details>
 
-**API sem chave (openfootball).** A tabela da Copa vem do
-[openfootball](https://github.com/openfootball/world-cup), um dataset público
-em JSON. Não pede cadastro nem token — mas API aberta não é convite pra abuso:
-o server guarda a resposta por **15 minutos** (a tabela muda pouco) e só
-revalida quando o TTL vence. A fonte de placar ao vivo é opcional e plugável
-(`LIVE_SOURCE_URL`), com cache de 60 s; se ela cair, o app degrada com
-elegância pra tabela — sem placar ao vivo, mas sem quebrar.
+---
 
-**API com chave (o server companion).** O ESP32 não fala com as fontes
-diretamente: ele fala com o server, que exige um header **`X-Device-Key`** em
-todas as rotas `/copa/*` (só o `/health` fica aberto, pra monitoramento). As
-chaves válidas ficam na env `DEVICE_KEYS` em CSV — dá pra ter vários aparelhos
-e revogar um sem afetar os outros. No firmware, a chave mora em
-`espnokia_config.h`, que é **gitignored**: segredo não entra em repositório.
+## 🏛️ System architecture
 
-**Por que um server no meio?** O JSON original do openfootball tem centenas de
-KB — o ESP32 trabalha com um buffer de 2 KB. O server filtra, normaliza e
-responde ~1.2 KB pros 8 jogos que interessam. De quebra, qualquer credencial
-de fonte externa vive no server e **nunca toca o firmware**: se um dia uma
-fonte paga entrar no lugar, nenhum aparelho precisa de reflash.
+Two pieces: the **device** (C++/Arduino firmware) and a **companion server**
+(FastAPI) that chews through the data sources and serves lean JSON the ESP32 can
+parse without suffering. The chip never touches an external source directly —
+the server is the membrane between a 2 KB buffer and the open internet.
 
-| | openfootball | server companion |
+<p align="center">
+  <img src="docs/assets/architecture.png" width="900" alt="system architecture: the device on the desk, the companion server it owns, and the open internet behind it, with labelled arrows for each data path">
+</p>
+
+When you talk to Claw'd, this is the round trip — voice in, paged text out:
+
+```mermaid
+sequenceDiagram
+    actor You
+    participant P as 📟 espnokia
+    participant S as 🐍 companion server
+    participant C as Claude
+    You->>P: hold button & speak
+    P->>S: POST /claude/voz · raw PCM + X-Device-Key
+    S->>S: speech-to-text (whisper / Groq)
+    S->>C: transcript + persona + memory
+    C-->>S: reply
+    S-->>P: JSON · paged text + mood
+    P-->>You: the pet reads it back ✶
+```
+
+<details>
+<summary><b>Why a server in the middle?</b> (click to expand)</summary>
+
+The raw openfootball JSON weighs hundreds of KB; the ESP32 works with a 2 KB
+buffer. The server **filters, normalizes and answers ~1.2 KB** for the matches
+that matter. As a bonus, every credential — a live-score source, your Claude
+key — lives on the server and **never touches the firmware**: swap a source or
+rotate a key and not a single device needs a reflash.
+
+</details>
+
+---
+
+## 🏆 World Cup 26 — live, on your desk
+
+Upcoming matches, Brazil's fixtures, the live board and the group tables. Mark a
+match and the phone **rings at kickoff**; while it's running, the score updates
+by itself and **"GOAL!" flashes on screen** the instant it changes — with the
+scorer's name when the source has it.
+
+<p align="center">
+  <img src="docs/assets/photos/copa-menu.png" width="208" alt="World Cup menu: Upcoming, Brazil, Live">
+  <img src="docs/assets/photos/copa-upcoming.png" width="208" alt="upcoming matches list with dates">
+  <img src="docs/assets/photos/copa-list.png" width="208" alt="match list">
+  <img src="docs/assets/photos/copa-notify.png" width="208" alt="goal alert flashing on screen">
+</p>
+
+<p align="center"><b>Flow</b> &nbsp;·&nbsp; splash → menu → match detail → live goal</p>
+<p align="center">
+  <img src="docs/assets/flow-copa.png" width="840" alt="World Cup flow with arrows between screens: splash, menu, match detail and goal alert">
+</p>
+
+---
+
+## ⚽ Leagues — adaptive standings
+
+The Sports category opens into club football too: Champions League, Libertadores
+and friends. The standings view **adapts to the competition** — a numbered table
+for round-robin leagues, navigable groups for cups — and the menu **captures
+whatever is currently running**, showing the season in play.
+
+<p align="center">
+  <img src="docs/assets/photos/sports.png" width="208" alt="Sports category carousel">
+  <img src="docs/assets/photos/football-leagues.png" width="208" alt="league picker">
+  <img src="docs/assets/photos/football-table.png" width="208" alt="standings table with positions">
+  <img src="docs/assets/photos/football-game.png" width="208" alt="a single match view">
+</p>
+
+<p align="center"><b>Flow</b> &nbsp;·&nbsp; leagues → league menu → games / table</p>
+<p align="center">
+  <img src="docs/assets/flow-football.png" width="840" alt="Football flow with arrows between screens: leagues, submenu and standings table">
+</p>
+
+---
+
+## 🐾 Claw'd — talk to Claude from a Nokia
+
+<p align="center">
+  <img src="https://img.shields.io/badge/powered_by-Claude-d97757?style=flat-square&logo=anthropic&logoColor=white" alt="powered by Claude">
+  &nbsp;<img src="docs/assets/star-orange.png" width="18" alt="orange pixel star">
+</p>
+
+Hold the button, **speak**, let go. The mic samples your voice, the companion
+server transcribes it, **Claude answers**, and a pixel-art pet reads the reply
+back page by page on the 84×48 screen — pulsing the six-pointed star while it
+thinks. Every exchange is kept in a **conversation log**, and an accumulating
+**memory** lets the pet remember you across reboots.
+
+<p align="center">
+  <img src="docs/assets/photos/clawd-listen.png" width="245" alt="Claw'd listening with the pet, a microphone and a filling progress bar">
+  <img src="docs/assets/photos/clawd-reply.png" width="245" alt="Claw'd showing Claude's reply as paginated text">
+</p>
+
+> The pet's mood reacts to how you treat it, the reply is cut to exactly the
+> byte budget the screen can page, and the spinner is the very six-pointed star
+> from Claude Code, redrawn pixel by pixel. ✶
+
+<details open>
+<summary><b>Bring your own keys</b> — Claw'd is yours to run</summary>
+
+There's no hosted backend, no account, nothing phoning home. Stand up the
+companion server anywhere that runs a container, drop in your own keys, and
+point the device at it:
+
+```bash
+# server/.env  (never committed)
+ANTHROPIC_API_KEY=sk-ant-...        # your Claude key — the only must-have
+DEVICE_KEYS=*                       # capability mode: accept any strong device key
+GROQ_API_KEY=gsk_...                # optional: cloud STT instead of local whisper
+```
+
+```bash
+cd server
+docker build -t espnokia .
+docker run -p 8000:8000 --env-file .env espnokia
+```
+
+Then open **Settings → Connections** on the phone and type your server's URL —
+no reflash, no recompile. Speech-to-text runs **locally** (faster-whisper) by
+default, or flip to **Groq** from the dashboard if you'd rather offload it.
+
+</details>
+
+---
+
+## 📲 Pairing &amp; the dashboard
+
+<table align="center"><tr>
+<td width="150" align="center"><img src="docs/assets/dash-icon.png" width="120" alt="EspNokia Dash PWA icon: bicolor eN emblem, orange e and blue N"></td>
+<td>
+
+The device **rolls its own key** at first boot (hardware RNG → NVS) and shows a
+**QR code** under *Connections → Device QR*. Scan it and the **dashboard opens
+already logged in** — the key travels in the URL fragment, so the browser that
+paired is the one that gets in. The key *is* the capability: no users, no
+passwords, data isolated per device by a salted hash.
+
+</td>
+</tr></table>
+
+The dashboard is an **installable PWA — "EspNokia Dash"** — mobile-first, in 9
+languages, sharing the phone's palette and logo. From it you read the pet's
+**memory** and recent **conversations** (or wipe them), pick the **persona**
+(Cuddly, Sarcastic, Hyped, Poet, Tough, Wise — the prompt stays in the code),
+choose the **STT engine**, set the **reply length** and drop in your **API keys**.
+
+> Set a key from the dashboard and it lives as long as the server runs; for a
+> permanent key, use the `ANTHROPIC_API_KEY` env. Screenshots of the panel on a
+> phone are coming with the next capture pass.
+
+---
+
+## 🔑 The study underneath: APIs with and without keys
+
+The backbone of the project is one complete data path — from a public source on
+the open internet down to an 84×48 pixel display — and the two ways a device
+earns access along the way.
+
+**Keyless API (openfootball).** The World Cup data comes from
+[openfootball](https://github.com/openfootball/world-cup), a public JSON
+dataset: no signup, no token. But an open API is not an invitation to abuse it —
+the server caches each response for **15 minutes** and only revalidates when the
+TTL expires. The live-score source is optional and **pluggable**; if it drops,
+the app degrades gracefully to the table instead of breaking.
+
+**Keyed API (the companion server).** The ESP32 never talks to the sources
+directly — it talks to *your* server, which requires an **`X-Device-Key`** on
+every route (only `/health` stays open). In **capability mode** (`DEVICE_KEYS=*`)
+any sufficiently strong key is accepted and its data is isolated by hash, so a
+device can pair itself without a central registry. On the firmware side the key
+lives in NVS (or `espnokia_config.h`, which is **gitignored**) — secrets never
+enter the repo.
+
+| | public sources | companion server |
 |---|---|---|
-| Autenticação | nenhuma | `X-Device-Key` |
-| Quem consome | o server | o ESP32 |
-| Resposta | JSON de centenas de KB | JSON de ~1.2 KB |
-| Proteção da fonte | cache TTL 15 min | chaves revogáveis por device |
+| Authentication | none | `X-Device-Key` (capability) |
+| Consumed by | the server | the ESP32 |
+| Response | hundreds of KB of JSON | lean JSON the chip can parse |
+| What it protects | TTL cache, graceful fallback | per-device isolation, your keys |
+
+---
+
+## 📶 WiFi without recompiling
+
+Switching networks needs no USB cable and no reflash. The device brings up a
+**config mode**: it becomes an access point (`espnokia-XXXX`) with a **numeric
+password drawn on the spot** (hardware RNG, shown only on the little screen) and
+a **captive portal** that opens by itself. It **scans nearby networks** — padlock
+on the protected ones, signal bars — or you type a **hidden** SSID by hand. The
+same page is where you set the **server URL**.
+
+<p align="center">
+  <img src="docs/assets/prov-scan.png" width="330" alt="config page with the network scan: padlock and signal strength">
+  &nbsp;&nbsp;
+  <img src="docs/assets/prov-saved.png" width="330" alt="network saved, the device will reboot">
+</p>
+
+Your WiFi password is encrypted in NVS with a key derived from the MAC burned
+into the chip's eFuse: a flash dump from another device cannot decrypt it. 🔐
+
+---
+
+## 🎨 Behind the art
+
+Every glyph on that screen was a decision. The **Nokia 3310 pixel fonts** are the
+real ones, redrawn pixel-by-pixel from the screen by
+[Premysl Janouch](https://git.janouch.name/p/nokia-3310-fonts) and converted to
+the embedded format with u8g2's `bdfconv` — I extended them with the Latin-1
+accents the 9 system languages need. The boot is the Nokia 1100's hands meeting,
+frame by frame; the World Cup trophy, the football, the menu icons and the pet
+are **bitmaps authored in a tiny grid DSL** and compiled to XBM by a
+[home-grown tool](tools/) — so the art lives in version control as text, not
+binary blobs.
+
+The hardest piece was the **thinking spinner**: getting Claude Code's
+six-pointed star to read correctly at a handful of pixels took several passes —
+rendering it large and downscaling lost the points, drawing it small distorted
+them, until a symmetric hand-placed sprite finally pulsed right. The orange
+six-pointed star below is the maker's mark that came out of it.
+
+<p align="center">
+  <img src="docs/assets/star-orange.png" width="64" alt="orange six-pointed pixel star, the maker's mark">
+</p>
+
+<p align="center"><b>Whole-device navigation</b></p>
+<p align="center">
+  <img src="docs/assets/flow-nav.png" width="860" alt="navigation flow across the whole device with arrows between screens">
+</p>
+
+---
 
 ## 🔌 Hardware
 
-| | Componente | Papel |
+| | Component | Role |
 |---|---|---|
-| <img src="docs/assets/components/comp-esp32.png" width="72" alt="ESP32"> | **ESP32 WROOM-32** DevKit 30 pinos | Cérebro: WiFi, 2 cores, e o NokiaOS inteiro |
-| <img src="docs/assets/components/comp-5110.png" width="72" alt="Nokia 5110"> | **Display Nokia 5110** (PCD8544) | 84×48 monocromático — o display dos Nokia de verdade, via SPI |
-| <img src="docs/assets/components/comp-ds3231.png" width="72" alt="DS3231"> | **RTC DS3231** | Hora precisa com bateria + termômetro de bordo, via I2C |
-| <img src="docs/assets/components/comp-button.png" width="72" alt="botões"> | **4 botões táteis** | UP · DOWN · OK · C — navegação completa estilo 3310 |
-| <img src="docs/assets/components/comp-buzzer.png" width="72" alt="buzzer"> | **Buzzer passivo** | Toques RTTTL, beeps e o alerta de gol (volume por duty PWM) |
-| <img src="docs/assets/components/comp-proto.png" width="72" alt="protoboard"> | **Protoboard + jumpers** | Montagem sem solda — pinagem completa em [`docs/INSTALL.md`](docs/INSTALL.md) |
-
-Planejado para as próximas fases: mic I2S INMP441 (conversa por voz) e bateria
-LiPo com leitura de tensão.
-
-## 📶 WiFi sem recompilar
-
-Trocar de rede WiFi não pede cabo USB nem reflash. O aparelho sobe um **modo
-config**: vira um access point (`espnokia-XXXX`) com **senha numérica
-sorteada na hora** (hardware RNG, exibida só na telinha) e um **captive
-portal** — conectou, a página de configuração abre sozinha. Ela **busca as
-redes próximas** com cadeado nas protegidas e barras de intensidade de sinal;
-toque numa rede pra escolher, ou digite o nome no campo manual se a sua for
-**oculta**:
+| <img src="docs/assets/components/comp-esp32.png" width="60" alt="ESP32"> | **ESP32 WROOM-32** DevKit, 30 pins | The brain: WiFi, 2 cores, the whole NokiaOS |
+| <img src="docs/assets/components/comp-5110.png" width="60" alt="Nokia 5110"> | **Nokia 5110 display** (PCD8544) | 84×48 monochrome — the panel from real Nokias, over SPI |
+| <img src="docs/assets/components/comp-ds3231.png" width="60" alt="DS3231"> | **DS3231 RTC** | Battery-backed time + onboard thermometer, over I2C |
+| <img src="docs/assets/components/comp-button.png" width="60" alt="buttons"> | **4 tactile buttons** | UP · DOWN · OK · C — full 3310-style navigation |
+| <img src="docs/assets/components/comp-buzzer.png" width="60" alt="buzzer"> | **Passive buzzer** | RTTTL ringtones, beeps and the goal alert (volume via PWM) |
+| 🎤 | **INMP441 I2S mic** | Picks up your voice for Claw'd |
+| <img src="docs/assets/components/comp-proto.png" width="60" alt="breadboard"> | **Breadboard + jumpers** | Solderless build — full pinout in [`docs/INSTALL.md`](docs/INSTALL.md) |
 
 <p align="center">
-  <img src="docs/assets/prov-scan.png" width="340" alt="página de configuração com o scan de redes: cadeado e intensidade de sinal">
-  &nbsp;&nbsp;
-  <img src="docs/assets/prov-saved.png" width="340" alt="rede salva, o aparelho vai reiniciar">
+  <img src="docs/assets/photos/protoboard.png" width="420" alt="the real breadboard build with all components wired up">
 </p>
 
-A senha da sua rede é cifrada na NVS com chave derivada do MAC gravado em
-eFuse do próprio chip: um dump da flash de outro aparelho não decifra a sua
-rede. 🔐
+---
 
-## 🧪 Qualidade
+## 🧪 Quality
 
-- **34 testes Unity** rodando direto no PC (`pio test -e native`) — toda a
-  lógica pura (shell, botões, RTTTL, formatação de hora, parse da Copa, i18n)
-  testa sem placa nenhuma na mesa
-- **Server com pytest** — fontes de dados mockadas, auth e cache cobertos
-- Camadas bem separadas: `drivers/` (hardware) · `lib/` (lógica pura portável)
-  · `apps/` (UI) — é o que permite testar no PC o que roda no ESP32
-
-## 🗂️ O repositório
+- **82 Unity tests** running straight on the PC (`pio test -e native`) — all the
+  pure logic (shell, buttons, RTTTL, time formatting, World Cup &amp; football
+  parsing, the Claw'd model, i18n) is testable with no board on the desk.
+- **157 pytest tests** on the server — mocked sources, auth, cache, personas,
+  memory and the dashboard endpoints.
+- Clean layering: `drivers/` (hardware) · `lib/` (pure portable logic) ·
+  `apps/` (UI). That separation is what lets the PC test what runs on the ESP32.
 
 ```
-firmware/   NokiaOS em C++/Arduino (PlatformIO: esp32dev + native)
-  lib/      lógica pura testável: shell, btnlogic, rtttl, i18n, copamodel...
-  src/      drivers, apps, som, alarme, rede (wifi/http/ntp/provisionamento)
-server/     companion FastAPI: /copa/* com X-Device-Key, cache e Dockerfile
-docs/       instalação, assets do README
-tools/      utilitários de pixel art (grid → XBM)
+firmware/   NokiaOS in C++/Arduino (PlatformIO: esp32dev + native)
+  lib/      pure testable logic: shell, btnlogic, rtttl, i18n, copamodel, claudemodel...
+  src/      drivers, apps, sound, alarm, networking (wifi/http/ntp/provisioning), conn
+server/     FastAPI companion: /copa /futebol /claude /admin + the dashboard PWA
+docs/       install guide, README assets
+tools/      pixel-art utilities (grid → XBM)
 ```
 
 ---
 
+## 🙏 Credits &amp; attributions
+
+This project stands on open work. Every external source, library and reference
+it leans on, with thanks:
+
+**Data sources**
+- [**openfootball**](https://github.com/openfootball/world-cup) — public-domain World Cup dataset (fixtures &amp; tables).
+- **ESPN** — live scores and league data via unofficial public endpoints. Scores and team data © ESPN / The Walt Disney Company.
+
+**AI &amp; speech**
+- [**Anthropic Claude**](https://www.anthropic.com/) — the brain behind Claw'd, via the Anthropic API.
+- [**faster-whisper**](https://github.com/SYSTRAN/faster-whisper) — local speech-to-text (CTranslate2 / OpenAI Whisper).
+- [**Groq**](https://groq.com/) — optional cloud speech-to-text.
+
+**Fonts &amp; art reference**
+- [**nokia-3310-fonts**](https://git.janouch.name/p/nokia-3310-fonts) by **Premysl Janouch** — the Nokia 3310 pixel fonts, the heart of the UI's look.
+- Nokia 1100 boot sequence &amp; factory ringtones — reproduced from reference as a homage.
+
+**Firmware libraries**
+- [**U8g2**](https://github.com/olikraus/u8g2) (olikraus) · [**ArduinoJson**](https://arduinojson.org/) (bblanchon) · [**QRCode**](https://github.com/ricmoo/QRCode) (ricmoo).
+
+**Server libraries**
+- [**FastAPI**](https://fastapi.tiangolo.com/) · [**Uvicorn**](https://www.uvicorn.org/) · [**httpx**](https://www.python-httpx.org/) · the [**Anthropic SDK**](https://github.com/anthropics/anthropic-sdk-python).
+
+---
+
+## ⚖️ Trademarks &amp; authorship
+
+**Nokia** and the Nokia phone designs are trademarks of **Nokia Corporation**.
+**Claude** and **Anthropic** are trademarks of **Anthropic, PBC**. **Groq**,
+**ESPN** and any other names belong to their respective owners. This is an
+independent, **non-commercial fan &amp; educational project** — a homage — and is
+**not affiliated with, endorsed by or sponsored by** any of them. All referenced
+brands, logos and data remain the property of their respective owners.
+
+Original code, firmware, pixel art and assets © 2026 **Bernardo Melo**.
+Third-party components keep their own licenses (see each project above).
+
+---
+
 <p align="center">
-  Quer um na sua mesa? → <a href="docs/INSTALL.md"><b>🔧 Guia de montagem e instalação</b></a>
+  Want one on your desk? → <a href="docs/INSTALL.md"><b>🔧 Build &amp; install guide</b></a>
+  &nbsp;·&nbsp; <img src="docs/assets/star-orange.png" width="16" alt="orange star"> made by <b>Bernardo Melo</b>
 </p>
