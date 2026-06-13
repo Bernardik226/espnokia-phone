@@ -40,6 +40,8 @@ uint8_t copa_parse_grupos(const char* json, CopaGrupo* gs, uint8_t max);
 struct FutLiga {
   char id[24];  // "bra.1" — vai na query de /futebol/jogos e /futebol/live
   char n[20];   // "Brasileirão" — nome de exibicao (vem pronto do server)
+  bool live;    // tem jogo rolando agora
+  uint8_t dia, mes;  // ultimo jogo de liga "que passou" (0 = tem jogo por vir)
 };
 
 // Preenche ligas[] a partir do JSON de /futebol/ligas; retorna quantas entraram.

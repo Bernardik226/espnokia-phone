@@ -1,4 +1,5 @@
 #include "nokia_ui.h"
+#include <string.h>
 #include "assets.h"
 #include "fonts3310.h"
 #include "i18n.h"
@@ -26,6 +27,16 @@ int bold_width(U8G2& g, const char* s) {
   return w;
 }
 void softkey(U8G2& g, const char* label) { text_bold_center(g, 47, label); }
+void poda(U8G2& g, char* s, int max_w) {
+  if ((int)g.getUTF8Width(s) <= max_w) return;
+  size_t n = strlen(s);
+  while (n > 1) {
+    do { n--; } while (n > 1 && (s[n] & 0xC0) == 0x80);  // char UTF-8 inteiro
+    s[n] = '.';
+    s[n + 1] = '\0';
+    if ((int)g.getUTF8Width(s) <= max_w) return;
+  }
+}
 void no_network(U8G2& g) {
   g.drawXBMP((84 - ICON_NOWIFI_W) / 2, 11, ICON_NOWIFI_W, ICON_NOWIFI_H,
              icon_nowifi_bits);

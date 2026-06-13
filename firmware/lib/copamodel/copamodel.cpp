@@ -78,6 +78,9 @@ uint8_t fut_parse_ligas(const char* json, FutLiga* ligas, uint8_t max) {
     if (n >= max) break;
     copia(ligas[n].id, sizeof(ligas[n].id), l["id"]);
     copia(ligas[n].n, sizeof(ligas[n].n), l["n"]);
+    ligas[n].live = l["live"] | false;
+    ligas[n].dia = l["dia"] | 0;
+    ligas[n].mes = l["mes"] | 0;
     if (!ligas[n].id[0]) continue;  // sem id nao tem como buscar os jogos
     n++;
   }
@@ -90,8 +93,13 @@ const char* copa_ultimo_gol(const char* gols) {
 }
 
 void copa_linha(const CopaJogo& j, char* out, size_t len) {
-  if (j.s1 >= 0 && j.s2 >= 0)
-    snprintf(out, len, "%s %dx%d %s", j.t1, j.s1, j.s2, j.t2);
-  else
+  if (j.s1 >= 0 && j.s2 >= 0) {
+    if (j.live)  // rolando: o placar e de agora, data nao acrescenta nada
+      snprintf(out, len, "%s %dx%d %s", j.t1, j.s1, j.s2, j.t2);
+    else         // encerrado: quando foi tambem importa
+      snprintf(out, len, "%u/%u %s %dx%d %s", j.dia, j.mes, j.t1, j.s1, j.s2,
+               j.t2);
+  } else {
     snprintf(out, len, "%u/%u %s x %s", j.dia, j.mes, j.t1, j.t2);
+  }
 }

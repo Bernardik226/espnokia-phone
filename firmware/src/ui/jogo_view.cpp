@@ -1,6 +1,7 @@
 #include "jogo_view.h"
 #include <stdio.h>
 #include <string.h>
+#include "assets.h"
 #include "i18n.h"
 #include "nokia_ui.h"
 #include "teams.h"
@@ -21,22 +22,53 @@ static void linha_equipe(U8G2& g, const char* code, const char* nome, int y) {
   g.drawUTF8(42 - (int)g.getUTF8Width(linha) / 2, y, linha);
 }
 
-// autores de gol da ultima pagina: um por linha, t1 a esquerda e t2 a direita
-static void desenha_gols(U8G2& g, const char* gols, bool direita) {
-  int y = 16;
-  const char* p = gols;
-  while (*p && y <= 30) {
-    const char* nl = strchr(p, '\n');
-    size_t len = nl ? (size_t)(nl - p) : strlen(p);
-    char linha[28];
-    if (len >= sizeof(linha)) len = sizeof(linha) - 1;
-    memcpy(linha, p, len);
-    linha[len] = '\0';
-    int x = direita ? 82 - (int)g.getUTF8Width(linha) : 2;
-    g.drawUTF8(x, y, linha);
-    y += 7;
-    if (!nl) break;
-    p = nl + 1;
+// proxima linha de uma lista "A 9'\nB 67'": copia pra out e avanca o ponteiro
+// (out vazio quando a lista acabou)
+static const char* pega_linha(const char* p, char* out, size_t cap) {
+  out[0] = '\0';
+  if (!*p) return p;
+  const char* nl = strchr(p, '\n');
+  size_t len = nl ? (size_t)(nl - p) : strlen(p);
+  if (len >= cap) len = cap - 1;
+  memcpy(out, p, len);
+  out[len] = '\0';
+  return nl ? nl + 1 : p + strlen(p);
+}
+
+// poda um autor de gol preservando o minuto, que e o que situa o lance:
+// "Richarlison 90+2'" → "Richarl. 90+2'" (o corte come so o nome)
+static void poda_gol(U8G2& g, char* s, size_t cap, int max_w) {
+  if ((int)g.getUTF8Width(s) <= max_w) return;
+  char suf[10] = "";
+  char* sp = strrchr(s, ' ');
+  if (sp && strlen(sp) < sizeof(suf)) {  // separa o " 90+2'" do fim
+    snprintf(suf, sizeof(suf), "%s", sp);
+    *sp = '\0';
+  }
+  nokia_ui::poda(g, s, max_w - (int)g.getUTF8Width(suf));
+  size_t n = strlen(s);
+  snprintf(s + n, cap - n, "%s", suf);
+}
+
+// autores de gol da ultima pagina: t1 a esquerda, t2 a direita, linha a
+// linha. Quando os dois lados tem gol na mesma linha, cada um fica na sua
+// metade (poda no nome) — autor comprido nao invade mais o lado do outro;
+// lado sozinho na linha usa a tela inteira.
+static void desenha_gols(U8G2& g, const char* g1, const char* g2) {
+  const char* p1 = g1;
+  const char* p2 = g2;
+  for (int y = 16; y <= 30 && (*p1 || *p2); y += 7) {
+    char l1[28], l2[28];
+    p1 = pega_linha(p1, l1, sizeof(l1));
+    p2 = pega_linha(p2, l2, sizeof(l2));
+    if (l1[0]) {
+      poda_gol(g, l1, sizeof(l1), l2[0] ? 38 : 80);
+      g.drawUTF8(2, y, l1);
+    }
+    if (l2[0]) {
+      poda_gol(g, l2, sizeof(l2), l1[0] ? 38 : 80);
+      g.drawUTF8(82 - (int)g.getUTF8Width(l2), y, l2);
+    }
   }
 }
 
@@ -54,8 +86,7 @@ void jogo_view_detail(U8G2& g, const CopaJogo& j, uint8_t pag,
     return;
   }
   if (pag == 2) {  // pagina 3: autores dos gols + estadio
-    desenha_gols(g, j.g1, false);
-    desenha_gols(g, j.g2, true);
+    desenha_gols(g, j.g1, j.g2);
     if (j.est[0]) {
       const char* sep = strstr(j.est, " \xc2\xb7 ");  // " · " do server
       if (sep) {
@@ -94,6 +125,13 @@ void jogo_view_detail(U8G2& g, const CopaJogo& j, uint8_t pag,
   } else if (tem_aviso) {
     g.drawUTF8(42 - (int)g.getUTF8Width(tr(STR_NOTIFY_ON)) / 2, 39,
                tr(STR_NOTIFY_ON));
+  } else if (j.s1 >= 0 && j.s2 >= 0) {
+    // jogo encerrado: quando foi, com o reloginho de historico
+    snprintf(l2, sizeof(l2), "%02u/%02u %02u:%02u", j.dia, j.mes, j.h, j.m);
+    int x = 42 - ((int)g.getStrWidth(l2) - (MINI_CLOCK_W + 2)) / 2;
+    g.drawXBMP(x - MINI_CLOCK_W - 2, 33, MINI_CLOCK_W, MINI_CLOCK_H,
+               mini_clock_bits);
+    g.drawStr(x, 39, l2);
   }
   nokia_ui::softkey(g, tr(tem_aviso ? STR_NOTIFY_OFF : STR_NOTIFY));
   g.drawStr(79, 47, "v");  // tem pagina pra baixo
