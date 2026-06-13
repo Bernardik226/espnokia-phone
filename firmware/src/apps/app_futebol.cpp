@@ -21,12 +21,19 @@
 // monta conforme o que esta rolando na temporada — Copa do Brasil e
 // Libertadores aparecem sozinhas quando abrem. O vigia de gols e o mesmo da
 // Copa, armado com o path da liga ("/futebol/live?liga=X").
-enum View : uint8_t { V_LIGAS, V_LIST, V_DETAIL };
+//
+// Cada liga abre num submenu (V_LIGA: Jogos / Tabela). A V_TABELA se adapta ao
+// formato que o server manda em /futebol/tabela: 1 bloco = pontos corridos
+// (tabela unica numerada, rolavel); varios = fase de grupos (navegavel, igual
+// a Copa). Mata-mata puro nao tem classificacao → "sem tabela".
+enum View : uint8_t { V_LIGAS, V_LIGA, V_LIST, V_DETAIL, V_TABELA };
 enum Fetch : uint8_t { FETCH_IDLE, FETCH_PENDING, FETCH_OK, FETCH_ERR,
                        FETCH_NONET };
 
 static const uint8_t kMaxLigas = 10;
 static const uint8_t kMaxJogos = 8;
+static const uint8_t kMenuLiga = 2;  // submenu da liga: Jogos, Tabela
+static const uint8_t kVisTab = 4;    // linhas visiveis na tabela unica
 
 static View view = V_LIGAS;
 static Fetch fetch_ = FETCH_IDLE;
@@ -35,11 +42,15 @@ static uint8_t cur = 0;        // cursor (cardapio e lista)
 static uint8_t pag_ = 0;  // detail: 0 placar, 1 equipes, 2 gols/estadio
 static const uint8_t kPags = 3;
 static uint32_t pending_ms_ = 0;
+static uint8_t menu_cur = 0;   // submenu da liga: 0 Jogos, 1 Tabela
+static uint8_t gcur_ = 0;      // grupo aberto (modo grupos)
+static uint8_t tab_off_ = 0;   // 1a linha visivel (modo tabela unica)
 
 static FutLiga ligas_[kMaxLigas];
 static uint8_t n_ligas_ = 0;
 static CopaJogo jogos_[kMaxJogos];
 static uint8_t n_jogos_ = 0;
+static FutClass classif_;      // classificacao da liga aberta (/futebol/tabela)
 static char buf_[3072];        // payload do server
 static char path_[48];         // /futebol/jogos?liga=X da liga aberta
 
@@ -64,19 +75,40 @@ static void live_watch(const CopaJogo& j) {
   live_next_ = millis() + kLiveRefetchMs;
 }
 
-static void abre_lista(uint8_t i) {
+// escolher a liga abre o submenu dela (Jogos / Tabela) — sem rede ainda
+static void abre_submenu(uint8_t i) {
   liga_ = i;
-  snprintf(path_, sizeof(path_), "/futebol/jogos?liga=%s", ligas_[i].id);
+  menu_cur = 0;
+  list_next_ = 0;
+  view = V_LIGA;
+}
+
+static void abre_lista() {
+  snprintf(path_, sizeof(path_), "/futebol/jogos?liga=%s", ligas_[liga_].id);
   cur = 0;
   fetch_ = wifi::connected() ? FETCH_PENDING : FETCH_NONET;
   pending_ms_ = millis();
   view = V_LIST;
 }
 
+static void abre_tabela() {
+  snprintf(path_, sizeof(path_), "/futebol/tabela?liga=%s", ligas_[liga_].id);
+  gcur_ = 0;
+  tab_off_ = 0;
+  fetch_ = wifi::connected() ? FETCH_PENDING : FETCH_NONET;
+  pending_ms_ = millis();
+  view = V_TABELA;
+}
+
 static void volta_ligas() {
   view = V_LIGAS;
   cur = liga_;
   fetch_ = FETCH_OK;  // o cardapio ainda esta na RAM: sem refetch
+  list_next_ = 0;
+}
+
+static void volta_submenu() {  // jogos/tabela voltam pro submenu da liga
+  view = V_LIGA;
   list_next_ = 0;
 }
 
@@ -145,6 +177,13 @@ static void tick(uint32_t now_ms) {
     fetch_ = (code == 200) ? FETCH_OK : FETCH_ERR;
     return;
   }
+  if (view == V_TABELA) {
+    int code = http::get_json(path_, buf_, sizeof(buf_));
+    if (code == 200) fut_parse_tabela(buf_, &classif_);
+    else classif_.ng = 0;  // erro de rede: cai pra "sem tabela"
+    fetch_ = (code == 200) ? FETCH_OK : FETCH_ERR;
+    return;
+  }
   int code = http::get_json(path_, buf_, sizeof(buf_));
   n_jogos_ = (code == 200) ? copa_parse(buf_, jogos_, kMaxJogos, nullptr) : 0;
   fetch_ = (code == 200) ? FETCH_OK : FETCH_ERR;  // erro fica na tela, sem bip
@@ -161,11 +200,23 @@ static bool input(Button b, BtnEvent e) {
       if (fetch_ != FETCH_OK || n_ligas_ == 0) return false;
       if (b == BTN_UP) { cur = (cur + n_ligas_ - 1) % n_ligas_; return true; }
       if (b == BTN_DOWN) { cur = (cur + 1) % n_ligas_; return true; }
-      if (b == BTN_OK) { abre_lista(cur); return true; }
+      if (b == BTN_OK) { abre_submenu(cur); return true; }
       return false;  // C nao consumido → fecha o app
+    case V_LIGA:
+      if (b == BTN_UP || b == BTN_DOWN) {
+        menu_cur = (menu_cur + 1) % kMenuLiga;  // so dois itens: alterna
+        return true;
+      }
+      if (b == BTN_OK) {
+        if (menu_cur == 0) abre_lista();
+        else abre_tabela();
+        return true;
+      }
+      volta_ligas();  // C volta pro cardapio de ligas
+      return true;
     case V_LIST:
       if (fetch_ == FETCH_PENDING) return true;
-      if (fetch_ != FETCH_OK || n_jogos_ == 0) { volta_ligas(); return true; }
+      if (fetch_ != FETCH_OK || n_jogos_ == 0) { volta_submenu(); return true; }
       if (b == BTN_UP) { cur = (cur + n_jogos_ - 1) % n_jogos_; return true; }
       if (b == BTN_DOWN) { cur = (cur + 1) % n_jogos_; return true; }
       if (b == BTN_OK) {
@@ -174,7 +225,21 @@ static bool input(Button b, BtnEvent e) {
         if (jogos_[cur].live) live_watch(jogos_[cur]);
         return true;
       }
-      volta_ligas();  // C volta
+      volta_submenu();  // C volta pro submenu da liga
+      return true;
+    case V_TABELA:
+      if (fetch_ == FETCH_PENDING) return true;
+      if (fetch_ != FETCH_OK || classif_.ng == 0) { volta_submenu(); return true; }
+      if (classif_.ng > 1) {  // grupos: UP/DOWN troca de grupo
+        if (b == BTN_UP) { gcur_ = (gcur_ + classif_.ng - 1) % classif_.ng;
+                           return true; }
+        if (b == BTN_DOWN) { gcur_ = (gcur_ + 1) % classif_.ng; return true; }
+      } else {  // tabela unica: UP/DOWN rola a janela
+        uint8_t maxoff = classif_.nt > kVisTab ? classif_.nt - kVisTab : 0;
+        if (b == BTN_UP) { if (tab_off_) tab_off_--; return true; }
+        if (b == BTN_DOWN) { if (tab_off_ < maxoff) tab_off_++; return true; }
+      }
+      volta_submenu();  // OK/C volta pro submenu
       return true;
     case V_DETAIL: {
       const CopaJogo& j = jogos_[cur];
@@ -254,6 +319,22 @@ static void render(void* gfx) {
       nokia_ui::softkey(g, tr(STR_SELECT));
       break;
     }
+    case V_LIGA: {
+      // submenu da liga: Jogos / Tabela (espaco pra mais visoes no futuro)
+      nokia_ui::text_bold_center(g, 8, ligas_[liga_].n);
+      const char* itens[kMenuLiga] = {tr(STR_GAMES), tr(STR_TABLE)};
+      for (uint8_t i = 0; i < kMenuLiga; i++) {
+        int y = 13 + i * 11;
+        if (i == menu_cur) {
+          g.drawBox(0, y, 84, 10);
+          g.setDrawColor(0);
+        }
+        g.drawUTF8(4, y + 8, itens[i]);
+        g.setDrawColor(1);
+      }
+      nokia_ui::softkey(g, tr(STR_SELECT));
+      break;
+    }
     case V_LIST: {
       nokia_ui::text_bold_center(g, 8, ligas_[liga_].n);
       if (fetch_ == FETCH_PENDING) {
@@ -299,6 +380,74 @@ static void render(void* gfx) {
     case V_DETAIL: {
       const CopaJogo& j = jogos_[cur];
       jogo_view_detail(g, j, pag_, jogo_aviso_armado(j));
+      break;
+    }
+    case V_TABELA: {
+      if (fetch_ == FETCH_PENDING) {
+        nokia_ui::text_bold_center(g, 8, tr(STR_TABLE));
+        g.drawUTF8(2, 28, tr(STR_SEARCHING));
+        break;
+      }
+      if (fetch_ == FETCH_NONET) {
+        nokia_ui::text_bold_center(g, 8, tr(STR_TABLE));
+        nokia_ui::no_network(g);
+        nokia_ui::softkey(g, tr(STR_BACK));
+        break;
+      }
+      if (fetch_ != FETCH_OK || classif_.ng == 0) {
+        // mata-mata puro (Copa do Brasil) ou erro: nao ha classificacao
+        nokia_ui::text_bold_center(g, 8, ligas_[liga_].n);
+        nokia_ui::text_bold_center(g, 28, tr(STR_NO_GAMES));
+        nokia_ui::softkey(g, tr(STR_BACK));
+        break;
+      }
+      char num[8];
+      if (classif_.ng > 1) {
+        // fase de grupos: um bloco por vez, navegavel com UP/DOWN
+        char titulo[20];
+        snprintf(titulo, sizeof(titulo), "%s %s", tr(STR_GROUP),
+                 classif_.gnome[gcur_]);
+        nokia_ui::text_bold_center(g, 8, titulo);
+        g.drawStr(34, 16, "P");
+        g.drawStr(50, 16, "J");
+        g.drawStr(62, 16, "S");
+        uint8_t ini = classif_.gini[gcur_];
+        for (uint8_t i = 0; i < classif_.gn[gcur_]; i++) {
+          int y = 24 + i * 7;
+          const CopaGrupoTime& t = classif_.times[ini + i];
+          g.drawStr(2, y, t.c);
+          snprintf(num, sizeof(num), "%d", t.pts);
+          g.drawStr(34, y, num);
+          snprintf(num, sizeof(num), "%d", t.j);
+          g.drawStr(50, y, num);
+          snprintf(num, sizeof(num), "%+d", t.sg);
+          g.drawStr(62, y, num);
+        }
+      } else {
+        // pontos corridos: tabela unica numerada, rolavel com UP/DOWN
+        nokia_ui::text_bold_center(g, 8, ligas_[liga_].n);
+        g.drawStr(40, 16, "P");
+        g.drawStr(54, 16, "J");
+        g.drawStr(66, 16, "S");
+        for (uint8_t i = 0; i < kVisTab && tab_off_ + i < classif_.nt; i++) {
+          uint8_t idx = tab_off_ + i;
+          int y = 24 + i * 7;
+          const CopaGrupoTime& t = classif_.times[idx];
+          snprintf(num, sizeof(num), "%d", idx + 1);
+          g.drawStr(1, y, num);
+          g.drawStr(13, y, t.c);
+          snprintf(num, sizeof(num), "%d", t.pts);
+          g.drawStr(40, y, num);
+          snprintf(num, sizeof(num), "%d", t.j);
+          g.drawStr(54, y, num);
+          snprintf(num, sizeof(num), "%+d", t.sg);
+          g.drawStr(66, y, num);
+        }
+        // setinhas quando ha linhas fora da janela (acima/abaixo)
+        uint8_t maxoff = classif_.nt > kVisTab ? classif_.nt - kVisTab : 0;
+        if (tab_off_) g.drawTriangle(78, 16, 82, 16, 80, 12);
+        if (tab_off_ < maxoff) g.drawTriangle(78, 43, 82, 43, 80, 47);
+      }
       break;
     }
   }

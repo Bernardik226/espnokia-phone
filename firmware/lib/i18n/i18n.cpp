@@ -122,6 +122,9 @@ static const char* const kStr[STR_COUNT][LANG_COUNT] = {
   /* NO_TALKS */ {"SEM CONVERSAS", "NO TALKS YET", "SIN CHARLAS",
                   "AUCUN MESSAGE", "KEINE GESPRACHE", "EI JUTTUJA"},
   /* ME */ {"EU", "ME", "YO", "MOI", "ICH", "MINA"},
+  /* GAMES */ {"Jogos", "Games", "Partidos", "Matchs", "Spiele", "Ottelut"},
+  /* TABLE */ {"Tabela", "Table", "Tabla", "Classement", "Tabelle",
+               "Sarjataulukko"},
 };
 
 static const char* const kDay[LANG_COUNT][7] = {

@@ -87,6 +87,35 @@ uint8_t fut_parse_ligas(const char* json, FutLiga* ligas, uint8_t max) {
   return n;
 }
 
+uint8_t fut_parse_tabela(const char* json, FutClass* c) {
+  c->nt = 0;
+  c->ng = 0;
+  JsonDocument doc;
+  if (deserializeJson(doc, json) != DeserializationError::Ok) return 0;
+  JsonArray arr = doc["grupos"];
+  if (arr.isNull()) return 0;
+
+  for (JsonObject g : arr) {
+    if (c->ng >= FUT_GRUPO_MAX || c->nt >= FUT_CLASS_MAX) break;
+    uint8_t gi = c->ng;
+    copia(c->gnome[gi], sizeof(c->gnome[gi]), g["n"]);
+    c->gini[gi] = c->nt;
+    c->gn[gi] = 0;
+    for (JsonObject t : (JsonArray)g["t"]) {
+      if (c->nt >= FUT_CLASS_MAX) break;
+      CopaGrupoTime& gt = c->times[c->nt];
+      copia(gt.c, sizeof(gt.c), t["c"]);
+      gt.pts = t["p"] | 0;
+      gt.j = t["j"] | 0;
+      gt.sg = t["s"] | 0;
+      c->nt++;
+      c->gn[gi]++;
+    }
+    c->ng++;
+  }
+  return c->ng;
+}
+
 const char* copa_ultimo_gol(const char* gols) {
   const char* p = strrchr(gols, '\n');
   return p ? p + 1 : gols;
