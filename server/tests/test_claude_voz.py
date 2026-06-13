@@ -220,3 +220,17 @@ def test_historico_sobrevive_a_restart(tmp_path, monkeypatch):
     assert ultima[0] == {"role": "user", "content": "oi tudo bem"}
     assert ultima[1] == {"role": "assistant", "content": "lembro sim"}
     assert ultima[-1] == {"role": "user", "content": "oi tudo bem"}
+
+
+def test_resposta_longa_bate_na_fala_e_no_registro(tmp_path, monkeypatch):
+    # Claude estourou o limite: a fala em tempo real e o registro têm que
+    # mostrar EXATAMENTE o mesmo texto cortado (senão o aparelho buga)
+    from app.memoria import MAX_R_BYTES
+    longa = "miau " * 100                      # ~500 bytes, bem acima do teto
+    client, _ = faz_client(tmp_path, monkeypatch,
+                           chat_fn=lambda c, s, m: (longa, 1, 1))
+    resp = post(client).json()["resposta"]
+    assert len(resp.encode("utf-8")) <= MAX_R_BYTES
+    reg = client.get("/claude/registro",
+                     headers={"X-Device-Key": "k1"}).json()
+    assert reg["itens"][0]["r"] == resp        # fala == histórico, byte a byte

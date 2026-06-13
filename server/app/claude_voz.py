@@ -7,7 +7,7 @@ import logging
 import time
 
 from app import config, stt
-from app.memoria import MemoriaService
+from app.memoria import MAX_R_BYTES, MemoriaService, corta_utf8
 
 MAX_CORPO = 500 * 1024          # ~15,6 s de PCM16 16 kHz
 MAX_TOKENS = 300
@@ -80,6 +80,10 @@ class VozService:
         except Exception:
             logging.exception("claude api falhou")
             return 502, {"erro": "sem resposta do claude"}
+        # corta a resposta no mesmo teto do registro (MAX_R_BYTES, UTF-8-safe):
+        # a fala em tempo real e o histórico passam a mostrar EXATAMENTE o mesmo
+        # texto — sem o caso de aparecer inteira na hora e cortada no registro
+        resposta = corta_utf8(resposta, MAX_R_BYTES)
         self.memoria.grava_par(device, falei, resposta, t)
         try:
             self._loga_uso(device, t_in, t_out)
