@@ -218,17 +218,27 @@ static int32_t dias_civil(int y, int m, int d) {
   return (int32_t)era * 146097 + doe - 719468;
 }
 
-// contagem regressiva pra final (19/07/2026), discreta no canto do titulo;
-// RTC desacertado (fora da janela da Copa) esconde em vez de mostrar absurdo
-static void desenha_final_em(U8G2& g) {
+// contagem regressiva pra final (19/07/2026) no canto esquerdo, num
+// minibanner preto com o texto vazado (contraste com o titulo); da final em
+// diante vira so um "F". RTC desacertado (longe demais da Copa) esconde.
+// Devolve a largura do banner (0 se nao desenhou nada).
+static int desenha_final_em(U8G2& g) {
   rtc::DateTime dt;
-  if (!rtc::now(dt)) return;
+  if (!rtc::now(dt)) return 0;
   int32_t falta =
       dias_civil(2026, 7, 19) - dias_civil(dt.year, dt.month, dt.day);
-  if (falta <= 0 || falta > 60) return;
+  if (falta > 60) return 0;
   char s[8];
-  snprintf(s, sizeof(s), "%ldd", (long)falta);
-  g.drawStr(82 - (int)g.getStrWidth(s), 8, s);
+  if (falta > 0)
+    snprintf(s, sizeof(s), "%ldd", (long)falta);
+  else
+    snprintf(s, sizeof(s), "F");
+  int w = (int)g.getStrWidth(s) + 4;
+  g.drawBox(0, 0, w, 9);
+  g.setDrawColor(0);
+  g.drawStr(2, 8, s);
+  g.setDrawColor(1);
+  return w;
 }
 
 static void render(void* gfx) {
@@ -236,8 +246,14 @@ static void render(void* gfx) {
   g.setFont(u8g2_font_3310_small);
   switch (view) {
     case V_MENU: {
-      nokia_ui::text_bold_center(g, 8, tr(STR_APP_COPA));
-      desenha_final_em(g);
+      // titulo a direita; a contagem pra final mora no canto esquerdo
+      const char* t = tr(STR_APP_COPA);
+      int ini_t = 82 - nokia_ui::bold_width(g, t);
+      nokia_ui::text_bold(g, ini_t, 8, t);
+      int fim_b = desenha_final_em(g);
+      // a taca da copa mora no respiro entre o banner e o titulo
+      g.drawXBMP((fim_b + ini_t - MINI_CUP_W) / 2, 1, MINI_CUP_W, MINI_CUP_H,
+                 mini_cup_bits);
       const uint8_t kVis = 3;
       uint8_t top = cur >= kVis ? (uint8_t)(cur - kVis + 1) : 0;
       for (uint8_t i = 0; i < kVis && top + i < kAbaCount; i++) {

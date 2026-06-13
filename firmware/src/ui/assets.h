@@ -525,3 +525,9 @@ static const unsigned char mini_clock_bits[] U8X8_PROGMEM = {
 static const unsigned char mini_down_bits[] U8X8_PROGMEM = {
     0x04, 0x04, 0x1f, 0x0e, 0x04,
 };
+
+#define MINI_CUP_W 5
+#define MINI_CUP_H 7
+static const unsigned char mini_cup_bits[] U8X8_PROGMEM = {
+    0x0e, 0x1f, 0x0e, 0x04, 0x04, 0x0e, 0x1f,
+};
