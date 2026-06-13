@@ -208,7 +208,7 @@ def test_dashboard_html_aberto_sem_chave():
     c = monta(device_keys="segredo")        # a casca HTML não exige chave
     r = c.get("/")
     assert r.status_code == 200
-    assert "dashboard do Claw" in r.text
+    assert "espnokia" in r.text and "Claw'd" in r.text
 
 
 def test_admin_status_exige_chave():
@@ -251,3 +251,16 @@ def test_memoria_limpar_exige_chave_e_responde_ok(tmp_path, monkeypatch):
     assert c.post("/claude/memoria/limpar").status_code == 401
     r = c.post("/claude/memoria/limpar", headers={"X-Device-Key": "segredo"})
     assert r.status_code == 200 and r.json() == {"ok": True}
+
+
+def test_capability_aceita_qualquer_chave_forte():
+    c = monta(device_keys="*")
+    r = c.get("/copa/proximos", headers={"X-Device-Key": "a" * 32})
+    assert r.status_code == 200
+
+
+def test_capability_recusa_sem_chave_ou_chave_curta():
+    c = monta(device_keys="*")
+    assert c.get("/copa/proximos").status_code == 401
+    assert c.get("/copa/proximos",
+                 headers={"X-Device-Key": "curtinha"}).status_code == 401
