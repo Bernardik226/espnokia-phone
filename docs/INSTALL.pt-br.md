@@ -12,6 +12,7 @@ Do zero até o aparelho ligado, acompanhando a Copa e conversando com o Claude:
 **montar o hardware → subir o server → gravar o firmware → conectar no WiFi →
 parear o Claw'd**. Nessa ordem.
 
+---
 ## 🧰 Lista de materiais
 
 | Qtde | Item | Observação |
@@ -25,6 +26,7 @@ parear o Claw'd**. Nessa ordem.
 | 1 | Microfone I2S INMP441 | Para o Claw'd (push-to-talk com o Claude) — opcional se dispensar a voz |
 | 1 | Protoboard 830 pontos + jumpers | Montagem sem solda |
 
+---
 ## 🔌 Pinagem
 
 A fonte da verdade é [`firmware/include/pins.h`](../firmware/include/pins.h):
@@ -53,6 +55,13 @@ A fonte da verdade é [`firmware/include/pins.h`](../firmware/include/pins.h):
 - Buzzer passivo: positivo no GPIO 25, negativo no GND.
 - INMP441 em **3V3**; ligue o pino `L/R` no GND (canal esquerdo).
 
+<p align="center">
+  <img src="assets/photos/protoboard.png" width="360" alt="a montagem na protoboard com todos os componentes">
+</p>
+
+<sub>A montagem sem solda completa — cada módulo na protoboard.</sub>
+
+---
 ## 🐍 Server companion
 
 O server alimenta a Copa, as ligas e o Claw'd. Rode na sua máquina, num servidor
@@ -112,6 +121,7 @@ pip install -r requirements-dev.txt
 python -m pytest tests/        # 157 testes
 ```
 
+---
 ## 📟 Firmware
 
 Pré-requisito: [PlatformIO](https://platformio.org/install/cli) (CLI ou
@@ -150,6 +160,7 @@ pio run -e esp32dev -t upload
 pio device monitor      # 115200 baud, pra acompanhar o boot
 ```
 
+---
 ## 📶 Conectando no WiFi
 
 Na primeira ligada (ou depois de **Config → Conexões → WiFi/Servidor → trocar de
@@ -174,6 +185,7 @@ rede**), o aparelho entra em **modo config**:
 A senha da sua rede fica **cifrada na NVS** com chave derivada do MAC em eFuse
 do próprio chip. Pra apagar: **Config → Conexões → WiFi/Servidor → esquecer**.
 
+---
 ## 🐾 Pareando o Claw'd &amp; o dashboard
 
 Com o aparelho online e o server com uma `ANTHROPIC_API_KEY`:
@@ -188,6 +200,7 @@ Com o aparelho online e o server com uma `ANTHROPIC_API_KEY`:
 4. Abra o **Claw'd** no aparelho, **segure o botão e fale**, solte — o pet
    escuta, pensa (a ✶ pulsa) e lê a resposta do Claude página por página.
 
+---
 ## 🚑 Problemas comuns
 
 | Sintoma | Causa provável / solução |

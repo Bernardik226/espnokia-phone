@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="docs/assets/banner.png" alt="ESPNOKIA" width="720">
+  <img src="docs/assets/banner.png" alt="ESPNOKIA" width="680">
+</p>
+
+<p align="center">
+  <img src="docs/assets/boot-hands.gif" width="260" alt="the Nokia boot animation recreated: two pixel hands reach in, meet, and the logo lights up">
 </p>
 
 <p align="center">
@@ -34,9 +38,9 @@
 ---
 
 A Nokia 3310-style "phone" built from scratch: an **ESP32 + Nokia 5110 display**
-running a homemade **NokiaOS** — an app shell, the Nokia 3310 pixel fonts, the
-boot animation with the little hands meeting, factory ringtones in RTTTL and
-menus in 9 languages.
+running a homemade **NokiaOS** — an app shell, the Nokia 3310 pixel fonts, that
+boot animation up there with the little hands meeting, factory ringtones in
+RTTTL and menus in 9 languages.
 
 **Y2K looks, 2026 features.** It follows the **2026 World Cup live** and rings
 the very second a goal is scored ⚽, tracks **club leagues** with adaptive
@@ -63,11 +67,13 @@ the monochrome screen.
 
 ## 📑 Contents
 
-- [The apps](#️-the-apps) · [System architecture](#-system-architecture)
-- [World Cup 26](#-world-cup-26--live-on-your-desk) · [Leagues](#-leagues--adaptive-standings) · [Claw'd](#-clawd--talk-to-claude-from-a-nokia)
-- [Pairing & dashboard](#-pairing--the-dashboard) · [APIs with & without keys](#-the-study-underneath-apis-with-and-without-keys) · [WiFi without recompiling](#-wifi-without-recompiling)
-- [Behind the art](#-behind-the-art) · [Hardware](#-hardware) · [Quality](#-quality)
-- [Make your own app](#-make-your-own-app) · [Credits & attributions](#-credits--attributions) · [Trademarks & authorship](#-trademarks--authorship)
+**The showcase**
+- [The apps](#️-the-apps) · [Everyday](#️-everyday) · [World Cup 26](#-world-cup-26) · [Leagues](#-leagues) · [Claw'd](#-clawd--talk-to-claude-from-a-nokia) · [Pairing & dashboard](#-pairing--the-dashboard)
+
+**Under the hood**
+- [APIs with & without keys](#-the-study-underneath-apis-with-and-without-keys) · [System architecture](#️-system-architecture) · [WiFi without recompiling](#-wifi-without-recompiling)
+- [Behind the art](#-behind-the-art) · [Hardware](#-hardware) · [Quality](#-quality) · [Make your own app](#-make-your-own-app)
+- [Credits](#-credits--attributions) · [Trademarks](#️-trademarks--authorship)
 
 ---
 
@@ -94,65 +100,29 @@ flowchart TD
     class CD,CN bl;
 ```
 
-<details>
-<summary><b>The full app list</b> (click to expand)</summary>
-
-| App | What's inside |
-|---|---|
-| ⏰ **Clock** | Big 3310-style time (DS3231 RTC), an **alarm** that survives reboots (NVS) and a countdown **timer** |
-| 🏆 **World Cup 26** | Upcoming, Brazil and live matches; rings at kickoff and **flashes "GOAL!"** when the score changes |
-| ⚽ **Leagues** | Club football (Champions, Libertadores…) with an **adaptive standings table** |
-| 🐾 **Claw'd** | Push-to-talk to **Claude**, a pixel-art pet with conversation log and persistent memory |
-| 🌡️ **Weather** | Ambient temperature from the DS3231's onboard thermometer (0.25 °C) |
-| 🎵 **Tones** | 9 original Nokia ringtones transcribed to RTTTL — browse to preview, OK to set |
-| ⚙️ **Settings** | Backlight, date/time, **Connections** (WiFi + device QR), volume, language, about |
-
-</details>
-
 ---
 
-## 🏛️ System architecture
+# 🗂️ Showcase
 
-Two pieces: the **device** (C++/Arduino firmware) and a **companion server**
-(FastAPI) that chews through the data sources and serves lean JSON the ESP32 can
-parse without suffering. The chip never touches an external source directly —
-the server is the membrane between a 2 KB buffer and the open internet.
+## 🛠️ Everyday
+
+The bread and butter — a real 3310-style clock with an **alarm** that survives
+reboots and a **timer**; ambient **temperature** from the DS3231's onboard
+thermometer; **9 original Nokia ringtones** transcribed to RTTTL (browse to
+preview, OK to set); and **Connections**, where WiFi and the device QR live.
 
 <p align="center">
-  <img src="docs/assets/architecture.png" width="900" alt="system architecture: the device on the desk, the companion server it owns, and the open internet behind it, with labelled arrows for each data path">
+  <img src="docs/assets/photos/clock.png" width="210" alt="clock app, big 3310-style time">
+  <img src="docs/assets/photos/weather.png" width="210" alt="weather app showing ambient temperature">
+  <img src="docs/assets/photos/tones.png" width="210" alt="tones app browsing ringtones">
+  <img src="docs/assets/photos/connections.png" width="210" alt="connections menu: WiFi/server and device QR">
 </p>
-
-When you talk to Claw'd, this is the round trip — voice in, paged text out:
-
-```mermaid
-sequenceDiagram
-    actor You
-    participant P as 📟 espnokia
-    participant S as 🐍 companion server
-    participant C as Claude
-    You->>P: hold button & speak
-    P->>S: POST /claude/voz · raw PCM + X-Device-Key
-    S->>S: speech-to-text (whisper / Groq)
-    S->>C: transcript + persona + memory
-    C-->>S: reply
-    S-->>P: JSON · paged text + mood
-    P-->>You: the pet reads it back ✶
-```
-
-<details>
-<summary><b>Why a server in the middle?</b> (click to expand)</summary>
-
-The raw openfootball JSON weighs hundreds of KB; the ESP32 works with a 2 KB
-buffer. The server **filters, normalizes and answers ~1.2 KB** for the matches
-that matter. As a bonus, every credential — a live-score source, your Claude
-key — lives on the server and **never touches the firmware**: swap a source or
-rotate a key and not a single device needs a reflash.
-
-</details>
 
 ---
 
-## 🏆 World Cup 26 — live, on your desk
+## 🏆 World Cup 26
+
+<img src="docs/assets/logo-copa2026.png" height="46" align="right" alt="2026 FIFA World Cup emblem">
 
 Upcoming matches, Brazil's fixtures, the live board and the group tables. Mark a
 match and the phone **rings at kickoff**; while it's running, the score updates
@@ -160,20 +130,20 @@ by itself and **"GOAL!" flashes on screen** the instant it changes — with the
 scorer's name when the source has it.
 
 <p align="center">
+  <img src="docs/assets/photos/copa-worldcup.png" width="168" alt="World Cup splash with the pixel-art trophy">
   <img src="docs/assets/photos/copa-upcoming.png" width="168" alt="upcoming matches with dates">
   <img src="docs/assets/photos/copa-list.png" width="168" alt="match list">
-  <img src="docs/assets/photos/copa-detail.png" width="168" alt="match detail with scorers">
   <img src="docs/assets/photos/copa-notify.png" width="168" alt="goal alert flashing on screen">
 </p>
 
-<p align="center"><b>Flow</b> &nbsp;·&nbsp; splash → menu → match detail → live goal</p>
+<p align="center"><b>Flow</b> &nbsp;·&nbsp; menu → live list → goal alert</p>
 <p align="center">
-  <img src="docs/assets/flow-copa.png" width="840" alt="World Cup flow with arrows between screens: splash, menu, match detail and goal alert">
+  <img src="docs/assets/flow-copa.png" width="780" alt="World Cup flow with arrows between screens: menu, live list and goal alert">
 </p>
 
 ---
 
-## ⚽ Leagues — adaptive standings
+## ⚽ Leagues
 
 The Sports category opens into club football too: Champions League, Libertadores
 and friends. The standings view **adapts to the competition** — a numbered table
@@ -189,17 +159,14 @@ whatever is currently running**, showing the season in play.
 
 <p align="center"><b>Flow</b> &nbsp;·&nbsp; leagues → league menu → games / table</p>
 <p align="center">
-  <img src="docs/assets/flow-football.png" width="840" alt="Football flow with arrows between screens: leagues, submenu and standings table">
+  <img src="docs/assets/flow-football.png" width="780" alt="Football flow with arrows between screens: leagues, submenu and standings table">
 </p>
 
 ---
 
 ## 🐾 Claw'd — talk to Claude from a Nokia
 
-<p align="center">
-  <img src="https://img.shields.io/badge/powered_by-Claude-d97757?style=flat-square&logo=anthropic&logoColor=white" alt="powered by Claude">
-  &nbsp;<img src="docs/assets/star-orange.png" width="18" alt="orange pixel star">
-</p>
+<img src="docs/assets/logo-claude.png" height="42" align="right" alt="Claude symbol">
 
 Hold the button, **speak**, let go. The mic samples your voice, the companion
 server transcribes it, **Claude answers**, and a pixel-art pet reads the reply
@@ -272,7 +239,11 @@ choose the **STT engine**, set the **reply length** and drop in your **API keys*
 > Set a key from the dashboard and it lives as long as the server runs; for a
 > permanent key, use the `ANTHROPIC_API_KEY` env.
 
+<br>
+
 ---
+
+<h1 align="center">⚙️ Under the hood</h1>
 
 ## 🔑 The study underneath: APIs with and without keys
 
@@ -302,7 +273,33 @@ enter the repo.
 | Response | hundreds of KB of JSON | lean JSON the chip can parse |
 | What it protects | TTL cache, graceful fallback | per-device isolation, your keys |
 
----
+## 🏛️ System architecture
+
+Two pieces: the **device** (C++/Arduino firmware) and a **companion server**
+(FastAPI) that chews through the data sources and serves lean JSON the ESP32 can
+parse without suffering. The chip never touches an external source directly —
+the server is the membrane between a 2 KB buffer and the open internet.
+
+<p align="center">
+  <img src="docs/assets/architecture.png" width="900" alt="system architecture: the device on the desk, the companion server it owns, and the open internet behind it, with labelled arrows for each data path">
+</p>
+
+When you talk to Claw'd, this is the round trip — voice in, paged text out:
+
+```mermaid
+sequenceDiagram
+    actor You
+    participant P as 📟 espnokia
+    participant S as 🐍 companion server
+    participant C as Claude
+    You->>P: hold button & speak
+    P->>S: POST /claude/voz · raw PCM + X-Device-Key
+    S->>S: speech-to-text (whisper / Groq)
+    S->>C: transcript + persona + memory
+    C-->>S: reply
+    S-->>P: JSON · paged text + mood
+    P-->>You: the pet reads it back ✶
+```
 
 ## 📶 WiFi without recompiling
 
@@ -322,17 +319,15 @@ same page is where you set the **server URL**.
 Your WiFi password is encrypted in NVS with a key derived from the MAC burned
 into the chip's eFuse: a flash dump from another device cannot decrypt it. 🔐
 
----
-
 ## 🎨 Behind the art
 
 Every glyph on that screen was a decision. The **Nokia 3310 pixel fonts** are the
 real ones, redrawn pixel-by-pixel from the screen by
 [Premysl Janouch](https://git.janouch.name/p/nokia-3310-fonts) and converted to
 the embedded format with u8g2's `bdfconv` — I extended them with the Latin-1
-accents the 9 system languages need. The boot is the Nokia 1100's hands meeting,
-frame by frame; the World Cup trophy, the football, the menu icons and the pet
-are **bitmaps authored in a tiny grid DSL** and compiled to XBM by a
+accents the 9 system languages need. The boot up top is the Nokia 1100's hands
+meeting, frame by frame; the World Cup trophy, the football, the menu icons and
+the pet are **bitmaps authored in a tiny grid DSL** and compiled to XBM by a
 [home-grown tool](tools/) — so the art lives in version control as text, not
 binary blobs.
 
@@ -348,10 +343,8 @@ six-pointed star below is the maker's mark that came out of it.
 
 <p align="center"><b>Whole-device navigation</b></p>
 <p align="center">
-  <img src="docs/assets/flow-nav.png" width="860" alt="navigation flow across the whole device with arrows between screens">
+  <img src="docs/assets/flow-nav.png" width="760" alt="navigation flow across the whole device with arrows between screens">
 </p>
-
----
 
 ## 🔌 Hardware
 
@@ -368,8 +361,6 @@ six-pointed star below is the maker's mark that came out of it.
 <p align="center">
   <img src="docs/assets/photos/protoboard.png" width="420" alt="the real breadboard build with all components wired up">
 </p>
-
----
 
 ## 🧪 Quality
 
@@ -396,8 +387,6 @@ server/     FastAPI companion: /copa /futebol /claude /admin + the dashboard PWA
 docs/       install guide, README assets
 tools/      pixel-art utilities (grid → XBM)
 ```
-
----
 
 ## 🧩 Make your own app
 
@@ -435,15 +424,18 @@ it leans on, with thanks:
 **Server libraries**
 - [**FastAPI**](https://fastapi.tiangolo.com/) · [**Uvicorn**](https://www.uvicorn.org/) · [**httpx**](https://www.python-httpx.org/) · the [**Anthropic SDK**](https://github.com/anthropics/anthropic-sdk-python).
 
+**Logos** — the Claude symbol and the 2026 FIFA World Cup emblem shown above are reproduced from [Wikimedia Commons](https://commons.wikimedia.org/) for reference only.
+
 ---
 
 ## ⚖️ Trademarks &amp; authorship
 
 **Nokia** and the Nokia phone designs are trademarks of **Nokia Corporation**.
-**Claude** and **Anthropic** are trademarks of **Anthropic, PBC**. **Groq**,
-**ESPN** and any other names belong to their respective owners. This is an
-independent, **non-commercial fan &amp; educational project** — a homage — and is
-**not affiliated with, endorsed by or sponsored by** any of them. All referenced
+**Claude** and **Anthropic** are trademarks of **Anthropic, PBC**. The **FIFA
+World Cup** name and emblem are trademarks of **FIFA**. **Groq**, **ESPN** and
+any other names belong to their respective owners. This is an independent,
+**non-commercial fan &amp; educational project** — a homage — and is **not
+affiliated with, endorsed by or sponsored by** any of them. All referenced
 brands, logos and data remain the property of their respective owners.
 
 Original code, firmware, pixel art and assets © 2026 **Bernardo Melo**.
