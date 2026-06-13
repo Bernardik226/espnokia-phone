@@ -158,7 +158,7 @@ def test_futebol_ligas_e_jogos():
     fut = FutebolService({"bra.1": FonteFutFake([fut_partida("FLA", "VAS")])})
     c = monta(futebol=fut)
     assert c.get("/futebol/ligas").json() == \
-        {"ligas": [{"id": "bra.1", "n": "Brasileirão"}]}
+        {"ligas": [{"id": "bra.1", "n": "Brasileirão", "live": True}]}
     j = c.get("/futebol/jogos", params={"liga": "bra.1"}).json()["jogos"][0]
     assert (j["t1"], j["n1"], j["s1"], j["min"]) == ("FLA", "Flamengo", 1, "30")
     assert j["info"] == "Brasileirão"   # o detail mostra de que liga é o jogo

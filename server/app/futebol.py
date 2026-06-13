@@ -36,17 +36,31 @@ class FutebolService:
         # Varre as candidatas em paralelo (cada fonte cacheia o scoreboard,
         # então a varredura repetida custa zero rede); liga quebrada só
         # fica de fora — nunca derruba o cardápio inteiro.
-        def ativa(fonte):
+        def pega(fonte):
             try:
-                return bool(fonte.partidas())
+                return fonte.partidas()
             except Exception:
-                return False
+                return None
 
         with ThreadPoolExecutor(max(len(self.fontes), 1)) as ex:
-            vivas = dict(zip(self.fontes,
-                             ex.map(ativa, self.fontes.values())))
-        return [{"id": lid, "n": nome} for lid, nome in LIGAS
-                if vivas.get(lid)]
+            partidas = dict(zip(self.fontes,
+                                ex.map(pega, self.fontes.values())))
+        agora = self.now_fn()
+        out = []
+        for lid, nome in LIGAS:
+            ps = partidas.get(lid)
+            if not ps:
+                continue
+            liga = {"id": lid, "n": nome}
+            if any(p["rolando"] for p in ps):
+                liga["live"] = True       # tem bola rolando agora
+            elif all(p["data"] < agora for p in ps):
+                # liga parada na janela: o aparelho mostra quando foi o
+                # último jogo (em Brasília, mesmo fuso do resto do payload)
+                d = max(p["data"] for p in ps).astimezone(BRT)
+                liga["dia"], liga["mes"] = d.day, d.month
+            out.append(liga)
+        return out
 
     def jogos(self, liga):
         fonte = self.fontes.get(liga)
