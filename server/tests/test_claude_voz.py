@@ -234,3 +234,34 @@ def test_resposta_longa_bate_na_fala_e_no_registro(tmp_path, monkeypatch):
     reg = client.get("/claude/registro",
                      headers={"X-Device-Key": "k1"}).json()
     assert reg["itens"][0]["r"] == resp        # fala == histórico, byte a byte
+
+
+def test_e2e_chave_aparelho_dashboard(tmp_path, monkeypatch):
+    # fluxo real: o aparelho gera a chave (esp_random), fala usando ela, e o
+    # navegador que escaneou o QR (mesma chave) acessa os dados desse device.
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    K = "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6"        # 32 hex, como a do device
+    voz = VozService(stt_fn=lambda *a: "oi claw'd",
+                     chat_fn=lambda *a: ("miau, oi!", 1, 1),
+                     memoria=MemoriaService(base_dir=tmp_path))
+    c = TestClient(create_app(device_keys="*", voz=voz))   # capability ligado
+
+    # 1) o aparelho fala -> grava sob hash(K)
+    r = c.post("/claude/voz", content=b"\x00\x01" * 50, headers={"X-Device-Key": K})
+    assert r.status_code == 200
+
+    # 2) o dashboard, com a MESMA chave, vê status + registro + edita config
+    st = c.get("/admin/status", headers={"X-Device-Key": K}).json()
+    assert st["conversas"] == 1
+    reg = c.get("/claude/registro", headers={"X-Device-Key": K}).json()
+    assert (reg["itens"][0]["q"], reg["itens"][0]["r"]) == ("oi claw'd", "miau, oi!")
+    assert c.post("/admin/config", headers={"X-Device-Key": K},
+                  json={"persona_id": "sarcastico"}).status_code == 200
+
+    # 3) outra chave NÃO enxerga os dados desse device (isolamento por hash)
+    K2 = "ffffffffffffffffffffffffffffffff"
+    assert c.get("/admin/status", headers={"X-Device-Key": K2}).json()["conversas"] == 0
+
+    # 4) sem chave ou chave fraca = barrado
+    assert c.get("/admin/status").status_code == 401
+    assert c.get("/admin/status", headers={"X-Device-Key": "curta"}).status_code == 401
