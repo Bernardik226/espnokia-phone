@@ -265,3 +265,37 @@ def test_e2e_chave_aparelho_dashboard(tmp_path, monkeypatch):
     # 4) sem chave ou chave fraca = barrado
     assert c.get("/admin/status").status_code == 401
     assert c.get("/admin/status", headers={"X-Device-Key": "curta"}).status_code == 401
+
+
+def test_e2e_chave_anthropic_pelo_dashboard(tmp_path, monkeypatch):
+    # define a chave da API pelo dashboard e confirma que o pet passa a falar
+    # com ela (e que ela fica salva, mas NUNCA volta crua pro navegador)
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    visto = {}
+
+    def chat_spy(cfg, system, msgs):
+        visto["key"] = cfg["anthropic_api_key"]      # o que o cliente usaria
+        return ("oi!", 1, 1)
+
+    voz = VozService(stt_fn=lambda *a: "oi", chat_fn=chat_spy,
+                     memoria=MemoriaService(base_dir=tmp_path))
+    c = TestClient(create_app(device_keys="*", voz=voz))
+    K = "a" * 32
+
+    # 1) define a chave pelo dashboard
+    assert c.post("/admin/config", headers={"X-Device-Key": K},
+                  json={"anthropic_api_key": "sk-ant-minha"}).status_code == 200
+    # 2) dashboard mostra "configurada", nunca a chave crua
+    cfg = c.get("/admin/config", headers={"X-Device-Key": K}).json()
+    assert cfg["tem_anthropic_key"] is True and "anthropic_api_key" not in cfg
+    # 3) o espnokia fala -> usa exatamente a chave definida
+    c.post("/claude/voz", content=b"\x00" * 40, headers={"X-Device-Key": K})
+    assert visto["key"] == "sk-ant-minha"
+    # 4) ficou salva no config.json (vale enquanto o server roda)
+    salvo = json.loads((tmp_path / "config.json").read_text(encoding="utf-8"))
+    assert salvo["anthropic_api_key"] == "sk-ant-minha"
+    # 5) campo vazio NÃO apaga a chave já configurada
+    c.post("/admin/config", headers={"X-Device-Key": K}, json={"anthropic_api_key": ""})
+    salvo = json.loads((tmp_path / "config.json").read_text(encoding="utf-8"))
+    assert salvo["anthropic_api_key"] == "sk-ant-minha"
