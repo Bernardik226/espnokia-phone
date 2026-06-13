@@ -284,5 +284,8 @@ static void render(void* gfx) {
   }
 }
 
+// animacao de selecao: a bola quica e assenta na boca do gol
+static const unsigned char* const kAnim[] = {icon_futebol_f1_bits,
+                                             icon_futebol_f2_bits, nullptr};
 const App app_futebol = {STR_APP_FUTEBOL, on_enter, tick, input, nullptr,
-                         render, icon_futebol_bits};
+                         render, icon_futebol_bits, kAnim};

@@ -61,5 +61,8 @@ static void render(void* gfx) {
   menu_view_draw(*(U8G2*)gfx, *kSub[cur_], kN, cur_);
 }
 
+// animacao de selecao: a bola gira 72° (simetria do pentagono fecha o loop)
+static const unsigned char* const kAnim[] = {icon_esportes_f1_bits,
+                                             icon_esportes_f2_bits, nullptr};
 const App app_esportes = {STR_APP_SPORTS, on_enter, tick, input, on_exit,
-                          render, icon_esportes_bits};
+                          render, icon_esportes_bits, kAnim};

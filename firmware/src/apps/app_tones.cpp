@@ -102,5 +102,8 @@ uint8_t tones_count() { return kCount; }
 const char* tones_name(uint8_t i) { return kTones[i % kCount].name; }
 const char* tones_rtttl(uint8_t i) { return kTones[i % kCount].rtttl; }
 
+// animacao de selecao: a nota danca (sobe, desce, sobe) e assenta
+static const unsigned char* const kAnim[] = {
+    icon_tones_f1_bits, icon_tones_f2_bits, icon_tones_f1_bits, nullptr};
 const App app_tones = {STR_APP_TONES, on_enter, tick, input, on_exit, render,
-                       icon_tones_bits};
+                       icon_tones_bits, kAnim};
