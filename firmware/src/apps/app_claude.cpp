@@ -406,16 +406,20 @@ static void render_ouvindo(U8G2& g, uint32_t now) {
   g.drawStr(83 - g.getStrWidth(s), 7, s);
 }
 
-static void render_pensando(U8G2& g, uint32_t now) {
-  desenha_pet(g, face_neutro_bits, 0);
-  nokia_ui::text_bold(g, 2, 7, tr(STR_THINKING));
-  // a estrela da anthropic pensando: pulsa mudando de forma (· ✢ ✳ ✻ ✽),
-  // ping-pong a ~200 ms por frame, como o spinner do claude code
+// a estrela da anthropic esperando: pulsa mudando de forma (· ✢ ✳ ✻ ✽),
+// ping-pong a ~200 ms por frame, como o spinner do claude code
+static void desenha_spinner(U8G2& g, uint32_t now, int x, int y) {
   static const unsigned char* const kSpin[] = {
       spin_f0_bits, spin_f1_bits, spin_f2_bits, spin_f3_bits, spin_f4_bits};
   uint8_t i = (uint8_t)((now / 200) % 8);
   if (i > 4) i = 8 - i;  // cresce e recolhe
-  g.drawXBMP(48, 19, SPIN_F0_W, SPIN_F0_H, kSpin[i]);
+  g.drawXBMP(x, y, SPIN_F0_W, SPIN_F0_H, kSpin[i]);
+}
+
+static void render_pensando(U8G2& g, uint32_t now) {
+  desenha_pet(g, face_neutro_bits, 0);
+  nokia_ui::text_bold(g, 2, 7, tr(STR_THINKING));
+  desenha_spinner(g, now, 48, 19);
 }
 
 static void render_falando(U8G2& g) {
@@ -447,6 +451,7 @@ static void render_registro(U8G2& g) {
   if (reg_fetch_ == REG_NONET) { nokia_ui::no_network(g); return; }
   if (reg_fetch_ == REG_PENDING) {
     g.drawUTF8(2, 24, tr(STR_SEARCHING));
+    desenha_spinner(g, millis(), 56, 16);  // a estrela ao lado do buscando
     return;
   }
   if (reg_fetch_ == REG_ERR || reg_total_ == 0) {
