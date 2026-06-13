@@ -64,7 +64,9 @@ void loop() {
     // outra durante a gravacao) fica muda. Bipar antes segurava um tom de
     // 900 Hz ligado durante todo o handshake TLS do begin() — o tick que o
     // desligaria nao roda enquanto o input bloqueia.
-    if (e == EV_PRESS && !mic::running()) sound::play(sound::SND_KEY);
+    // (o auto-repeat de segurar UP/DOWN tambem fica mudo: 9 bips/s cansa)
+    if (e == EV_PRESS && !mic::running() && !buttons::repeating())
+      sound::play(sound::SND_KEY);
   }
   shell.tick(now);
   buzzer::tick(now);
