@@ -9,7 +9,7 @@ import httpx
 #   v2/sports/soccer/{liga}/standings
 URL = "https://site.api.espn.com/apis"
 
-TTL_JOGOS_S = 60
+TTL_JOGOS_S = 30   # placar ao vivo fresco: o aviso de gol nao pode atrasar
 TTL_GRUPOS_S = 300
 
 
