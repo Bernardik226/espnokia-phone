@@ -29,7 +29,8 @@ static char texto_[512];          // resposta (ou erro local) na tela
 static bool gravando_ = false;
 static uint32_t grava_t0_ = 0;    // contador de segundos do OUVINDO
 static uint16_t nivel_ = 0;       // media |amostra| da ultima leitura (VU)
-static uint32_t finish_em_ = 0;   // agenda o finish() 1 frame depois
+static uint32_t finish_em_ = 0;   // agenda o fim do upload 1 frame depois
+static bool esperando_ = false;   // resposta do servidor a caminho (poll)
 static uint32_t ping_em_ = 0;     // proximo ping de keep-alive do socket
 static size_t fala_pos_ = 0;      // typewriter/bitspeech: posicao no texto
 static uint32_t pausa_ate_ = 0;   // respiro do bitspeech (freq 0)
@@ -108,6 +109,7 @@ static void on_enter() {
   texto_[0] = '\0';
   gravando_ = false;
   finish_em_ = 0;
+  esperando_ = false;
   fala_viva_ = false;
   registro_ = false;
   mic::init();
@@ -122,6 +124,7 @@ static void on_exit() {
   }
   voicecli::abort();
   finish_em_ = 0;
+  esperando_ = false;
   registro_ = false;
 }
 
@@ -281,7 +284,7 @@ static void tick(uint32_t now) {
   }
   // ping a cada 30 s: segura o keep-alive na borda e reconecta fora do
   // aperto (socket frio custava ~1,8 s de begin e comia o inicio da fala)
-  if (!gravando_ && !finish_em_ && wifi::connected() &&
+  if (!gravando_ && !finish_em_ && !esperando_ && wifi::connected() &&
       (int32_t)(now - ping_em_) >= 0) {
     ping_em_ = now + 30000;
     voicecli::ping();
@@ -290,28 +293,40 @@ static void tick(uint32_t now) {
   claude::Estado antes = maq_.st;
   if (claude::maquina_tick(maq_, now) && antes == claude::E_OUVINDO)
     encerra_gravacao(now);
-  // PENSANDO: o finish agendado roda agora (bloqueia ate 20 s)
+  // PENSANDO: fecha o corpo e passa a vigiar a resposta SEM bloquear — o
+  // loop segue redesenhando e a estrela do spinner pulsa de verdade
   if (finish_em_ && (int32_t)(now - finish_em_) >= 0) {
     finish_em_ = 0;
+    esperando_ = voicecli::finish_begin();
+    if (!esperando_) {  // socket ja era: falha na hora
+      snprintf(texto_, sizeof(texto_), "%s", tr(STR_NO_RESPONSE));
+      claude::maquina_evento(maq_, claude::EV_FALHA, now);
+      comeca_fala(now);
+    }
+  }
+  if (esperando_) {
     static char resp[1536];
-    int status = voicecli::finish(resp, sizeof(resp));
-    uint32_t fim = millis();
-    if (status == 200 &&
-        claude::voz_parse(resp, nullptr, 0, texto_, sizeof(texto_))) {
-      claude::maquina_evento(maq_, claude::EV_RESPOSTA, fim);
-      comeca_fala(fim);
-      ultima_min_ = agora_min();  // o carinho conta a partir de agora
-      if (ultima_min_ > 0) {
-        Preferences p;
-        p.begin("claude", false);
-        p.putLong64("ult", ultima_min_);
-        p.end();
+    int status = voicecli::finish_poll(resp, sizeof(resp));
+    if (status != voicecli::kEsperando) {
+      esperando_ = false;
+      uint32_t fim = millis();
+      if (status == 200 &&
+          claude::voz_parse(resp, nullptr, 0, texto_, sizeof(texto_))) {
+        claude::maquina_evento(maq_, claude::EV_RESPOSTA, fim);
+        comeca_fala(fim);
+        ultima_min_ = agora_min();  // o carinho conta a partir de agora
+        if (ultima_min_ > 0) {
+          Preferences p;
+          p.begin("claude", false);
+          p.putLong64("ult", ultima_min_);
+          p.end();
+        }
+      } else {
+        snprintf(texto_, sizeof(texto_), "%s",
+                 tr(status == 422 ? STR_SAY_AGAIN : STR_NO_RESPONSE));
+        claude::maquina_evento(maq_, claude::EV_FALHA, fim);
+        comeca_fala(fim);
       }
-    } else {
-      snprintf(texto_, sizeof(texto_), "%s",
-               tr(status == 422 ? STR_SAY_AGAIN : STR_NO_RESPONSE));
-      claude::maquina_evento(maq_, claude::EV_FALHA, fim);
-      comeca_fala(fim);
     }
   }
   // FALANDO: typewriter + bitspeech (um chirp por caractere revelado)
@@ -419,7 +434,7 @@ static void desenha_spinner(U8G2& g, uint32_t now, int x, int y) {
 static void render_pensando(U8G2& g, uint32_t now) {
   desenha_pet(g, face_neutro_bits, 0);
   nokia_ui::text_bold(g, 2, 7, tr(STR_THINKING));
-  desenha_spinner(g, now, 48, 19);
+  desenha_spinner(g, now, 50, 22);
 }
 
 static void render_falando(U8G2& g) {
@@ -451,7 +466,7 @@ static void render_registro(U8G2& g) {
   if (reg_fetch_ == REG_NONET) { nokia_ui::no_network(g); return; }
   if (reg_fetch_ == REG_PENDING) {
     g.drawUTF8(2, 24, tr(STR_SEARCHING));
-    desenha_spinner(g, millis(), 56, 16);  // a estrela ao lado do buscando
+    desenha_spinner(g, millis(), 58, 19);  // a estrela ao lado do buscando
     return;
   }
   if (reg_fetch_ == REG_ERR || reg_total_ == 0) {
