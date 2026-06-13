@@ -29,8 +29,8 @@ def monta(fontes):
 
 
 def test_ligas_so_as_que_tem_jogo_na_ordem_do_catalogo():
-    svc = monta({"eng.1": FonteFake([partida("ARS", "LIV")]),
-                 "bra.1": FonteFake([partida("FLA", "VAS")]),
+    svc = monta({"eng.1": FonteFake([partida("ARS", "LIV", hora=22)]),
+                 "bra.1": FonteFake([partida("FLA", "VAS", hora=22)]),
                  "esp.1": FonteFake()})                    # sem jogos: some
     assert svc.ligas() == [{"id": "bra.1", "n": "Brasileirão"},
                            {"id": "eng.1", "n": "Premier League"}]
@@ -38,8 +38,30 @@ def test_ligas_so_as_que_tem_jogo_na_ordem_do_catalogo():
 
 def test_liga_quebrada_nao_derruba_o_cardapio():
     svc = monta({"bra.1": FonteFake(explode=True),
-                 "eng.1": FonteFake([partida("ARS", "LIV")])})
+                 "eng.1": FonteFake([partida("ARS", "LIV", hora=22)])})
     assert svc.ligas() == [{"id": "eng.1", "n": "Premier League"}]
+
+
+def test_ligas_marca_quem_tem_jogo_rolando():
+    svc = monta({"bra.1": FonteFake([partida("FLA", "VAS", rolando=True),
+                                     partida("SAO", "SAN", hora=23)])})
+    assert svc.ligas() == [{"id": "bra.1", "n": "Brasileirão", "live": True}]
+
+
+def test_liga_que_passou_mostra_data_do_ultimo_jogo_em_brasilia():
+    # 01:00 UTC do dia 12 = 22:00 do dia 11 em Brasília: o display fala BRT
+    svc = monta({"eng.1": FonteFake([
+        partida("MCI", "CHE", hora=15, dia=10, fim=True),
+        partida("ARS", "LIV", hora=1, dia=12, fim=True)])})
+    assert svc.ligas() == [{"id": "eng.1", "n": "Premier League",
+                            "dia": 11, "mes": 6}]
+
+
+def test_liga_com_jogo_por_vir_fica_neutra():
+    svc = monta({"esp.1": FonteFake([
+        partida("RMA", "BAR", hora=15, dia=10, fim=True),
+        partida("BET", "SEV", hora=18, dia=14)])})
+    assert svc.ligas() == [{"id": "esp.1", "n": "LaLiga"}]
 
 
 def test_jogos_corta_pra_8_sem_derrubar_quem_esta_rolando():
