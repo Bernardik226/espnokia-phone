@@ -153,6 +153,46 @@ void test_parse_grupos_json_invalido_da_zero() {
   TEST_ASSERT_EQUAL_UINT8(0, copa_parse_grupos("{\"nada\":1}", gs, 12));
 }
 
+void test_tabela_unica_um_bloco_sem_nome() {
+  // pontos corridos: 1 bloco sem nome → tabela unica numerada
+  static const char* kUnica =
+      "{\"grupos\":[{\"n\":\"\",\"t\":["
+      "{\"c\":\"FLA\",\"p\":9,\"j\":3,\"s\":5},"
+      "{\"c\":\"PAL\",\"p\":7,\"j\":3,\"s\":2},"
+      "{\"c\":\"VAS\",\"p\":1,\"j\":3,\"s\":-4}]}]}";
+  FutClass c;
+  TEST_ASSERT_EQUAL_UINT8(1, fut_parse_tabela(kUnica, &c));
+  TEST_ASSERT_EQUAL_UINT8(1, c.ng);
+  TEST_ASSERT_EQUAL_UINT8(3, c.nt);
+  TEST_ASSERT_EQUAL_STRING("", c.gnome[0]);
+  TEST_ASSERT_EQUAL_UINT8(0, c.gini[0]);
+  TEST_ASSERT_EQUAL_UINT8(3, c.gn[0]);
+  TEST_ASSERT_EQUAL_STRING("FLA", c.times[0].c);
+  TEST_ASSERT_EQUAL_INT8(9, c.times[0].pts);
+  TEST_ASSERT_EQUAL_INT8(-4, c.times[2].sg);
+}
+
+void test_tabela_grupos_varios_blocos() {
+  // fase de grupos: cada bloco nomeado, com sua fatia em times[]
+  FutClass c;
+  TEST_ASSERT_EQUAL_UINT8(2, fut_parse_tabela(kGrupos, &c));
+  TEST_ASSERT_EQUAL_UINT8(2, c.ng);
+  TEST_ASSERT_EQUAL_UINT8(5, c.nt);          // 4 do grupo A + 1 do B
+  TEST_ASSERT_EQUAL_STRING("A", c.gnome[0]);
+  TEST_ASSERT_EQUAL_UINT8(0, c.gini[0]);
+  TEST_ASSERT_EQUAL_UINT8(4, c.gn[0]);
+  TEST_ASSERT_EQUAL_STRING("B", c.gnome[1]);
+  TEST_ASSERT_EQUAL_UINT8(4, c.gini[1]);     // bloco B comeca depois do A
+  TEST_ASSERT_EQUAL_UINT8(1, c.gn[1]);
+  TEST_ASSERT_EQUAL_STRING("CAN", c.times[4].c);
+}
+
+void test_tabela_json_invalido_da_zero() {
+  FutClass c;
+  TEST_ASSERT_EQUAL_UINT8(0, fut_parse_tabela("xx", &c));
+  TEST_ASSERT_EQUAL_UINT8(0, fut_parse_tabela("{\"nada\":1}", &c));
+}
+
 void test_ultimo_gol_pega_a_ultima_linha() {
   TEST_ASSERT_EQUAL_STRING("R. Jimenez 67'",
                            copa_ultimo_gol("J. Quinones 9'\nR. Jimenez 67'"));
@@ -201,6 +241,9 @@ int main(int, char**) {
   RUN_TEST(test_parse_ligas_json_invalido_da_zero);
   RUN_TEST(test_parse_grupos);
   RUN_TEST(test_parse_grupos_json_invalido_da_zero);
+  RUN_TEST(test_tabela_unica_um_bloco_sem_nome);
+  RUN_TEST(test_tabela_grupos_varios_blocos);
+  RUN_TEST(test_tabela_json_invalido_da_zero);
   RUN_TEST(test_ultimo_gol_pega_a_ultima_linha);
   RUN_TEST(test_linha_sem_placar_mostra_data);
   RUN_TEST(test_linha_com_placar_mostra_placar);

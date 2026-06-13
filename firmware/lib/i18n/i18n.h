@@ -41,6 +41,8 @@ enum StrId : uint8_t {
   STR_APP_CLAUDE, STR_TALK, STR_LISTENING, STR_THINKING, STR_SAY_AGAIN,
   // registro de conversa do claude
   STR_NO_TALKS, STR_ME,
+  // tabela do futebol (submenu da liga + titulo da tabela unica)
+  STR_GAMES, STR_TABLE,
   STR_COUNT
 };
 
