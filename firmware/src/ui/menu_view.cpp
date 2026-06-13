@@ -4,7 +4,7 @@
 #include "i18n.h"
 #include "nokia_ui.h"
 
-static const uint16_t kFrameMs = 90;  // animacao de selecao: ~3 frames/270ms
+static const uint16_t kFrameMs = 180;  // animacao de selecao: da pra ver cada frame
 
 void menu_view_draw(U8G2& g, const App& a, uint8_t n, uint8_t cur) {
   g.setFont(u8g2_font_3310_small);
