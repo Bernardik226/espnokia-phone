@@ -108,8 +108,8 @@
 
         <section id="t-claude" class="hide">
           <!-- configuração do pet -->
-          <label data-i18n="lbl_persona">persona do Claw'd</label>
-          <textarea id="c_persona"></textarea>
+          <label data-i18n="lbl_persona">personalidade do Claw'd</label>
+          <select id="c_persona"></select>
           <div class="row">
             <div><label data-i18n="lbl_stt">motor de STT</label>
               <select id="c_stt"><option value="local">local (whisper)</option>
@@ -252,7 +252,9 @@ async function carregaTalks(){
 function pagina(d){ pag = Math.max(0, Math.min(pags-1, pag+d)); carregaTalks(); }
 async function carregaConfig(){
   const r = await api("/admin/config"); const c = await r.json();
-  document.getElementById("c_persona").value = c.persona;
+  const ps = document.getElementById("c_persona");
+  ps.innerHTML = (c.personas||[]).map(p=>`<option value="${p.id}">${p.nome}</option>`).join("");
+  ps.value = c.persona_id;
   document.getElementById("c_stt").value = c.stt;
   document.getElementById("c_max").value = c.max_resposta_chars;
   document.getElementById("c_model").value = c.claude_model;
@@ -261,7 +263,7 @@ async function carregaConfig(){
 }
 async function salvar(){
   const body = {
-    persona: document.getElementById("c_persona").value,
+    persona_id: document.getElementById("c_persona").value,
     stt: document.getElementById("c_stt").value,
     max_resposta_chars: parseInt(document.getElementById("c_max").value)||220,
     claude_model: document.getElementById("c_model").value.trim(),

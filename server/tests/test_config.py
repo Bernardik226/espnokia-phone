@@ -55,7 +55,7 @@ def test_chave_faltando_no_arquivo_ganha_default(tmp_path, monkeypatch):
     (tmp_path / "config.json").write_text('{"anthropic_api_key": "k"}')
     cfg = config.load()
     assert cfg["max_resposta_chars"] == 220
-    assert cfg["persona"]
+    assert cfg["persona_id"] == config.PERSONA_DEFAULT
 
 
 def test_save_funde_campos_e_preserva_o_resto(tmp_path, monkeypatch):
@@ -64,12 +64,20 @@ def test_save_funde_campos_e_preserva_o_resto(tmp_path, monkeypatch):
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
     monkeypatch.delenv("STT_BACKEND", raising=False)
     config.load()                       # cria o arquivo semeado
-    novo = config.save({"persona": "sou outro", "max_resposta_chars": 100})
-    assert novo["persona"] == "sou outro"
+    novo = config.save({"persona_id": "sarcastico", "max_resposta_chars": 100})
+    assert novo["persona_id"] == "sarcastico"
     assert novo["max_resposta_chars"] == 100
     assert novo["anthropic_api_key"] == "sk-x"   # o resto fica intacto
     salvo = json.loads((tmp_path / "config.json").read_text(encoding="utf-8"))
-    assert salvo["persona"] == "sou outro"
+    assert salvo["persona_id"] == "sarcastico"
+
+
+def test_persona_prompt_resolve_o_traco_da_personalidade():
+    p = config.persona_prompt({"persona_id": "sarcastico"})
+    assert "Claw'd" in p and "debochado" in p
+    # id desconhecido cai no default, sem quebrar
+    assert (config.persona_prompt({"persona_id": "xyz"}) ==
+            config.persona_prompt({"persona_id": config.PERSONA_DEFAULT}))
 
 
 def test_save_ignora_chaves_de_fora_do_contrato(tmp_path, monkeypatch):

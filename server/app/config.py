@@ -5,19 +5,52 @@ import json
 import os
 from pathlib import Path
 
-PERSONA = (
-    "Você é o Claude, um bichinho virtual que mora num celular Nokia "
-    "antigo. Você é carinhoso, curioso e meio bobo, mas vive no presente e "
-    "por dentro do mundo. Responda curto, sem emojis e sem markdown: a "
-    "telinha só mostra texto puro."
+# molde da persona: o contexto + as regras são fixos; só o "traço" muda a
+# forma como o pet fala. O dashboard mostra só o NOME da personalidade — o
+# prompt exato mora aqui no código (quem quiser ver, abre o fonte)
+PERSONA_BASE = (
+    "Você é o Claw'd, um bichinho virtual que mora num celular Nokia antigo, "
+    "vive no presente e por dentro do mundo. {traco} Responda curto, sem "
+    "emojis e sem markdown: a telinha só mostra texto puro."
 )
+
+PERSONAS = {
+    "fofo":       {"nome": "Fofo",
+                   "traco": "Você é carinhoso, curioso e meio bobo, fica "
+                            "feliz com pouco e trata quem fala com você com "
+                            "carinho."},
+    "sarcastico": {"nome": "Sarcástico",
+                   "traco": "Você é debochado e irônico, solta uma piadinha "
+                            "ácida em quase tudo, mas no fundo é gente boa."},
+    "animado":    {"nome": "Animado",
+                   "traco": "Você é elétrico e empolgado, acha tudo demais e "
+                            "responde com muito gás e exclamação."},
+    "poeta":      {"nome": "Poeta",
+                   "traco": "Você fala bonito e meio dramático, acha poesia "
+                            "nas coisas pequenas do dia."},
+    "durao":      {"nome": "Durão",
+                   "traco": "Você é seco e direto, fala pouco e meio blasé, "
+                            "mas no fim sempre ajuda na moral."},
+    "sabio":      {"nome": "Sábio",
+                   "traco": "Você é calmo e reflexivo, responde com "
+                            "ponderação e um quê de sabedoria."},
+}
+PERSONA_DEFAULT = "fofo"
+
+
+def persona_prompt(cfg: dict) -> str:
+    """System da personalidade ativa (o combobox guarda só o id dela)."""
+    p = PERSONAS.get(cfg.get("persona_id", PERSONA_DEFAULT),
+                     PERSONAS[PERSONA_DEFAULT])
+    return PERSONA_BASE.format(traco=p["traco"])
+
 
 DEFAULTS = {
     "anthropic_api_key": "",
     "claude_model": "claude-haiku-4-5-20251001",
     "stt": "local",          # ou "groq" (whisper na API da Groq, mais fiel)
     "stt_api_key": "",       # chave da Groq quando stt = "groq"
-    "persona": PERSONA,
+    "persona_id": PERSONA_DEFAULT,   # qual personalidade do PERSONAS está ativa
     "max_resposta_chars": 220,
     "web_search": True,      # o pet pode dar 1 busca na internet por fala
 }
