@@ -132,12 +132,12 @@ def test_time_sem_codigo_e_ignorado():
     assert set(es.jogos()) == {("MEX", "RSA"), ("RSA", "MEX")}
 
 
-def test_cache_de_60s_evita_rede():
+def test_cache_evita_rede_dentro_do_ttl():
     clock = RelogioFake()
     es, ch = monta({"/scoreboard": {"events": [evento("BRA", "HAI", 3, 0)]}},
                    clock=clock)
     es.jogos()
-    clock.t += 30
+    clock.t += 15                            # dentro do TTL de 30 s
     assert es.jogos()[("BRA", "HAI")]["s1"] == 3
     assert ch["n"] == 1
 
@@ -148,7 +148,7 @@ def test_erro_na_fonte_mantem_o_cache_anterior():
     es, _ = monta(rotas, clock=clock)
     assert es.jogos()[("BRA", "HAI")]["s1"] == 1
     rotas.pop("/scoreboard")                 # fonte caiu (vira 404)
-    clock.t += 120                           # cache de 60 s já venceu
+    clock.t += 120                           # o TTL do cache já venceu
     assert es.jogos()[("BRA", "HAI")]["s1"] == 1  # placar velho > nenhum
 
 
