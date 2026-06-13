@@ -31,7 +31,7 @@ PROMPT_RESUMO = (
 )
 
 
-def _corta_utf8(s: str, max_bytes: int) -> str:
+def corta_utf8(s: str, max_bytes: int) -> str:
     """Trunca em bytes sem quebrar caractere UTF-8 (o ESP32 dimensiona
     buffers em bytes)."""
     b = s.encode("utf-8")
@@ -148,8 +148,8 @@ class MemoriaService:
         pags = (total + PARES_POR_PAG - 1) // PARES_POR_PAG
         ini = pag * PARES_POR_PAG
         # d/h prontos pro display (fuso = TZ do ambiente do server)
-        itens = [{"q": _corta_utf8(p["q"], MAX_Q_BYTES),
-                  "r": _corta_utf8(p["r"], MAX_R_BYTES),
+        itens = [{"q": corta_utf8(p["q"], MAX_Q_BYTES),
+                  "r": corta_utf8(p["r"], MAX_R_BYTES),
                   "d": time.strftime("%d/%m", time.localtime(p["ts"])),
                   "h": time.strftime("%H:%M", time.localtime(p["ts"]))}
                  for p in todos[ini:ini + PARES_POR_PAG]]
