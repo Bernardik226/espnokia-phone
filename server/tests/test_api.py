@@ -280,3 +280,11 @@ def test_capability_recusa_sem_chave_ou_chave_curta():
     assert c.get("/copa/proximos").status_code == 401
     assert c.get("/copa/proximos",
                  headers={"X-Device-Key": "curtinha"}).status_code == 401
+
+
+def test_pwa_manifest_sw_e_icone():
+    c = monta(device_keys="segredo")        # PWA é aberto (a casca)
+    m = c.get("/manifest.json")
+    assert m.status_code == 200 and m.json()["short_name"] == "Claw'd"
+    assert c.get("/sw.js").status_code == 200
+    assert c.get("/static/icon-192.png").status_code == 200
