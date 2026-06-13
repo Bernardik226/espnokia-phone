@@ -10,6 +10,7 @@
 #include "drivers/buttons.h"
 #include "drivers/mic.h"
 #include "drivers/rtc.h"
+#include "net/conn.h"
 #include "net/wifi.h"
 #include "net/ntp.h"
 #include "ui/boot_anim.h"
@@ -45,6 +46,7 @@ void setup() {
   } else {
     Serial.println("[rtc] DS3231 ausente — relogio de videocassete");
   }
+  conn::init();                       // chave do device + endereco do server (NVS)
   alarme::init();                     // recarrega aviso de jogo persistido
   copa_watch::init();                 // recarrega vigia de gols persistido
   wifi::init();                      // nao-bloqueante; conecta enquanto a animacao roda
