@@ -56,3 +56,27 @@ def test_chave_faltando_no_arquivo_ganha_default(tmp_path, monkeypatch):
     cfg = config.load()
     assert cfg["max_resposta_chars"] == 220
     assert cfg["persona"]
+
+
+def test_save_funde_campos_e_preserva_o_resto(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-x")
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
+    monkeypatch.delenv("STT_BACKEND", raising=False)
+    config.load()                       # cria o arquivo semeado
+    novo = config.save({"persona": "sou outro", "max_resposta_chars": 100})
+    assert novo["persona"] == "sou outro"
+    assert novo["max_resposta_chars"] == 100
+    assert novo["anthropic_api_key"] == "sk-x"   # o resto fica intacto
+    salvo = json.loads((tmp_path / "config.json").read_text(encoding="utf-8"))
+    assert salvo["persona"] == "sou outro"
+
+
+def test_save_ignora_chaves_de_fora_do_contrato(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
+    monkeypatch.delenv("STT_BACKEND", raising=False)
+    config.load()
+    novo = config.save({"hacker": "rm -rf", "stt": "groq"})
+    assert "hacker" not in novo
+    assert novo["stt"] == "groq"

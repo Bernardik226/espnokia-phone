@@ -43,3 +43,17 @@ def load() -> dict:
     cfg = dict(DEFAULTS)
     cfg.update(json.loads(arq.read_text(encoding="utf-8")))
     return cfg
+
+
+def save(parcial: dict) -> dict:
+    """Funde campos conhecidos no config.json e devolve o config novo. O
+    dashboard edita campo a campo e vale na hora (load relê a cada request).
+    Chaves de fora de DEFAULTS são ignoradas — nada de gravar lixo do form."""
+    cfg = load()
+    cfg.update({k: v for k, v in parcial.items() if k in DEFAULTS})
+    arq = data_dir() / "config.json"
+    tmp = arq.with_suffix(".tmp")        # escrita atômica
+    tmp.write_text(json.dumps(cfg, indent=2, ensure_ascii=False),
+                   encoding="utf-8")
+    os.replace(tmp, arq)
+    return cfg

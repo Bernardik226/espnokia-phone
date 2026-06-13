@@ -281,3 +281,16 @@ def test_grava_par_t_quebrado_cai_no_relogio_do_servidor(tmp_path):
     reg = json.loads(next((tmp_path / "claw").iterdir())
                      .joinpath("registro.json").read_text(encoding="utf-8"))
     assert reg["pares"][0]["ts"] == 1000
+
+
+def test_limpar_esquece_registro_e_memoria(tmp_path):
+    m = svc(tmp_path)
+    m.grava_par("k1", "oi", "olá")
+    (m._dir("k1") / "memoria.md").write_text("lembro de voce", encoding="utf-8")
+    m.limpar("k1")
+    assert m.pares("k1", 0)["total"] == 0
+    assert m.memoria("k1")["memoria"] == ""
+
+
+def test_limpar_sem_nada_nao_explode(tmp_path):
+    svc(tmp_path).limpar("ninguem")     # device sem arquivos: silencioso

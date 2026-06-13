@@ -163,6 +163,15 @@ class MemoriaService:
                 "resumidos": self._carrega(device)["resumidos"],
                 "ts": int(arq.stat().st_mtime)}
 
+    def limpar(self, device):
+        """Esquece tudo desse device: apaga registro e memória (botão do
+        dashboard). Some o que o pet guardou — começa do zero na próxima."""
+        d = self._dir(device)
+        for nome in ("registro.json", "memoria.md"):
+            arq = d / nome
+            if arq.exists():
+                arq.unlink()
+
     def recentes(self, device, n=6):
         msgs = []
         for p in self._carrega(device)["pares"][-n:]:

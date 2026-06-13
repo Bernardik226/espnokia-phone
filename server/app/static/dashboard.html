@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>espnokia · Claw'd</title>
+<style>
+  :root{
+    --bg:#0d100b; --panel:#161a12; --line:#2a3320; --fg:#cfe8b0;
+    --dim:#7d8c66; --accent:#9bbc0f; --star:#ffc107; --bad:#e2683c;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);
+    font-family:ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;
+    font-size:14px;line-height:1.5}
+  a{color:var(--accent)}
+  .wrap{max-width:720px;margin:0 auto;padding:20px 16px 60px}
+  header{display:flex;align-items:center;gap:10px;border-bottom:2px solid var(--line);
+    padding-bottom:12px;margin-bottom:16px}
+  .star{color:var(--star);font-size:22px}
+  h1{font-size:16px;margin:0;letter-spacing:1px}
+  h1 small{color:var(--dim);font-weight:normal;letter-spacing:0}
+  .dot{margin-left:auto;font-size:11px;color:var(--dim)}
+  .dot.on{color:var(--accent)} .dot.off{color:var(--bad)}
+  .panel{background:var(--panel);border:1px solid var(--line);padding:16px;
+    margin-bottom:14px}
+  .tabs{display:flex;gap:0;margin-bottom:14px;border:1px solid var(--line)}
+  .tabs button{flex:1;background:transparent;color:var(--dim);border:0;
+    border-right:1px solid var(--line);padding:10px;cursor:pointer;
+    font-family:inherit;font-size:13px;letter-spacing:1px}
+  .tabs button:last-child{border-right:0}
+  .tabs button.sel{background:var(--accent);color:#0d100b;font-weight:bold}
+  label{display:block;color:var(--dim);font-size:12px;margin:12px 0 4px;
+    text-transform:uppercase;letter-spacing:1px}
+  input,select,textarea{width:100%;background:#0d100b;color:var(--fg);
+    border:1px solid var(--line);padding:9px;font-family:inherit;font-size:14px}
+  textarea{min-height:90px;resize:vertical}
+  input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent)}
+  .row{display:flex;gap:12px} .row>div{flex:1}
+  button.act{background:var(--accent);color:#0d100b;border:0;padding:11px 18px;
+    font-family:inherit;font-weight:bold;cursor:pointer;letter-spacing:1px;margin-top:14px}
+  button.ghost{background:transparent;color:var(--bad);border:1px solid var(--bad)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .stat{border:1px solid var(--line);padding:12px}
+  .stat b{display:block;font-size:20px;color:var(--accent)}
+  .stat span{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+  pre.mem{white-space:pre-wrap;word-wrap:break-word;background:#0d100b;
+    border:1px solid var(--line);padding:12px;margin:0;color:var(--fg);font-size:13px}
+  .talk{border-left:2px solid var(--line);padding:4px 0 4px 12px;margin:12px 0}
+  .talk .q{color:var(--fg)} .talk .r{color:var(--accent);margin-top:3px}
+  .talk .meta{color:var(--dim);font-size:11px;margin-bottom:4px}
+  .pag{display:flex;align-items:center;gap:12px;margin-top:14px;color:var(--dim)}
+  .pag button{background:var(--panel);color:var(--fg);border:1px solid var(--line);
+    padding:6px 12px;cursor:pointer;font-family:inherit}
+  .muted{color:var(--dim)}
+  .hide{display:none}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
+    background:var(--accent);color:#0d100b;padding:10px 20px;font-weight:bold;
+    opacity:0;transition:opacity .25s}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="star">✳</span>
+    <h1>espnokia <small>· dashboard do Claw'd</small></h1>
+    <span id="conn" class="dot off">offline</span>
+  </header>
+
+  <!-- login -->
+  <div id="login" class="panel">
+    <label>chave do dispositivo (device key)</label>
+    <input id="key" type="password" placeholder="cole a DEVICE_KEY aqui"
+           autocomplete="off">
+    <button class="act" onclick="conectar()">conectar</button>
+    <p class="muted" id="loginmsg"></p>
+  </div>
+
+  <!-- app -->
+  <div id="app" class="hide">
+    <div class="tabs">
+      <button data-t="status" class="sel" onclick="aba('status')">status</button>
+      <button data-t="claude" onclick="aba('claude')">claw'd</button>
+      <button data-t="config" onclick="aba('config')">config</button>
+    </div>
+
+    <section id="t-status" class="panel">
+      <div class="grid" id="stats"></div>
+    </section>
+
+    <section id="t-claude" class="panel hide">
+      <label>memória persistente</label>
+      <pre class="mem" id="mem">—</pre>
+      <button class="act ghost" onclick="limpar()">esquecer tudo</button>
+      <label style="margin-top:20px">conversas registradas</label>
+      <div id="talks"></div>
+      <div class="pag hide" id="pag">
+        <button onclick="pagina(-1)">‹</button>
+        <span id="paginfo"></span>
+        <button onclick="pagina(1)">›</button>
+      </div>
+    </section>
+
+    <section id="t-config" class="panel hide">
+      <label>persona do Claw'd</label>
+      <textarea id="c_persona"></textarea>
+      <div class="row">
+        <div>
+          <label>motor de STT</label>
+          <select id="c_stt"><option value="local">local (whisper)</option>
+            <option value="groq">groq</option></select>
+        </div>
+        <div>
+          <label>limite de resposta (chars)</label>
+          <input id="c_max" type="number" min="40" max="600">
+        </div>
+      </div>
+      <label>modelo Claude</label>
+      <input id="c_model" type="text">
+      <div class="row" style="margin-top:6px;align-items:center">
+        <div><label>busca na web</label>
+          <select id="c_web"><option value="true">ligada</option>
+            <option value="false">desligada</option></select></div>
+        <div><label>chave Anthropic <span id="haskey" class="muted"></span></label>
+          <input id="c_key" type="password" placeholder="(deixe vazio pra manter)"></div>
+      </div>
+      <button class="act" onclick="salvar()">salvar config</button>
+    </section>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+let KEY = localStorage.getItem("espnokia_key") || "";
+let pag = 0, pags = 1;
+
+function api(path, opts={}){
+  opts.headers = Object.assign({"X-Device-Key": KEY}, opts.headers||{});
+  return fetch(path, opts);
+}
+function toast(msg, bad){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.style.background = bad ? "var(--bad)" : "var(--accent)";
+  t.classList.add("show"); setTimeout(()=>t.classList.remove("show"), 1800);
+}
+function conn(ok){
+  const c = document.getElementById("conn");
+  c.className = "dot " + (ok?"on":"off"); c.textContent = ok?"online":"offline";
+}
+
+async function conectar(){
+  KEY = document.getElementById("key").value.trim();
+  const r = await api("/admin/status");
+  if(r.status !== 200){
+    document.getElementById("loginmsg").textContent =
+      r.status === 401 ? "chave recusada." : "servidor não respondeu.";
+    conn(false); return;
+  }
+  localStorage.setItem("espnokia_key", KEY);
+  document.getElementById("login").classList.add("hide");
+  document.getElementById("app").classList.remove("hide");
+  conn(true); aba("status");
+}
+
+function aba(nome){
+  for(const b of document.querySelectorAll(".tabs button"))
+    b.classList.toggle("sel", b.dataset.t === nome);
+  for(const s of ["status","claude","config"])
+    document.getElementById("t-"+s).classList.toggle("hide", s !== nome);
+  if(nome==="status") carregaStatus();
+  if(nome==="claude"){ pag=0; carregaMemoria(); carregaTalks(); }
+  if(nome==="config") carregaConfig();
+}
+
+async function carregaStatus(){
+  const r = await api("/admin/status"); if(r.status!==200) return conn(false);
+  const s = await r.json(); conn(true);
+  const ts = s.memoria_ts ? new Date(s.memoria_ts*1000).toLocaleString("pt-BR") : "—";
+  document.getElementById("stats").innerHTML = [
+    ["versão", "v"+s.versao], ["conversas guardadas", s.conversas],
+    ["resumos na memória", s.resumidos], ["motor de STT", s.stt],
+    ["modelo", s.model.replace("claude-","")], ["busca web", s.web_search?"on":"off"],
+    ["chave anthropic", s.tem_api_key?"ok":"falta"], ["memória atualizada", ts],
+  ].map(([k,v])=>`<div class="stat"><b>${v}</b><span>${k}</span></div>`).join("");
+}
+
+async function carregaMemoria(){
+  const r = await api("/claude/memoria"); const m = await r.json();
+  document.getElementById("mem").textContent = m.memoria || "(o Claw'd ainda não formou memória)";
+}
+async function carregaTalks(){
+  const r = await api("/claude/registro?pag="+pag); const d = await r.json();
+  pags = d.pags || 1;
+  document.getElementById("talks").innerHTML = d.itens.length ? d.itens.map(p=>
+    `<div class="talk"><div class="meta">${p.d} ${p.h}</div>`+
+    `<div class="q">eu: ${esc(p.q)}</div><div class="r">claw'd: ${esc(p.r)}</div></div>`
+  ).join("") : '<p class="muted">nenhuma conversa registrada ainda.</p>';
+  document.getElementById("pag").classList.toggle("hide", pags<=1);
+  document.getElementById("paginfo").textContent = (pag+1)+" / "+pags;
+}
+function pagina(d){ pag = Math.max(0, Math.min(pags-1, pag+d)); carregaTalks(); }
+
+async function carregaConfig(){
+  const r = await api("/admin/config"); const c = await r.json();
+  document.getElementById("c_persona").value = c.persona;
+  document.getElementById("c_stt").value = c.stt;
+  document.getElementById("c_max").value = c.max_resposta_chars;
+  document.getElementById("c_model").value = c.claude_model;
+  document.getElementById("c_web").value = String(c.web_search);
+  document.getElementById("haskey").textContent = c.tem_anthropic_key?"(configurada)":"(faltando)";
+}
+async function salvar(){
+  const body = {
+    persona: document.getElementById("c_persona").value,
+    stt: document.getElementById("c_stt").value,
+    max_resposta_chars: parseInt(document.getElementById("c_max").value)||220,
+    claude_model: document.getElementById("c_model").value.trim(),
+    web_search: document.getElementById("c_web").value === "true",
+  };
+  const k = document.getElementById("c_key").value.trim();
+  if(k) body.anthropic_api_key = k;
+  const r = await api("/admin/config", {method:"POST",
+    headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)});
+  if(r.status===200){ toast("config salva ✓"); document.getElementById("c_key").value=""; }
+  else toast("falha ao salvar", true);
+}
+async function limpar(){
+  if(!confirm("Apagar TODA a memória e o registro do Claw'd? Não dá pra desfazer."))
+    return;
+  const r = await api("/claude/memoria/limpar", {method:"POST"});
+  if(r.status===200){ toast("memória apagada"); carregaMemoria(); carregaTalks(); }
+  else toast("falha", true);
+}
+function esc(s){ return s.replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+if(KEY){ document.getElementById("key").value = KEY; conectar(); }
+</script>
+</body>
+</html>
