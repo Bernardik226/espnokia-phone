@@ -106,16 +106,16 @@ flowchart TD
 
 ## 🛠️ Everyday
 
-The bread and butter — a real 3310-style clock with an **alarm** that survives
-reboots and a **timer**; ambient **temperature** from the DS3231's onboard
-thermometer; **9 original Nokia ringtones** transcribed to RTTTL (browse to
-preview, OK to set); and **Connections**, where WiFi and the device QR live.
+A real 3310-style clock with an **alarm** that survives reboots and a **timer**;
+ambient **temperature** from the DS3231's onboard thermometer; **9 original Nokia
+ringtones** transcribed to RTTTL (browse to preview, OK to set); and
+**Connections**, where WiFi and the device QR live.
 
 <p align="center">
-  <img src="docs/assets/photos/clock.png" width="210" alt="clock app, big 3310-style time">
-  <img src="docs/assets/photos/weather.png" width="210" alt="weather app showing ambient temperature">
-  <img src="docs/assets/photos/tones.png" width="210" alt="tones app browsing ringtones">
-  <img src="docs/assets/photos/connections.png" width="210" alt="connections menu: WiFi/server and device QR">
+  <img src="docs/assets/photos/clock.png" width="168" alt="clock app, big 3310-style time">
+  <img src="docs/assets/photos/weather.png" width="168" alt="weather app showing ambient temperature">
+  <img src="docs/assets/photos/tones.png" width="168" alt="tones app browsing ringtones">
+  <img src="docs/assets/photos/connections.png" width="168" alt="connections menu: WiFi/server and device QR">
 </p>
 
 ---

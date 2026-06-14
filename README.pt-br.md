@@ -106,16 +106,16 @@ flowchart TD
 
 ## 🛠️ Dia a dia
 
-O arroz com feijão — um relógio estilo 3310 de verdade com **alarme** que
-sobrevive a reboot e **timer**; **temperatura** ambiente pelo termômetro de bordo
-do DS3231; **9 toques originais da Nokia** transcritos em RTTTL (navegue pra
-ouvir, OK pra definir); e **Conexões**, onde moram o WiFi e o QR do aparelho.
+Um relógio estilo 3310 de verdade com **alarme** que sobrevive a reboot e
+**timer**; **temperatura** ambiente pelo termômetro de bordo do DS3231; **9
+toques originais da Nokia** transcritos em RTTTL (navegue pra ouvir, OK pra
+definir); e **Conexões**, onde moram o WiFi e o QR do aparelho.
 
 <p align="center">
-  <img src="docs/assets/photos/clock.png" width="210" alt="app relógio, hora grande estilo 3310">
-  <img src="docs/assets/photos/weather.png" width="210" alt="app clima mostrando a temperatura ambiente">
-  <img src="docs/assets/photos/tones.png" width="210" alt="app toques navegando os ringtones">
-  <img src="docs/assets/photos/connections.png" width="210" alt="menu de conexões: WiFi/servidor e QR do aparelho">
+  <img src="docs/assets/photos/clock.png" width="168" alt="app relógio, hora grande estilo 3310">
+  <img src="docs/assets/photos/weather.png" width="168" alt="app clima mostrando a temperatura ambiente">
+  <img src="docs/assets/photos/tones.png" width="168" alt="app toques navegando os ringtones">
+  <img src="docs/assets/photos/connections.png" width="168" alt="menu de conexões: WiFi/servidor e QR do aparelho">
 </p>
 
 ---
