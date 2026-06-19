@@ -45,6 +45,9 @@ enum StrId : uint8_t {
   STR_GAMES, STR_TABLE,
   // conexoes (menu de settings + QR de pareamento do dashboard)
   STR_CONNECTIONS, STR_WIFI_SERVER, STR_DEVICE_QR, STR_SCAN_TO_PAIR,
+  // jogos
+  STR_APP_GAMES, STR_GAME_SNAKE, STR_LEVEL, STR_GAME_OVER, STR_RECORD,
+  STR_NEW_RECORD,
   STR_COUNT
 };
 
