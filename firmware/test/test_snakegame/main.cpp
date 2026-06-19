@@ -61,6 +61,33 @@ void test_colisao_consigo_mata() {
   TEST_ASSERT_FALSE(g.alive);
 }
 
+void test_comer_cresce_e_pontua() {
+  SnakeGame g; snake_init(g, 20, 10, 1);
+  // poe a comida exatamente na celula a frente da cabeca (dir RIGHT)
+  g.fx = g.bx[0] + 1; g.fy = g.by[0];
+  TEST_ASSERT_EQUAL_UINT8(SNK_EAT, snake_step(g, 20, 10));
+  TEST_ASSERT_EQUAL_UINT16(4, g.len);     // cresceu 1
+  TEST_ASSERT_EQUAL_UINT16(1, g.score);   // pontuou
+}
+
+void test_rng_deterministico_mesma_seed() {
+  SnakeGame a; snake_init(a, 20, 10, 42);
+  SnakeGame b; snake_init(b, 20, 10, 42);
+  TEST_ASSERT_EQUAL_UINT8(a.fx, b.fx);    // mesma seed -> mesma comida
+  TEST_ASSERT_EQUAL_UINT8(a.fy, b.fy);
+  snake_place_food(a, 20, 10);
+  snake_place_food(b, 20, 10);
+  TEST_ASSERT_EQUAL_UINT8(a.fx, b.fx);    // e segue igual na sequencia
+  TEST_ASSERT_EQUAL_UINT8(a.fy, b.fy);
+}
+
+void test_nivel_intervalo_monotonico() {
+  for (uint8_t l = 1; l < 9; l++)
+    TEST_ASSERT_TRUE(snake_level_interval_ms(l) > snake_level_interval_ms(l + 1));
+  TEST_ASSERT_TRUE(snake_level_interval_ms(1) <= 300);
+  TEST_ASSERT_TRUE(snake_level_interval_ms(9) >= 40);
+}
+
 int main(int, char**) {
   UNITY_BEGIN();
   RUN_TEST(test_init_estado_inicial);
@@ -68,5 +95,8 @@ int main(int, char**) {
   RUN_TEST(test_set_dir_bloqueia_re_180);
   RUN_TEST(test_wrap_nas_quatro_bordas);
   RUN_TEST(test_colisao_consigo_mata);
+  RUN_TEST(test_comer_cresce_e_pontua);
+  RUN_TEST(test_rng_deterministico_mesma_seed);
+  RUN_TEST(test_nivel_intervalo_monotonico);
   return UNITY_END();
 }
