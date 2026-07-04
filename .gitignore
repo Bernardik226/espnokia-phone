@@ -11,3 +11,13 @@ docs/superpowers/
 server/.env.local
 
 server/data/
+
+# hardware: só os STLs FINAIS da case (frente + capa) vão pro repo.
+# Fontes .scad, gerador do logo, refs e STLs antigos ficam locais.
+hardware/*
+!hardware/Case/
+hardware/Case/*
+!hardware/Case/stl/
+hardware/Case/stl/*
+!hardware/Case/stl/frente-relevo.stl
+!hardware/Case/stl/case-capa.stl
