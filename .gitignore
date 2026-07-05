@@ -12,7 +12,8 @@ server/.env.local
 
 server/data/
 
-# hardware: só os STLs FINAIS da case (frente + capa) vão pro repo.
+# hardware: só os STLs ATUAIS da case vão pro repo (frente + capa + placa de
+# teste do switch + mockup da tela p/ simulação no FreeCAD).
 # Fontes .scad, gerador do logo, refs e STLs antigos ficam locais.
 hardware/*
 !hardware/Case/
@@ -21,3 +22,5 @@ hardware/Case/*
 hardware/Case/stl/*
 !hardware/Case/stl/frente-relevo.stl
 !hardware/Case/stl/case-capa.stl
+!hardware/Case/stl/switch-teste.stl
+!hardware/Case/stl/sim-tela-modulo.stl
