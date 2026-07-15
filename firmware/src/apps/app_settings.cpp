@@ -344,7 +344,9 @@ static void render(void* gfx) {
       // QR do "endereco do server/#k=chave": a camera do celular abre o
       // dashboard ja logado. 1 px por modulo, centralizado (quiet zone = o
       // fundo claro do LCD). Versao escolhida pelo tamanho do link.
-      char link[120];
+      // pior caso: url ate 90 (maxlength do form) + "/#k=" (4) + key ate 39
+      // (key_[40] em conn.cpp) + nul = ate 134 chars; 160 da folga.
+      char link[160];
       conn::pair_link(link, sizeof(link));
       static uint8_t qrbuf[256];  // qrcode_getBufferSize(6) = 211, com folga
       QRCode qr;
