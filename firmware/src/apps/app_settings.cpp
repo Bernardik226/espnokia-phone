@@ -380,6 +380,9 @@ static void render(void* gfx) {
         g.drawXBMP(2, 22, ESPNOKIA_LOGO_W, ESPNOKIA_LOGO_H, espnokia_logo_bits);
       } else if (about_page == 1) {  // descricao
         nokia_ui::text_bold_center(g, 8, tr(STR_ABOUT));
+        // "Nokia OS fake" e tagline/flavor (como "CLAWD" em claudemodel.cpp);
+        // "ESP32 + 5110" e nome de peca/hardware. Intencionalmente fixos em
+        // todo idioma, nao sao texto de UI a traduzir.
         g.drawStr(2, 19, "Nokia OS fake");
         g.drawStr(2, 28, "ESP32 + 5110");
       } else {  // specs do sistema
@@ -388,6 +391,8 @@ static void render(void* gfx) {
         g.drawStr(2, 19, buf);
         snprintf(buf, sizeof(buf), tr(STR_RAM_FREE_FMT), (unsigned)(ESP.getFreeHeap() / 1024));
         g.drawUTF8(2, 28, buf);
+        // "CPU 240MHz": spec fixa (frequencia do ESP32), nome proprio de
+        // hardware, intencionalmente nao traduzida.
         g.drawStr(2, 37, "CPU 240MHz");
       }
       snprintf(buf, sizeof(buf), "%u/%u", about_page + 1, kAboutPages);
