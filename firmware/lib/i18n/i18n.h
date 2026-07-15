@@ -50,6 +50,10 @@ enum StrId : uint8_t {
   STR_NEW_RECORD, STR_NEW_GAME,
   // niveis do backlight (config > visor)
   STR_DISP_OFF, STR_DISP_MED, STR_DISP_HIGH,
+  // cabecalhos de tabela (copa/futebol): pontos, jogos, saldo de gols.
+  // curtos de proposito (colunas de ~12-16px) - ver getStrWidth() checado
+  // por fonte real em fonts3310.h antes de escolher as abreviacoes.
+  STR_TBL_PTS, STR_TBL_JOGOS, STR_TBL_SALDO,
   STR_COUNT
 };
 

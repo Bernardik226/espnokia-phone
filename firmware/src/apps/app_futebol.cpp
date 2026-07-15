@@ -409,9 +409,9 @@ static void render(void* gfx) {
         snprintf(titulo, sizeof(titulo), "%s %s", tr(STR_GROUP),
                  classif_.gnome[gcur_]);
         nokia_ui::text_bold_center(g, 8, titulo);
-        g.drawStr(34, 16, "P");
-        g.drawStr(50, 16, "J");
-        g.drawStr(62, 16, "S");
+        g.drawUTF8(34, 16, tr(STR_TBL_PTS));
+        g.drawUTF8(50, 16, tr(STR_TBL_JOGOS));
+        g.drawUTF8(62, 16, tr(STR_TBL_SALDO));
         uint8_t ini = classif_.gini[gcur_];
         for (uint8_t i = 0; i < classif_.gn[gcur_]; i++) {
           int y = 24 + i * 7;
@@ -427,9 +427,9 @@ static void render(void* gfx) {
       } else {
         // pontos corridos: tabela unica numerada, rolavel com UP/DOWN
         nokia_ui::text_bold_center(g, 8, ligas_[liga_].n);
-        g.drawStr(40, 16, "P");
-        g.drawStr(54, 16, "J");
-        g.drawStr(66, 16, "S");
+        g.drawUTF8(40, 16, tr(STR_TBL_PTS));
+        g.drawUTF8(54, 16, tr(STR_TBL_JOGOS));
+        g.drawUTF8(66, 16, tr(STR_TBL_SALDO));
         for (uint8_t i = 0; i < kVisTab && tab_off_ + i < classif_.nt; i++) {
           uint8_t idx = tab_off_ + i;
           int y = 24 + i * 7;

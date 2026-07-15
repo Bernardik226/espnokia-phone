@@ -148,6 +148,9 @@ static const char* const kStr[STR_COUNT][LANG_COUNT] = {
   /* DISP_OFF    */ {"Desligada", "Off", "Apagada", "Éteint", "Aus", "Pois"},
   /* DISP_MED    */ {"Média", "Medium", "Media", "Moyen", "Mittel", "Keski"},
   /* DISP_HIGH   */ {"Alta", "High", "Alta", "Élevé", "Hoch", "Korkea"},
+  /* TBL_PTS     */ {"P", "Pts", "Pts", "Pts", "Pkt", "P"},
+  /* TBL_JOGOS   */ {"J", "PJ", "PJ", "J", "Sp", "O"},
+  /* TBL_SALDO   */ {"S", "GD", "DG", "Di", "TD", "ME"},
 };
 
 static const char* const kDay[LANG_COUNT][7] = {

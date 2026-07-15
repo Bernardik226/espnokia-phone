@@ -341,9 +341,9 @@ static void render(void* gfx) {
       snprintf(titulo, sizeof(titulo), "%s %s", tr(STR_GROUP), grp.nome);
       nokia_ui::text_bold_center(g, 8, titulo);
       // colunas: pontos, jogos, saldo de gols (classificado pelo server)
-      g.drawStr(34, 16, "P");
-      g.drawStr(50, 16, "J");
-      g.drawStr(62, 16, "S");
+      g.drawUTF8(34, 16, tr(STR_TBL_PTS));
+      g.drawUTF8(50, 16, tr(STR_TBL_JOGOS));
+      g.drawUTF8(62, 16, tr(STR_TBL_SALDO));
       char num[8];
       for (uint8_t i = 0; i < grp.nt; i++) {
         int y = 24 + i * 7;
