@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ArduinoJson.h>
+#include "jsonutil.h"
 
 namespace claude {
 
@@ -164,13 +165,12 @@ bool bitspeech_next(const char* texto, size_t pos, Tom& t, size_t* prox) {
 bool voz_parse(const char* json, char* falei, size_t falei_len,
                char* resposta, size_t resp_len) {
   JsonDocument doc;
-  if (deserializeJson(doc, json)) return false;
+  if (!jsonutil::parse_json(json, doc)) return false;
   const char* r = doc["resposta"];
   if (!r || !r[0]) return false;
   snprintf(resposta, resp_len, "%s", r);
   if (falei && falei_len) {
-    const char* f = doc["falei"];
-    snprintf(falei, falei_len, "%s", f ? f : "");
+    jsonutil::copia(falei, falei_len, doc["falei"]);
   }
   return true;
 }
@@ -179,17 +179,17 @@ uint8_t registro_parse(const char* json, RegPar* itens, uint8_t max,
                        uint16_t* total, uint8_t* pags, uint8_t* pag) {
   *total = 0; *pags = 0; *pag = 0;
   JsonDocument doc;
-  if (deserializeJson(doc, json)) return 0;
+  if (!jsonutil::parse_json(json, doc)) return 0;
   *total = doc["total"] | 0;
   *pags = doc["pags"] | 0;
   *pag = doc["pag"] | 0;
   uint8_t n = 0;
   for (JsonObject it : doc["itens"].as<JsonArray>()) {
     if (n >= max) break;
-    snprintf(itens[n].q, sizeof(itens[n].q), "%s", (const char*)(it["q"] | ""));
-    snprintf(itens[n].r, sizeof(itens[n].r), "%s", (const char*)(it["r"] | ""));
-    snprintf(itens[n].d, sizeof(itens[n].d), "%s", (const char*)(it["d"] | ""));
-    snprintf(itens[n].h, sizeof(itens[n].h), "%s", (const char*)(it["h"] | ""));
+    jsonutil::copia(itens[n].q, sizeof(itens[n].q), it["q"]);
+    jsonutil::copia(itens[n].r, sizeof(itens[n].r), it["r"]);
+    jsonutil::copia(itens[n].d, sizeof(itens[n].d), it["d"]);
+    jsonutil::copia(itens[n].h, sizeof(itens[n].h), it["h"]);
     n++;
   }
   return n;
