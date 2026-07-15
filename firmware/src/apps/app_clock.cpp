@@ -201,10 +201,11 @@ static void render(void* gfx) {
       }
       char m[8];
       snprintf(m, sizeof(m), "%u", tm_min_);
-      int wm = (int)g.getStrWidth(m), wmin = (int)g.getStrWidth(" min");
+      const char* minsuf = tr(STR_MIN_SUFFIX);
+      int wm = (int)g.getStrWidth(m), wmin = (int)g.getUTF8Width(minsuf);
       int x = 42 - (wm + wmin) / 2;
       inv_str(g, x, 25, m);
-      g.drawStr(x + wm, 25, " min");
+      g.drawUTF8(x + wm, 25, minsuf);
       nokia_ui::softkey(g, tr(STR_OK));
       break;
     }

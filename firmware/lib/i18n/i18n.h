@@ -54,6 +54,8 @@ enum StrId : uint8_t {
   // curtos de proposito (colunas de ~12-16px) - ver getStrWidth() checado
   // por fonte real em fonts3310.h antes de escolher as abreviacoes.
   STR_TBL_PTS, STR_TBL_JOGOS, STR_TBL_SALDO,
+  // sufixo de unidade do timer do relogio (editor de minutos)
+  STR_MIN_SUFFIX,
   STR_COUNT
 };
 

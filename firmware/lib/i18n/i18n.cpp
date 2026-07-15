@@ -151,6 +151,7 @@ static const char* const kStr[STR_COUNT][LANG_COUNT] = {
   /* TBL_PTS     */ {"P", "Pts", "Pts", "Pts", "Pkt", "P"},
   /* TBL_JOGOS   */ {"J", "PJ", "PJ", "J", "Sp", "O"},
   /* TBL_SALDO   */ {"S", "GD", "DG", "Di", "TD", "ME"},
+  /* MIN_SUFFIX  */ {" min", " min", " min", " min", " min", " min"},
 };
 
 static const char* const kDay[LANG_COUNT][7] = {
