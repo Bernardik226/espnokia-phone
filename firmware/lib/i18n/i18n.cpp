@@ -134,7 +134,8 @@ static const char* const kStr[STR_COUNT][LANG_COUNT] = {
   /* SCAN_TO_PAIR */ {"Escaneie p/ logar", "Scan to log in", "Escanea p/ entrar",
                       "Scan pour login", "Scannen z. Login", "Skannaa kirjautuaksesi"},
   /* APP_GAMES   */ {"Jogos", "Games", "Juegos", "Jeux", "Spiele", "Pelit"},
-  /* GAME_SNAKE  */ {"Snake", "Snake", "Snake", "Snake", "Snake", "Snake"},
+  /* GAME_SNAKE  */ {"Snake II", "Snake II", "Snake II", "Snake II", "Snake II",
+                     "Snake II"},
   /* LEVEL       */ {"Nível", "Level", "Nivel", "Niveau", "Stufe", "Taso"},
   /* GAME_OVER   */ {"Fim de jogo", "Game Over", "Fin del juego",
                      "Partie finie", "Game Over", "Peli ohi"},
@@ -142,6 +143,8 @@ static const char* const kStr[STR_COUNT][LANG_COUNT] = {
                      "Ennätys"},
   /* NEW_RECORD  */ {"Novo recorde!", "New record!", "¡Nuevo récord!",
                      "Nouveau record!", "Neuer Rekord!", "Uusi ennätys!"},
+  /* NEW_GAME    */ {"Novo jogo", "New game", "Nuevo juego", "Nouv. partie",
+                     "Neues Spiel", "Uusi peli"},
 };
 
 static const char* const kDay[LANG_COUNT][7] = {

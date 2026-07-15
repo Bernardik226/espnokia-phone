@@ -88,6 +88,41 @@ void test_nivel_intervalo_monotonico() {
   TEST_ASSERT_TRUE(snake_level_interval_ms(9) >= 40);
 }
 
+void test_borda_mata_sem_wrap() {
+  SnakeGame g; snake_init(g, 10, 10, 1);
+  g.wrap = false;
+  g.bx[0] = 9; g.by[0] = 5; g.dir = g.next = DIR_RIGHT;  // ultima coluna, indo p/ fora
+  g.fx = 0; g.fy = 0;
+  TEST_ASSERT_EQUAL_UINT8(SNK_DIE, snake_step(g, 10, 10));
+  TEST_ASSERT_FALSE(g.alive);
+}
+
+void test_borda_atravessa_com_wrap() {
+  SnakeGame g; snake_init(g, 10, 10, 1);                 // wrap default = true
+  g.bx[0] = 9; g.by[0] = 5; g.dir = g.next = DIR_RIGHT;
+  g.fx = 0; g.fy = 0;
+  TEST_ASSERT_EQUAL_UINT8(SNK_MOVE, snake_step(g, 10, 10));
+  TEST_ASSERT_EQUAL_UINT8(0, g.bx[0]);                   // saiu pelo outro lado, vivo
+  TEST_ASSERT_TRUE(g.alive);
+}
+
+void test_labirinto_parede_mata() {
+  SnakeGame g; snake_init(g, 10, 10, 1);
+  g.wrap = false; g.fx = 0; g.fy = 0;
+  g.len = 1; g.bx[0] = 5; g.by[0] = 5; g.dir = g.next = DIR_RIGHT;
+  snake_set_wall(g, 10, 6, 5);                           // parede bem na frente
+  TEST_ASSERT_TRUE(snake_is_wall(g, 10, 6, 5));
+  TEST_ASSERT_EQUAL_UINT8(SNK_DIE, snake_step(g, 10, 10));
+  TEST_ASSERT_FALSE(g.alive);
+}
+
+void test_comida_nao_cai_em_parede() {
+  SnakeGame g; snake_init(g, 6, 6, 7);
+  snake_set_wall(g, 6, g.fx, g.fy);                      // bloqueia onde a comida esta
+  snake_place_food(g, 6, 6);                             // recoloca
+  TEST_ASSERT_FALSE(snake_is_wall(g, 6, g.fx, g.fy));
+}
+
 int main(int, char**) {
   UNITY_BEGIN();
   RUN_TEST(test_init_estado_inicial);
@@ -98,5 +133,9 @@ int main(int, char**) {
   RUN_TEST(test_comer_cresce_e_pontua);
   RUN_TEST(test_rng_deterministico_mesma_seed);
   RUN_TEST(test_nivel_intervalo_monotonico);
+  RUN_TEST(test_borda_mata_sem_wrap);
+  RUN_TEST(test_borda_atravessa_com_wrap);
+  RUN_TEST(test_labirinto_parede_mata);
+  RUN_TEST(test_comida_nao_cai_em_parede);
   return UNITY_END();
 }
