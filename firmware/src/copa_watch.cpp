@@ -8,6 +8,7 @@
 #include "drivers/rtc.h"
 #include "net/http.h"
 #include "net/wifi.h"
+#include "timeutil.h"
 #include "ui/goal_fx.h"
 
 namespace copa_watch {
@@ -75,20 +76,15 @@ bool armed(const char* t1, const char* t2) {
   return armed_ && strcmp(t1, t1_) == 0 && strcmp(t2, t2_) == 0;
 }
 
-// mesmo "minuto do ano" aproximado do alarme: basta pra janela do jogo
-static int32_t minuto(uint8_t mes, uint8_t dia, uint8_t h, uint8_t m) {
-  return (((int32_t)mes * 31 + dia) * 24 + h) * 60 + m;
-}
-
 void tick(uint32_t now) {
   if (!armed_ || goal_fx::active()) return;
-  if (next_ && (int32_t)(now - next_) < 0) return;
+  if (next_ && !timeutil::reached(now, next_)) return;
   next_ = now + kPollMs;  // erro tambem espera o ciclo: sem martelar o server
   if (!wifi::connected()) return;
   rtc::DateTime dt;
   if (!rtc::now(dt)) return;  // cacheia 1 s, barato por loop
-  int32_t delta = minuto(dt.month, dt.day, dt.hour, dt.min) -
-                  minuto(mo_, d_, h_, mi_);
+  int32_t delta = timeutil::minuto(dt.month, dt.day, dt.hour, dt.min) -
+                  timeutil::minuto(mo_, d_, h_, mi_);
   if (delta < 0) return;  // nem comecou (o aviso de inicio e do alarme)
   if (delta > kJanelaMin) { disarm(); return; }
   if (buzzer::busy()) { next_ = now + 200; return; }  // GET seguraria o bip

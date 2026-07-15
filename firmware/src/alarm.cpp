@@ -6,6 +6,7 @@
 #include "i18n.h"
 #include "drivers/rtc.h"
 #include "sound.h"
+#include "timeutil.h"
 #include "ui/fonts3310.h"
 #include "ui/nokia_ui.h"
 
@@ -25,9 +26,6 @@ static char ring_label_[16];
 static bool timer_on_ = false;
 static uint32_t timer_end_ = 0;
 static uint16_t timer_min_ = 0;
-
-// comparação imune ao rollover de millis()
-static inline bool reached(uint32_t now, uint32_t t) { return (int32_t)(now - t) >= 0; }
 
 static void load() {
   if (loaded_) return;
@@ -99,17 +97,12 @@ uint32_t timer_left_s() {
 
 bool active() { return ringing_; }
 
-// "minuto do ano" aproximado: suficiente pra janela de 5 min no mesmo dia
-static int32_t minuto(uint8_t mes, uint8_t dia, uint8_t h, uint8_t m) {
-  return (((int32_t)mes * 31 + dia) * 24 + h) * 60 + m;
-}
-
 void tick(uint32_t now) {
   if (ringing_) {
     if (!buzzer::tune_busy()) sound::ringtone();  // loop no toque padrao
     return;
   }
-  if (timer_on_ && reached(now, timer_end_)) {
+  if (timer_on_ && timeutil::reached(now, timer_end_)) {
     timer_on_ = false;
     char lbl[16];
     snprintf(lbl, sizeof(lbl), "%u min", timer_min_);
@@ -119,7 +112,8 @@ void tick(uint32_t now) {
   if (!armed_) return;
   rtc::DateTime dt;
   if (!rtc::now(dt)) return;  // rtc::now cacheia 1 s, barato por loop
-  int32_t delta = minuto(dt.month, dt.day, dt.hour, dt.min) - minuto(mo_, d_, h_, mi_);
+  int32_t delta = timeutil::minuto(dt.month, dt.day, dt.hour, dt.min) -
+                  timeutil::minuto(mo_, d_, h_, mi_);
   if (delta < 0 || delta > 5) return;  // janela de 5 min (tolera reboot)
   armed_ = false;
   prefs_.putBool("al_on", false);  // one-shot

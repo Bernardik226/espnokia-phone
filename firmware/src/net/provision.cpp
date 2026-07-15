@@ -6,6 +6,7 @@
 #include <esp_wifi.h>
 #include "net/conn.h"
 #include "net/credstore.h"
+#include "timeutil.h"
 
 namespace provision {
 
@@ -243,7 +244,7 @@ void start() {
 void tick(uint32_t) {
   dns_.processNextRequest();
   server_.handleClient();
-  if (reboot_ms_ && millis() > reboot_ms_) ESP.restart();
+  if (reboot_ms_ && timeutil::reached(millis(), reboot_ms_)) ESP.restart();
 }
 
 }  // namespace provision
