@@ -41,9 +41,9 @@ void ip_str(char* buf, size_t len) {
 uint8_t level() {
   if (!connected()) return 0;
   int rssi = WiFi.RSSI();
-  if (rssi >= -55) return 4;
-  if (rssi >= -65) return 3;
-  if (rssi >= -75) return 2;
+  if (rssi >= kRssi1) return 4;
+  if (rssi >= kRssi2) return 3;
+  if (rssi >= kRssi3) return 2;
   if (rssi >= -85) return 1;
   return 0;
 }
