@@ -6,7 +6,6 @@
 // canal 2 = timer LEDC proprio (canal 0 e do buzzer, que varia a frequencia)
 static const uint8_t kCh = 2;
 static const uint8_t kDuty[backlight::kLevels] = {0, 90, 255};
-static const char* kNames[backlight::kLevels] = {"Desligada", "Media", "Alta"};
 static uint8_t cur_ = 2;
 static Preferences prefs_;
 
@@ -31,4 +30,3 @@ void backlight::save(uint8_t l) {
 }
 
 uint8_t backlight::level() { return cur_; }
-const char* backlight::name(uint8_t l) { return l < kLevels ? kNames[l] : ""; }

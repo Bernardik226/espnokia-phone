@@ -245,8 +245,7 @@ static void render(void* gfx) {
       break;
     }
     case V_DISPLAY: {
-      const char* names[backlight::kLevels];
-      for (uint8_t i = 0; i < backlight::kLevels; i++) names[i] = backlight::name(i);
+      const char* names[] = {tr(STR_DISP_OFF), tr(STR_DISP_MED), tr(STR_DISP_HIGH)};
       draw_list(g, tr(STR_BACKLIGHT), names, backlight::kLevels, cur);
       nokia_ui::softkey(g, tr(STR_OK));
       break;

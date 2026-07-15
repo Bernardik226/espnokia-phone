@@ -145,6 +145,9 @@ static const char* const kStr[STR_COUNT][LANG_COUNT] = {
                      "Nouveau record!", "Neuer Rekord!", "Uusi ennätys!"},
   /* NEW_GAME    */ {"Novo jogo", "New game", "Nuevo juego", "Nouv. partie",
                      "Neues Spiel", "Uusi peli"},
+  /* DISP_OFF    */ {"Desligada", "Off", "Apagada", "Éteint", "Aus", "Pois"},
+  /* DISP_MED    */ {"Média", "Medium", "Media", "Moyen", "Mittel", "Keski"},
+  /* DISP_HIGH   */ {"Alta", "High", "Alta", "Élevé", "Hoch", "Korkea"},
 };
 
 static const char* const kDay[LANG_COUNT][7] = {

@@ -48,6 +48,8 @@ enum StrId : uint8_t {
   // jogos
   STR_APP_GAMES, STR_GAME_SNAKE, STR_LEVEL, STR_GAME_OVER, STR_RECORD,
   STR_NEW_RECORD, STR_NEW_GAME,
+  // niveis do backlight (config > visor)
+  STR_DISP_OFF, STR_DISP_MED, STR_DISP_HIGH,
   STR_COUNT
 };
 
