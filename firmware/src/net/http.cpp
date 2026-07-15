@@ -19,7 +19,7 @@ int get_json(const char* path, char* buf, size_t len) {
   bool https = url.startsWith("https://");
   if (https) tls.setInsecure();
   if (!cli.begin(https ? (WiFiClient&)tls : plain, url)) return -2;
-  cli.addHeader("X-Device-Key", conn::device_key());
+  cli.addHeader(conn::kHeaderDeviceKey, conn::device_key());
   int code = cli.GET();
   if (code == HTTP_CODE_OK) {
     String body = cli.getString();

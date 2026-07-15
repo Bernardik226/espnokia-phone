@@ -65,11 +65,11 @@ bool begin(const char* path) {
   snprintf(cab, sizeof(cab),
            "POST %s HTTP/1.1\r\n"
            "Host: %s\r\n"
-           "X-Device-Key: %s\r\n"
+           "%s: %s\r\n"
            "Content-Type: application/octet-stream\r\n"
            "Transfer-Encoding: chunked\r\n"
            "Connection: keep-alive\r\n\r\n",
-           path, host, conn::device_key());
+           path, host, conn::kHeaderDeviceKey, conn::device_key());
   cli_->print(cab);
   return true;
 }
