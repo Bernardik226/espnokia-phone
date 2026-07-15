@@ -59,9 +59,9 @@ static void on_render(void* gfx) {
     uint8_t i = row;
     int y = 11 + row * 9;
     bool sel = (i == cur);
-    if (sel) { g.drawBox(0, y, 80, 9); g.setDrawColor(0); }
-    g.drawUTF8(3, y + 8, tr((StrId)kGames[i]->name_id));
-    if (sel) g.setDrawColor(1);
+    // sem scrollbar aqui (so 1 jogo hoje): barra cheia de 84px, nao 80
+    // (item 3 do sweep — unica mudanca visual desta tarefa)
+    nokia_ui::list_row(g, y, 84, tr((StrId)kGames[i]->name_id), sel);
   }
   nokia_ui::softkey(g, tr(STR_SELECT));
 }
