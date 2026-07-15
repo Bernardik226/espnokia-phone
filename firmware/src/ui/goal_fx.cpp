@@ -77,7 +77,7 @@ void render(void* gfx) {
     nokia_ui::text_bold_center(g, 14, tr(STR_GOAL));
   nokia_ui::text_bold_center(g, 27, placar_);
   if (autor_[0])
-    g.drawUTF8(42 - (int)g.getUTF8Width(autor_) / 2, 38, autor_);
+    nokia_ui::text_center(g, 38, autor_);
 }
 
 }  // namespace goal_fx

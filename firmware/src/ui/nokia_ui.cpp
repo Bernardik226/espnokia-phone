@@ -19,6 +19,9 @@ void text_bold_center(U8G2& g, int y, const char* s) {
   g.drawUTF8(42 - (int)g.getUTF8Width(s) / 2, y, s);
   if (prev) g.setFont(prev);
 }
+void text_center(U8G2& g, int y, const char* s) {
+  g.drawUTF8(42 - (int)g.getUTF8Width(s) / 2, y, s);
+}
 int bold_width(U8G2& g, const char* s) {
   const uint8_t* prev = g.getU8g2()->font;
   g.setFont(u8g2_font_3310_small_bold);
@@ -46,7 +49,6 @@ void poda(U8G2& g, char* s, int max_w) {
 void no_network(U8G2& g) {
   g.drawXBMP((84 - ICON_NOWIFI_W) / 2, 11, ICON_NOWIFI_W, ICON_NOWIFI_H,
              icon_nowifi_bits);
-  const char* s = tr(STR_CONNECT_WIFI);
-  g.drawUTF8(42 - (int)g.getUTF8Width(s) / 2, 38, s);
+  text_center(g, 38, tr(STR_CONNECT_WIFI));
 }
 }  // namespace nokia_ui

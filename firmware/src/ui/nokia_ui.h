@@ -11,6 +11,9 @@ void text_bold(U8G2& g, int x, int y, const char* s);
 void inv_str(U8G2& g, int x, int baseline, const char* s);
 // negrito centrado horizontalmente (tela de 84px); y = baseline
 void text_bold_center(U8G2& g, int y, const char* s);
+// centralizado horizontalmente na fonte corrente (sem forcar negrito);
+// y = baseline, como drawStr
+void text_center(U8G2& g, int y, const char* s);
 // largura do texto na fonte negrito (pra alinhar sem desenhar)
 int bold_width(U8G2& g, const char* s);
 // label de softkey centrado na base (negrito 3310, baseline 47)
