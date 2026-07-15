@@ -261,12 +261,7 @@ static void render(void* gfx) {
       uint8_t top = cur >= kVis ? (uint8_t)(cur - kVis + 1) : 0;
       for (uint8_t i = 0; i < kVis && top + i < kAbaCount; i++) {
         int y = 11 + i * 9;
-        if (top + i == cur) {
-          g.drawBox(0, y, 84, 9);
-          g.setDrawColor(0);
-        }
-        g.drawUTF8(3, y + 8, tr(kAbas[top + i]));
-        g.setDrawColor(1);
+        nokia_ui::list_row(g, y, 84, tr(kAbas[top + i]), top + i == cur);
       }
       nokia_ui::softkey(g, tr(STR_SELECT));
       break;
@@ -299,16 +294,14 @@ static void render(void* gfx) {
         int y = 11 + i * 9;
         const CopaJogo& j = jogos_[top + i];
         copa_linha(j, linha, sizeof(linha));
-        if (top + i == cur) {
-          g.drawBox(0, y, 84, 9);
-          g.setDrawColor(0);
-        }
-        g.drawStr(3, y + 8, linha);
+        bool sel = (top + i == cur);
+        nokia_ui::list_row(g, y, 84, linha, sel);
+        if (sel) g.setDrawColor(0);
         if (j.live)  // bolinha de "ao vivo"
           g.drawStr(78, y + 8, "*");
         else if (j.s1 >= 0)  // reloginho: este ja e historico
           g.drawXBMP(78, y + 2, MINI_CLOCK_W, MINI_CLOCK_H, mini_clock_bits);
-        g.setDrawColor(1);
+        if (sel) g.setDrawColor(1);
       }
       nokia_ui::softkey(g, tr(STR_OPEN));
       break;
