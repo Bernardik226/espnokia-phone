@@ -85,13 +85,13 @@ static void render(void* gfx) {
     uint8_t i = top + row;                          // lista com barra invertida (3310)
     int y = 11 + row * 9;
     bool sel = (i == cur);
-    if (sel) { g.drawBox(0, y, 80, 9); g.setDrawColor(0); }
-    g.drawStr(3, y + 8, kTones[i].name);
+    nokia_ui::list_row(g, y, 80, kTones[i].name, sel);
     if (i == sound::ringtone_idx()) {               // check no toque padrao
+      if (sel) g.setDrawColor(0);
       g.drawLine(72, y + 5, 73, y + 7);
       g.drawLine(73, y + 7, 76, y + 3);
+      if (sel) g.setDrawColor(1);
     }
-    if (sel) g.setDrawColor(1);
   }
   g.drawVLine(82, 11, 27);                          // scrollbar como no menu
   int th = 27 * kVisible / kCount;
