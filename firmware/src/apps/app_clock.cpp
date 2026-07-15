@@ -112,14 +112,6 @@ static bool input(Button b, BtnEvent e) {
   return false;
 }
 
-// campo selecionado do editor: texto invertido sobre uma caixa
-static void inv_str(U8G2& g, int x, int baseline, const char* s) {
-  g.drawBox(x - 1, baseline - 7, (int)g.getStrWidth(s) + 2, 9);
-  g.setDrawColor(0);
-  g.drawStr(x, baseline, s);
-  g.setDrawColor(1);
-}
-
 static void render(void* gfx) {
   U8G2& g = *(U8G2*)gfx;
   g.setFont(u8g2_font_3310_small);
@@ -183,7 +175,7 @@ static void render(void* gfx) {
       int x = 42 - (int)g.getStrWidth(hhmm) / 2;
       g.drawStr(x, 25, hhmm);
       char part[3] = {hhmm[al_field_ ? 3 : 0], hhmm[al_field_ ? 4 : 1], '\0'};
-      inv_str(g, al_field_ ? x + (int)g.getStrWidth("00:") : x, 25, part);
+      nokia_ui::inv_str(g, al_field_ ? x + (int)g.getStrWidth("00:") : x, 25, part);
       nokia_ui::softkey(g, tr(al_field_ == 0 ? STR_OK : STR_SAVE));
       break;
     }
@@ -204,7 +196,7 @@ static void render(void* gfx) {
       const char* minsuf = tr(STR_MIN_SUFFIX);
       int wm = (int)g.getStrWidth(m), wmin = (int)g.getUTF8Width(minsuf);
       int x = 42 - (wm + wmin) / 2;
-      inv_str(g, x, 25, m);
+      nokia_ui::inv_str(g, x, 25, m);
       g.drawUTF8(x + wm, 25, minsuf);
       nokia_ui::softkey(g, tr(STR_OK));
       break;

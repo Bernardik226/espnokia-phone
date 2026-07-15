@@ -27,6 +27,12 @@ int bold_width(U8G2& g, const char* s) {
   return w;
 }
 void softkey(U8G2& g, const char* label) { text_bold_center(g, 47, label); }
+void inv_str(U8G2& g, int x, int baseline, const char* s) {
+  g.drawBox(x - 1, baseline - 7, (int)g.getStrWidth(s) + 2, 9);
+  g.setDrawColor(0);
+  g.drawStr(x, baseline, s);
+  g.setDrawColor(1);
+}
 void poda(U8G2& g, char* s, int max_w) {
   if ((int)g.getUTF8Width(s) <= max_w) return;
   size_t n = strlen(s);

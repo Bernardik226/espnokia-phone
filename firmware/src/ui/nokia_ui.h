@@ -6,6 +6,9 @@
 namespace nokia_ui {
 // negrito 3310; (x, y) = baseline, como drawStr; preserva a fonte corrente
 void text_bold(U8G2& g, int x, int y, const char* s);
+// campo selecionado do editor: caixa preenchida + texto em cor invertida
+// (x, baseline) = onde drawStr(s) desenharia; a caixa cerca esse retangulo
+void inv_str(U8G2& g, int x, int baseline, const char* s);
 // negrito centrado horizontalmente (tela de 84px); y = baseline
 void text_bold_center(U8G2& g, int y, const char* s);
 // largura do texto na fonte negrito (pra alinhar sem desenhar)

@@ -225,14 +225,6 @@ static void draw_list(U8G2& g, const char* title, const char* const* items,
   }
 }
 
-// campo selecionado do editor: texto invertido sobre uma caixa
-static void inv_str(U8G2& g, int x, int baseline, const char* s) {
-  g.drawBox(x - 1, baseline - 7, (int)g.getStrWidth(s) + 2, 9);
-  g.setDrawColor(0);
-  g.drawStr(x, baseline, s);
-  g.setDrawColor(1);
-}
-
 static void render(void* gfx) {
   U8G2& g = *(U8G2*)gfx;
   g.setFont(u8g2_font_3310_small);
@@ -292,12 +284,12 @@ static void render(void* gfx) {
       // campo em edicao por cima, invertido
       int sep_t = (int)g.getStrWidth(":"), sep_d = (int)g.getStrWidth("/");
       switch (dt_field_) {
-        case 0: inv_str(g, tx, 19, hh); break;
-        case 1: inv_str(g, tx + (int)g.getStrWidth(hh) + sep_t, 19, mi); break;
-        case 2: inv_str(g, dx, 30, dd); break;
-        case 3: inv_str(g, dx + (int)g.getStrWidth(dd) + sep_d, 30, mo); break;
+        case 0: nokia_ui::inv_str(g, tx, 19, hh); break;
+        case 1: nokia_ui::inv_str(g, tx + (int)g.getStrWidth(hh) + sep_t, 19, mi); break;
+        case 2: nokia_ui::inv_str(g, dx, 30, dd); break;
+        case 3: nokia_ui::inv_str(g, dx + (int)g.getStrWidth(dd) + sep_d, 30, mo); break;
         case 4:
-          inv_str(g, dx + (int)g.getStrWidth(dd) + (int)g.getStrWidth(mo) + 2 * sep_d, 30, yr);
+          nokia_ui::inv_str(g, dx + (int)g.getStrWidth(dd) + (int)g.getStrWidth(mo) + 2 * sep_d, 30, yr);
           break;
       }
       nokia_ui::softkey(g, tr(dt_field_ < 4 ? STR_OK : STR_SAVE));
