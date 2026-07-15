@@ -149,9 +149,7 @@ static void render(void* gfx) {
       const char* items[] = {tr(STR_ALARM), tr(STR_TIMER)};
       for (uint8_t i = 0; i < 2; i++) {
         int y = 11 + i * 9;
-        if (i == cur) { g.drawBox(0, y, 84, 9); g.setDrawColor(0); }
-        g.drawUTF8(3, y + 8, items[i]);
-        if (i == cur) g.setDrawColor(1);
+        nokia_ui::list_row(g, y, 84, items[i], i == cur);
       }
       nokia_ui::softkey(g, tr(STR_SELECT));
       break;

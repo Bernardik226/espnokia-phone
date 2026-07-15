@@ -30,6 +30,11 @@ int bold_width(U8G2& g, const char* s) {
   return w;
 }
 void softkey(U8G2& g, const char* label) { text_bold_center(g, 47, label); }
+void list_row(U8G2& g, int y, uint8_t w, const char* text, bool selected) {
+  if (selected) { g.drawBox(0, y, w, 9); g.setDrawColor(0); }
+  g.drawUTF8(3, y + 8, text);
+  if (selected) g.setDrawColor(1);
+}
 void inv_str(U8G2& g, int x, int baseline, const char* s) {
   g.drawBox(x - 1, baseline - 7, (int)g.getStrWidth(s) + 2, 9);
   g.setDrawColor(0);

@@ -18,6 +18,12 @@ void text_center(U8G2& g, int y, const char* s);
 int bold_width(U8G2& g, const char* s);
 // label de softkey centrado na base (negrito 3310, baseline 47)
 void softkey(U8G2& g, const char* label);
+// uma linha de lista na posicao y; se selected, barra invertida de
+// largura w (box em (0,y,w,9), texto em x=3,y+8) — nao cuida de
+// windowing/scrollbar, so a linha; o caller decide o que mais desenhar
+// na mesma linha (marcadores etc) e, se precisar, reusa o color(0) do
+// caller enquanto selected pra manter o efeito invertido
+void list_row(U8G2& g, int y, uint8_t w, const char* text, bool selected);
 // tela padrao dos apps com internet sem rede: wifi cortado + instrucao
 // (titulo e softkey ficam por conta do app)
 void no_network(U8G2& g);

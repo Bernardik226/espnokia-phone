@@ -214,14 +214,7 @@ static void draw_list(U8G2& g, const char* title, const char* const* items,
   uint8_t top = sel >= kVis ? (uint8_t)(sel - kVis + 1) : 0;
   for (uint8_t i = 0; i < kVis && top + i < n; i++) {
     int y = 11 + i * 9;
-    if (top + i == sel) {
-      g.drawBox(0, y, 84, 9);
-      g.setDrawColor(0);
-      g.drawUTF8(3, y + 8, items[top + i]);
-      g.setDrawColor(1);
-    } else {
-      g.drawUTF8(3, y + 8, items[top + i]);
-    }
+    nokia_ui::list_row(g, y, 84, items[top + i], top + i == sel);
   }
 }
 
