@@ -1,0 +1,337 @@
+=========================================================
+CASE-ESTILO  -  espnokia (Nokia 5110)  -  pecas p/ impressao
+=========================================================
+
+Gerados de espnokia-5110-case.scad (case-estilo). So os arquivos ATUAIS
+(antigos/legados ficam FORA do repo — 12/jul).
+
+PROTOCOLO 3MF (12/jul — substituiu o STL nas pecas de impressao)
+----------------------------------------------------------------
+Pecas de IMPRESSAO saem em 3MF (pasta print/): mesma malha do render
+(a tesselacao acontece no $fn do OpenSCAD, nao no formato), mas com
+unidade mm explicita, vertices indexados (sem costuras de STL) e
+arquivo ~10x menor. Os SIMS continuam em STL (pasta sim/) p/ o FreeCAD.
+STEP foi avaliado e DESCARTADO: OpenSCAD nao tem kernel B-rep (um
+cilindro ja nasce poligono no $fn), entao STEP nao adicionaria precisao
+— e as folgas do projeto foram calibradas no FISICO com esta tesselacao.
+No CrealityPrint: na 1a vez, abrir print/espnokia-projeto.3mf, conferir
+o perfil "0.16mm ABS Resistente EspNokia" nas pecas e salvar File >
+Save Project — dai em diante reimprimir = abrir 1 arquivo, fatiar.
+
+ARQUIVOS
+--------
+print/ (IMPRIMIR — ja caem na orientacao certa no slicer, NAO virar):
+- frente-relevo.3mf .... FRENTE ATUAL: botoes de navegacao em RELEVO (raso)
+                         + switch direto + torres do RTC atras do teclado
+- case-capa.3mf ........ tampa traseira (parafusa na frente); furo USB c/
+                         funil, luvas meia-lua, sem RTC
+- switch-teste.3mf ..... placa de teste: 1 furo + 1 berco (IMPRIMIR PRIMEIRO)
+- espnokia-projeto.3mf . as 3 pecas juntas, ja posicionadas na mesa
+
+sim/ (NAO IMPRIMIR — simulacao de encaixe no FreeCAD):
+- sim-tela-modulo.stl .. modulo 5110 nas medidas do paquimetro, no
+                         referencial da frente (mostrar="tela_sim")
+- sim-esp32-capa.stl ... ESP32 DevKit V1 (PCB/furos/shell medidos; EN-BOOT/
+                         WROOM/pinos nominais) na posicao de montagem, no
+                         referencial da capa: conferir furo USB x shell,
+                         botoes x meia-lua, pinos x pilha (mostrar="esp_sim")
+
+(extensor-atuador e case-frente LEGADOS: fora do repo)
+
+LOGO espnokia (assinatura do projeto)
+-------------------------------------
+Logo do projeto vetorizado de ref/logo-espnokia.png por tools/gen-logo.py
+-> logo-espnokia.scad (letras "ESPNOKIA" + simbolo "eN"):
+ - FRENTE (frente-relevo.stl): SO AS LETRAS, relevo saltado (0,6mm; era 0,4
+   e saia apagado impresso) no vao entre a moldura da tela e a navegacao
+ - CAPA (case-capa.stl): logotipo COMPLETO (simbolo "eN" acima + letras,
+   layout fiel ao original), gravado (cavidade 0,6mm; era 0,4) centrado na
+   tampa, acompanhando a curva do domo (profundidade ~uniforme)
+Ajustes no .scad, secao "LOGO espnokia": LOGO_FR_* (frente) / LOGO_TP_* (tampa).
+AUMENTADOS 05/jul (+11%, saiam sem resolucao): LOGO_FR_W 26->29 (letra ~3,1),
+LOGO_TP_W 28->31 - traco mais grosso = o bico 0,4 desenha melhor.
+P/ IMPRIMIR OS LOGOS COM CALMA (slicer, nao e o STL): "tempo minimo de
+camada" 15-20s + "velocidade de perimetro pequeno/small features" ~15mm/s.
+Nas duas pecas o logo fica nas ULTIMAS camadas do print (frente teclado pra
+cima / capa domo pra cima) -> um modificador por faixa de altura no ultimo
+1mm com velocidade ~20mm/s resolve; filamento SECO e -5C no bico ajudam o
+detalhe no ABS.
+
+ORIENTACAO DE IMPRESSAO (12/jul: os DOIS STLs ja CAEM CERTOS no slicer!)
+------------------------------------------------------------------------
+FRENTE = TECLADO PRA CIMA (como o STL ja cai — NAO virar!).
+  O teste com a face pra baixo arruinou o acabamento (marcas de brim/mesa
+  e de suporte na face visivel). Face pra cima: a face sai lisa no topo;
+  suporte NORMAL "apenas na mesa" cresce POR DENTRO (berços/postes) e as
+  marcas ficam escondidas no interior. A peca apoia no anel do labio +
+  suporte. Conferir no preview: NADA de suporte sobre a face do teclado.
+CAPA = boca pra baixo / domo pra cima. Desde 12/jul o STL ja cai ASSIM
+  (export virou mirror Y — mesma peca fisica, logo legivel); antes caia
+  domo pra baixo e tinha que virar na mao. NAO virar mais nada.
+  Suporte so nas torres internas do ESP e na antena.
+
+ENCAIXE FRENTE <-> CAPA (corrigido 04/jul; REFORCADO 11/jul)
+------------------------------------------------------------
+A capa NAO fechava: o domo comecava em z=6,5 e ja tinha recuado ~1mm na
+faixa da junta -> a parede femea da capa virava uma lasca de 0,77->0mm que
+nao imprimia (boca "do mesmo tamanho" da trava). Agora a casca e RETA ate
+o topo da junta (Z_DOMO=13) e a boca da capa e um ANEL SOLIDO de 1,0mm x
+4mm que ENVOLVE a trava da frente com folga 0,2/lado; o topo da trava e
+AFILADO (chanfro 0,4 de entrada) e a canaleta tem 0,4 de folga axial ->
+fecha guiado ate o chanfro em V da juncao encostar.
+  Ajustes: LIP_FOLGA (radial), LIP_CH (chanfro de entrada), Z_DOMO.
+REFORCO 11/jul (1o teste fisico: os "dentinhos" da junta LASCARAM dos
+dois lados): o labio macho engrossou 0,8 -> 1,6 (LIP_T; cresceu SO PRA
+DENTRO -- a interface com a femea nao mudou: externo 1,2 / folga 0,2) e
+o gume da boca da capa foi de 0,2 -> 0,5 (o chanfro V do lado da capa
+caiu 0,8 -> 0,5, CHANFRO_TAMPA; o V da cintura fica 0,8+0,5, assimetria
+sutil). Femea segue 1,0 e agora fecha escorada no macho grosso.
+OBS: a quebra tambem foi de IMPRESSAO fraca -- ver secao PERFIL DE
+IMPRESSAO RESISTENTE no fim deste arquivo.
+
+CASCA DO DOMO REFORCADA (05/jul - a capa quebrava na torcao)
+------------------------------------------------------------
+A cavidade interna era o proprio solido encolhido em XY -> em RAMPA isso
+nao mantem espessura: o ombro do domo (z 20..24) afinava a 1,03mm no
+perimetro INTEIRO (~2 perimetros sem infill no slicer - por isso a capa
+torcia e quebrava facil). Agora a cavidade e gerada por OFFSET NORMAL da
+superficie externa (fatias em escada, ver vol_interno no .scad): parede
+medida no STL novo = 2,0..2,2 em TODO o domo (minimo 1,95 no canto da
+janela do USB). Teto interno segue em z=25 (as placas assentam igual);
+o anel femea da boca segue 1,0 x 4,4 por projeto (escorado pelo labio
+da frente quando fechada).
+
+TELA / BUZZER / MIC (recalibrados 04/jul, teste fisico)
+-------------------------------------------------------
+TELA: o cromado superior do modulo aparecia na janela -> a FURACAO (4
+  bosses) + o rebaixo da cromada SUBIRAM 2,0mm rumo ao buzzer (TELA_SUBIR
+  em parametros.scad); a JANELA nao mudou. Ainda aparecer cromado em cima
+  -> aumenta TELA_SUBIR; aparecer PCB embaixo -> diminui.
+MARGEM da tela REFORCADA (04/jul, 2a rodada): a pele na frente da cromada
+  subiu de 1,0 pra 1,6 (MARGEM_TELA; o modulo assenta 0,6 mais fundo e os
+  bosses crescem junto) e a moldura estetica rasa foi de 0,7 pra 0,5 de
+  profundidade -> o minimo de plastico na faixa da moldura foi de 0,3 pra
+  1,1mm (era ali que afundava no dedo). A LASCA de 0,2mm em volta do furo
+  da janela (anel que imprimia esgarcado na borda) foi removida: o 2D
+  interno da moldura agora invade a janela 0,4/lado.
+BUZZER: assento Ø12,4 (era 12,5) - press-fit SEM COLA (BUZZ_FOLGA).
+MIC: assento Ø14,4 (era 14,5) e anel 0,3 mais alto (2,8; MIC_ANEL_H) p/ a
+  placa entrar mais fundo por causa dos pinos - press-fit SEM COLA.
+  BUG corrigido 05/jul: o anel nascia 1mm AFUNDADO na parede e a pega real
+  era so 1,8 (menor que a placa, 2,0!); agora a pega acima da face interna
+  e 2,8 de verdade (fundo do assento a 4,8 da face externa - conferido).
+
+POWER V1 = CHAVE NA LATERAL + BOTAO POWER FICTICIO
+--------------------------------------------------
+Prototipo p/ fechar o celular: o relevo do power na frente e DECORATIVO
+(simbolo power, sem furo/berco — como o teclado numerico). Liga/desliga de
+verdade = mini chave deslizante na LATERAL DIREITA, na altura do power:
+fenda p/ a alavanca (medida 3,5x1,9 + folga 0,35/lado -> 4,2x2,6); o corpo
+do switch COLA por dentro da parede.
+  Ligacao: VOUT+ do modulo da bateria (apos o diodo dele) -> chave -> VIN.
+  Calibrar no .scad, secao "V1 — POWER": CHAVE_L/H (medidas), CHAVE_FOLGA
+  (se a fenda sair justa, lima resolve; se 3,5x1,9 ja era a fenda, zere),
+  CHAVE_Y/Z (posicao).
+  (Soft-latch de 3s fica p/ a V2, integrado na PCB mainboard.)
+
+BOTAO DIRETO = O SWITCH E O PROPRIO BOTAO (4 navegacao; power v1 ver acima)
+-----------------------------------------
+A cama elastica (laminas impressas) RACHOU no teste -> fim das partes moveis
+impressas. Cada botao de navegacao (C, -, setas, power) e um RELEVO FIXO com
+a silhueta Nokia de sempre + um FURO Ø4,2 no centro: a PONTA do atuador do
+switch tatil 6x6 sai pelo furo e o dedo clica DIRETO nela. Clique e mola sao
+100% do switch (nada impresso flexiona -> nada racha).
+
+MEDIDAS-MESTRAS (paquimetro, lote ATUAL 05/jul): corpo 6x6x3,81 (SEM
+atuador/perninhas); 5,0 = da BASE do corpo a PONTA do atuador. ATENCAO:
+o lote de 03/jul media corpo 2,96 — o 1o impresso da frente tinha o berco
+p/ esse corpo e o de 3,81 SO PASSOU QUEBRANDO AS TRAVAS (0,75 de
+interferencia). Nao era trava fraca: era parametro defasado (SW_H).
+ - o POCO invade a parede frontal (sobra pele SKIN_SW=0,3 na frente);
+ - quem POSICIONA o switch e a TRASEIRA do corpo apoiada nos DENTES, a
+   exatamente SW_ALT da ponta -> a saliencia deriva DIRETO da medida;
+ - RECALIBRADO 05/jul p/ o corpo 3,81 SEM COLA (decisao final): pele
+   0,2 + folga 0,10 + relevo 0,4 -> apoio dos dentes ~4,06, vao
+   pele<->dentes = 3,91 (corpo + 0,10). Poco 6,5 / furo O4,4 iguais.
+   PONTA: sai ~0,94 da placa = ~0,54 ALEM do relevo — pra fora e
+   clicavel; e o maximo fisico deste lote (atuador projeta so 1,19
+   alem do corpo). Relevo desceu 0,7->0,4 pra isso (silhuetas +8%
+   mantem o destaque).
+ - extensor-atuador.stl = OPCIONAL (descartado pelo Bernardo — era a
+   opcao com cola p/ +0,8 de saliencia; fica no repo se mudar de ideia).
+
+DENTES DO BERCO REFORCADOS (11/jul): os dentes que estalam atras do
+corpo quebraram no 1o print da frente (impressao fraca + raiz curta).
+A RAMPA de entrada subiu 0,6 -> 1,0: raiz do dente 2x mais alta (~70%
+mais robusto) e insercao ate mais suave. Face de apoio e engate de
+0,25/lado INTACTOS (vao 5,50 conferido no STL) — a calibracao validada
+no switch-teste fisico nao mudou.
+
+TESTE PRIMEIRO (switch-teste.stl)
+---------------------------------
+Placa pequena com o MESMO empilhamento do botao final (relevo 0,7 + parede
+2,0 c/ poco invadindo). Imprima, encaixe um switch por tras ate ESTALAR
+nos dentes e verifique:
+ 1. o corpo entra sem forcar e os dentes estalam atras? nao estala (corpo
+    + alto que 3,11) -> sobe FOLGA_SW_Z; ainda duro -> sobe SW_FOLGA
+ 2. a ponta sai ~0,8-0,9mm acima do relevo e clica firme nos dentes?
+    - ponta some/sai pouco -> baixa RELEVO_NAV (ou confere SW_ALT)
+    - sai demais -> sobe FOLGA_SW_Z (recua o plano dos dentes)
+ 3. a ponta desliza no furo sem raspar? raspa -> aumenta FURO_AT_D
+
+PELE DO MIOLO REFORCADA (13/jul — os 4 miolos RASGARAM no 1o print):
+a pele sobre o poco era 0,2 = 1 camada em PONTE; ela grudou na
+interface do suporte e saiu INTEIRA na remocao (fotos do teste).
+Agora SKIN_SW=0,32 (2 camadas consolidadas — sobrevive a pinca).
+Custo: a ponta do atuador sai 0,82 da face = 0,42 alem do relevo
+(era 0,52). Se no fisico ficar rasa: RELEVO_NAV 0,4->0,3 devolve 0,1.
+No mesmo teste: FURO_AT_D 4,4->4,2 e buzzer Ø12,4->12,2 (just fit).
+
+CALIBRAR (no .scad, secao "BOTAO DIRETO" + parametros.scad)
+-----------------------------------------------------------
+  SW_ALT      base do corpo -> ponta do atuador (medido 5,0; SEM perninhas)
+  SW_FOLGA    folga do corpo no poco, por lado (0,25) - "duro de encaixar"
+  FURO_AT_D   furo da ponta (Ø4,2 = 3,5 + 0,35/lado; FDM fecha ~0,2)
+  SKIN_SW     pele da parede na frente do corpo (0,32 = 2 camadas)
+  FOLGA_SW_Z  folga axial corpo<->pele (0,10) - move o plano dos dentes
+  RELEVO_NAV  altura do relevo dos botoes nav (0,4)
+
+REEXPORTAR (headless — protocolo 3MF)
+-------------------------------------
+  openscad -D 'mostrar="MODO"' --render -o print/ARQUIVO.3mf espnokia-5110-case.scad
+  MODO:  frente_relevo -> print/frente-relevo.3mf | tampa -> print/case-capa.3mf
+         sw_teste -> print/switch-teste.3mf
+  SIMS (STL, p/ FreeCAD): tela_sim -> sim/sim-tela-modulo.stl
+         esp_sim -> sim/sim-esp32-capa.stl
+  (inspecao: sw_corte = teste meio-cortado · sw2d = secao 2D)
+  O projeto combinado (espnokia-projeto.3mf) e gerado juntando os 3 via
+  trimesh ou re-salvando o projeto no slicer.
+
+MEDIR A PECA COM PRECISAO (tools/medir-stl.py — le STL e 3MF)
+-------------------------------------------------------------
+Secoes transversais exatas da malha: bbox de cada furo/ilha (dimensao +
+centro, 0,01mm) em qualquer plano. Melhor que slicer/FreeCAD pra conferir
+medidas antes de imprimir. (3MF precisa de lxml no venv.)
+  python tools/medir-stl.py print/frente-relevo.3mf z -1.65  # rebaixo tela
+  python tools/medir-stl.py print/case-capa.3mf z 19.85      # furo USB
+  python tools/medir-stl.py print/ARQ.3mf sweep              # camadas vazias
+  MEDIR_MIN=1.8 ... -> mostra furos de rosca (padrao esconde <4mm)
+Depois de TODO reexport: rodar sweep (pega o gotcha do hull de aneis) e
+conferir bbox. Deps (venv): trimesh shapely scipy rtree networkx numpy lxml.
+
+PORTA USB NA BASE = micro-USB DO PROPRIO ESP32 (carga + flash)
+--------------------------------------------------------------
+Um cabo so carrega a bateria E grava firmware. REFEITO 12/jul:
+ - MODELO DE APOIO CORRIGIDO: quem encosta no apoio das luvas e a FACE
+   DE COMPONENTES da PCB (prova: os botoes EN/BOOT esbarravam na luva).
+   Shell do micro-USB fica NA face de apoio: z 18,5..21,2, centro 19,85
+   -> USB_CARGA_Z=19,85 (furo 11x5 = 17,35..22,35, folga 1,15/lado).
+   A conta antiga (boca 20,6..23,3) somava a PCB do lado errado.
+ - ESP DESCEU 0,8 rumo a base (POS_ESP_Y 114->114,8; os postes de baixo
+   da case descem JUNTO): boca do conector a 3,4 da face externa (era
+   4,2). NAO descer mais: o poco da cabeca do parafuso raspa o domo.
+ - FUNIL na boca do furo: 14x8 na superficie afilando pro 11x5 em ~2,3
+   de profundidade -> o overmold do cabo entra no funil e para a ~1,1
+   do conector = o shell (~6) engata ~4,9 e TRAVA, com qualquer cabo.
+CONFERIR NO FISICO: sim-esp32-capa.stl (abaixo) mostra tudo posicionado.
+
+LIGACAO ELETRICA (a "logica"):
+  pino VIN/5V do DevKit ──fio──> IN+ do TP4056
+  TP4056 B+/B- ──> bateria LiPo
+  TP4056 OUT+ ──> diodo Schottky (SS14/1N5817) ──> VIN do DevKit
+  TP4056 OUT- ──> GND comum
+  USB plugado: 5V no VIN -> carrega a bateria; Schottky bloqueia o retorno.
+  Sem USB: bateria -> Schottky -> VIN -> regulador 3,3V da placa.
+  Obs: carregue de preferencia DESLIGADO; abaixo de ~3,7V da bateria o
+  regulador da placa perde folga (se incomodar: boost 5V entre OUT e VIN).
+
+MONTAGEM
+--------
+1) Switches tatil 6x6 por TRAS da frente, nos bercos: empurrar ate os dentes
+   ESTALAREM atras do corpo. A ponta do atuador sai pelo furo da frente.
+2) Fios soldados nas pernas saem pelas fendas laterais do berco.
+3) ESP32 na TAMPA, "de cabeca pra baixo": componentes/USB contra o FUNDO,
+   PINOS PARA CIMA (com a tampa aberta) = acesso facil pra fiacao.
+   Parafusar SO os 2 furos de CIMA nos standoffs. Os 2 furos de BAIXO
+   ficam vagos: os parafusos DA CASE passam por eles ao fechar (prendem o
+   ESP junto). Se algum pino da ponta encostar no poste, apare o pino.
+4) RTC DS3231 na FRENTE (mudou 11/jul — na capa competia espaco com a
+   bateria): DEITADO atras do teclado, logo acima do anel do mic, nas
+   4 torres O5,0x2,5. Socket da pilha voltado PRA CIMA (pra capa).
+   Parafusos M2,5 x 4-5 (6+ bate no fundo da rosca!).
+   ATENCAO ao fechar: as PONTAS dos pinos do ESP32 (na capa) descem a
+   z~9-10 e o topo da pilha do RTC fica a z~11,6 -> os pinos da fileira
+   que cair sobre a pilha devem ser APARADOS/dobrados (so os nao usados
+   caem ali; mesma regra do pino x poste).
+5) Bateria (c/ modulo de carga integrado): dupla-face no fundo da tampa,
+   agora com a METADE DE CIMA INTEIRA livre (da borda do ESP32 ate o
+   buzzer) — o RTC saiu da capa. Ligacao: ver secao PORTA USB acima.
+6) Fecha a tampa: 4 parafusos pelas costas — os 2 de BAIXO atravessam os
+   furos do ESP32 e rosqueiam nos postes.
+
+PARAFUSOS (rosca conferida contra os furos MEDIDOS dos modulos)
+---------------------------------------------------------------
+Regra: parafuso que ATRAVESSA furo de modulo = M2,5 (M3 nao passa ou raspa).
+  2x M2,5 ~20mm  fecham a case por BAIXO, atravessando o furo O3,0 do ESP
+                 (M2,5 passa c/ 0,27/lado; M3 raspa e trava se desalinhar)
+  2x M2,5 6-8mm  ESP32 nos standoffs de cima (rosca O2,05)
+  4x M2,5 4-5mm  RTC nas torres da FRENTE (furo do modulo O2,6 - M3 NAO
+                 passa). ERAM 6-8 na capa; as torres novas O5,0x2,5 tem
+                 rosca de 3,3 - com 6mm a ponta bate no fundo
+  2x M2,5 ~16mm  case por CIMA (nao atravessam modulo; poste O2,2 serve).
+                 ATENCAO: era ~20 — com o BATENTE novo (abaixo) o assento
+                 desceu e 20mm bate no fundo da rosca do poste
+  4x M3 curto    tela nos bosses da frente (furos O3,15 do modulo, rosca O2,5)
+
+BATENTE DOS PARAFUSOS DA CASE (05/jul; afinado no mesmo dia)
+------------------------------------------------------------
+Os 4 furos da capa agora tem POCO DA CABECA com BATENTE plano (counter-
+bore O5,6 / passante O3,4 — versao discreta, era 6,2/3,6): a cabeca
+desce pelo poco, senta no ombro e APERTA a capa contra a frente. M3 NAO
+cabe mais no poco -> os 4 parafusos da case sao M2,5. Antes era um
+escareado conico que, nos 2 postes de cima, caia ACIMA da casca
+(superficie local ~18-21 < cone 24,2) — furo vazado, cabeca torta.
+Batentes: cima z=18 (boss interno O8), baixo z=22,5 (luvas do ESP O8;
+era 21,5 — desceu junto com o rebaixo abaixo). Cabeca ~enterrada.
+
+LUVAS DO ESP REBAIXADAS P/ OS BOTOES BOOT/EN (11/jul; MEIA-LUA 12/jul)
+-----------------------------------------------------------------------
+A luva O8 cheia (do batente de 05/jul) ESBARRAVA nos botoes BOOT/EN do
+DevKit — eles ficam na FACE DE COMPONENTES, que e a face que apoia — e
+a placa nao assentava na furacao. Agora o TOPO da luva e uma MEIA-LUA
+O5,4 x 2,5 so do lado EXTERNO do furo (rumo a quina da PCB, onde nunca
+ha componente): o semiplano interno fica TODO livre no vao de 2,5 -> os
+botoes passam onde estiverem, em qualquer DevKit (a simulacao mostrou
+que ate o anel completo O5,4 podia esbarrar em botao colado no furo).
+Cone 45o volta ao O8 antes do batente da cabeca. Se o botao for mais
+alto que 2,5: subir ESP_BTN_CLEAR (o batente nao muda ate ~3,5).
+
+PERFIL DE IMPRESSAO RESISTENTE (11/jul — a peca de ~3h saiu QUEBRADICA)
+-----------------------------------------------------------------------
+>>> PRESET (12/jul): perfil "0.16mm ABS Resistente EspNokia" p/ o
+>>> CrealityPrint (aba do usuario da K2 Plus 0.4). E so selecionar — os
+>>> valores abaixo ficam de referencia/conferencia. (O perfil Standard da K2
+>>> usa 2 paredes a 200mm/s e 15% grid — era a causa da peca fraca.)
+
+O 1o print da frente/capa saiu fragil e mal acabado: a K2 Plus no ritmo
+default imprime ABS rapido demais (adesao de camada ruim = peca
+quebradica), o infill 15% grid deixa tudo oco e o suporte ARVORE abraca
+as paredes internas dos pocos dos switches (berco esgarcado -> switch
+folgado). CrealityPrint, processo em modo Avancado:
+  Qualidade..: camada 0,16 (1a camada 0,20)
+  Resistencia: paredes 4 (era 3) · topo/fundo 5/4 · infill 40% GIROIDE
+               (era 15% grid — giroide/cubico, nunca grid p/ resistencia)
+  Velocidade.: parede EXTERNA 60 · interna 120 · infill 150 · 1a camada
+               30-40 · "tempo minimo de camada" 15-20s · aceleracao
+               parede ext ~2000-3000 (o resto pode ficar)
+  Suporte....: NORMAL (grade) — NUNCA arvore nesta case! — "Apenas na
+               mesa", z-gap 0,25, COM interface (2-3 camadas)
+  Outros.....: brim 8-10mm
+  Filamento..: perfil ABS da K2 (bico 245-255 / mesa ~100), camara
+               ligada, porta e tampa FECHADAS, fan baixa
+Preview: NADA de suporte sobre a face do teclado (frente teclado pra
+CIMA); esperar suporte nos pocos/bercos por dentro (sai com pinca — com
+interface ligada sai limpo). Tempo esperado: ~2-3x as 3h de antes; e o
+preco da peca solida.
+Acabamento opcional: "passar a ferro"/ironing so na superficie superior
+melhora a face frontal; testar numa peca pequena antes.

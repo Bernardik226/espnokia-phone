@@ -6,22 +6,28 @@ __pycache__/
 .venv/
 .env
 docs/superpowers/
+.superpowers/
 
 # env local (chaves de dev)
 server/.env.local
 
 server/data/
 
-# hardware: só os STLs ATUAIS da case vão pro repo (frente + capa + placa de
-# teste do switch + mockup da tela p/ simulação no FreeCAD).
-# Fontes .scad, gerador do logo, refs e STLs antigos ficam locais.
+# hardware: só as peças ATUAIS da case vão pro repo (12/jul: protocolo 3MF —
+# print/ = peças de impressão .3mf; sim/ = mockups STL p/ simulação no FreeCAD;
+# LEIA-ME.txt = manual). Fontes .scad, tools, refs e legados ficam locais
+# (antigos e legados ficam fora do repo).
 hardware/*
 !hardware/Case/
 hardware/Case/*
-!hardware/Case/stl/
-hardware/Case/stl/*
-!hardware/Case/stl/frente-relevo.stl
-!hardware/Case/stl/case-capa.stl
-!hardware/Case/stl/switch-teste.stl
-!hardware/Case/stl/sim-tela-modulo.stl
-!hardware/Case/stl/extensor-atuador.stl
+!hardware/Case/LEIA-ME.txt
+!hardware/Case/print/
+hardware/Case/print/*
+!hardware/Case/print/frente-relevo.3mf
+!hardware/Case/print/case-capa.3mf
+!hardware/Case/print/switch-teste.3mf
+!hardware/Case/print/espnokia-projeto.3mf
+!hardware/Case/sim/
+hardware/Case/sim/*
+!hardware/Case/sim/sim-tela-modulo.stl
+!hardware/Case/sim/sim-esp32-capa.stl
