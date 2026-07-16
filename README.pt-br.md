@@ -109,6 +109,15 @@ Detalhes de arquitetura e decisões técnicas → **[docs/ARQUITETURA.md](docs/A
 </tr>
 </table>
 
+**Do arquivo à peça.** Desenhei a case no OpenSCAD/FreeCAD e exportei a frente em **multicor** (corpo preto + serigrafia branca, 2 objetos no mesmo `.3mf`). Os 2 arquivos prontos pra fatiar (frente + capa) ficam em [`hardware/Case/print/`](hardware/Case/print) — é só abrir e imprimir.
+
+<table align="center">
+<tr>
+<td align="center" width="50%"><img src="docs/assets/render-frente-multicor.jpg" width="300" alt="render da frente multicor: corpo preto e serigrafia branca"><br><sub><b>Frente multicor</b> · o arquivo final (2 cores)</sub></td>
+<td align="center" width="50%"><img src="docs/assets/render-case-cad.jpg" width="300" alt="case aberta no FreeCAD: frente, capa e uma peça de encaixe"><br><sub><b>No FreeCAD</b> · frente + capa + encaixes</sub></td>
+</tr>
+</table>
+
 ---
 
 ## 🚀 Rodar / build

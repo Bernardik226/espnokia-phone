@@ -109,6 +109,15 @@ Architecture and technical decisions → **[docs/ARQUITETURA.md](docs/ARQUITETUR
 </tr>
 </table>
 
+**From file to part.** I designed the case in OpenSCAD/FreeCAD and exported the front as **multi-color** (black body + white silkscreen, two objects in one `.3mf`). The two slice-ready files (front + back) live in [`hardware/Case/print/`](hardware/Case/print) — just open and print.
+
+<table align="center">
+<tr>
+<td align="center" width="50%"><img src="docs/assets/render-frente-multicor.jpg" width="300" alt="multi-color front render: black body and white silkscreen"><br><sub><b>Multi-color front</b> · the final file (2 colors)</sub></td>
+<td align="center" width="50%"><img src="docs/assets/render-case-cad.jpg" width="300" alt="case opened in FreeCAD: front, back cover and a fit part"><br><sub><b>In FreeCAD</b> · front + back + fits</sub></td>
+</tr>
+</table>
+
 ---
 
 ## 🚀 Run / build
