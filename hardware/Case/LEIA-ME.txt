@@ -20,13 +20,13 @@ Save Project — dai em diante reimprimir = abrir 1 arquivo, fatiar.
 
 ARQUIVOS
 --------
-print/ (IMPRIMIR — ja caem na orientacao certa no slicer, NAO virar):
-- frente-relevo.3mf .... FRENTE ATUAL: botoes de navegacao em RELEVO (raso)
-                         + switch direto + torres do RTC atras do teclado
+print/ (IMPRIMIR — 2 pecas finais, ja caem na orientacao certa no slicer, NAO virar):
+- frente-multicor.3mf .. FRENTE FINAL multicor: corpo preto + serigrafia branca
+                         (logo, teclado, simbolos) num so 3mf (2 objetos/cores);
+                         botoes de navegacao em relevo + switch direto + torres
+                         do RTC atras do teclado
 - case-capa.3mf ........ tampa traseira (parafusa na frente); furo USB c/
                          funil, luvas meia-lua, sem RTC
-- switch-teste.3mf ..... placa de teste: 1 furo + 1 berco (IMPRIMIR PRIMEIRO)
-- espnokia-projeto.3mf . as 3 pecas juntas, ja posicionadas na mesa
 
 sim/ (NAO IMPRIMIR — simulacao de encaixe no FreeCAD):
 - sim-tela-modulo.stl .. modulo 5110 nas medidas do paquimetro, no

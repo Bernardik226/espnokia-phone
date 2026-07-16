@@ -13,20 +13,18 @@ server/.env.local
 
 server/data/
 
-# hardware: só as peças ATUAIS da case vão pro repo (12/jul: protocolo 3MF —
-# print/ = peças de impressão .3mf; sim/ = mockups STL p/ simulação no FreeCAD;
-# LEIA-ME.txt = manual). Fontes .scad, tools, refs e legados ficam locais
-# (antigos e legados ficam fora do repo).
+# hardware: só as 2 peças FINAIS de impressão vão pro repo (protocolo 3MF).
+# print/ = frente multicor + capa (só bater o olho e imprimir); sim/ = mockups
+# STL p/ conferir encaixe no FreeCAD; LEIA-ME.txt = manual. Fontes .scad, tools,
+# refs, peças de teste e legados ficam locais (fora do repo).
 hardware/*
 !hardware/Case/
 hardware/Case/*
 !hardware/Case/LEIA-ME.txt
 !hardware/Case/print/
 hardware/Case/print/*
-!hardware/Case/print/frente-relevo.3mf
+!hardware/Case/print/frente-multicor.3mf
 !hardware/Case/print/case-capa.3mf
-!hardware/Case/print/switch-teste.3mf
-!hardware/Case/print/espnokia-projeto.3mf
 !hardware/Case/sim/
 hardware/Case/sim/*
 !hardware/Case/sim/sim-tela-modulo.stl
