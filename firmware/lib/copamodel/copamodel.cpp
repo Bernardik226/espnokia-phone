@@ -2,16 +2,14 @@
 #include <ArduinoJson.h>
 #include <stdio.h>
 #include <string.h>
+#include "jsonutil.h"
 
-static void copia(char* dst, size_t cap, const char* src) {
-  if (!src) src = "";
-  snprintf(dst, cap, "%s", src);  // trunca com nul garantido
-}
+using jsonutil::copia;
 
 uint8_t copa_parse(const char* json, CopaJogo* jogos, uint8_t max,
                    uint32_t* atualizado_s) {
   JsonDocument doc;
-  if (deserializeJson(doc, json) != DeserializationError::Ok) return 0;
+  if (!jsonutil::parse_json(json, doc)) return 0;
   JsonArray arr = doc["jogos"];
   if (arr.isNull()) return 0;
   if (atualizado_s) *atualizado_s = doc["atualizado_s"] | 0;
@@ -43,7 +41,7 @@ uint8_t copa_parse(const char* json, CopaJogo* jogos, uint8_t max,
 
 uint8_t copa_parse_grupos(const char* json, CopaGrupo* gs, uint8_t max) {
   JsonDocument doc;
-  if (deserializeJson(doc, json) != DeserializationError::Ok) return 0;
+  if (!jsonutil::parse_json(json, doc)) return 0;
   JsonArray arr = doc["grupos"];
   if (arr.isNull()) return 0;
 
@@ -69,7 +67,7 @@ uint8_t copa_parse_grupos(const char* json, CopaGrupo* gs, uint8_t max) {
 
 uint8_t fut_parse_ligas(const char* json, FutLiga* ligas, uint8_t max) {
   JsonDocument doc;
-  if (deserializeJson(doc, json) != DeserializationError::Ok) return 0;
+  if (!jsonutil::parse_json(json, doc)) return 0;
   JsonArray arr = doc["ligas"];
   if (arr.isNull()) return 0;
 
@@ -91,7 +89,7 @@ uint8_t fut_parse_tabela(const char* json, FutClass* c) {
   c->nt = 0;
   c->ng = 0;
   JsonDocument doc;
-  if (deserializeJson(doc, json) != DeserializationError::Ok) return 0;
+  if (!jsonutil::parse_json(json, doc)) return 0;
   JsonArray arr = doc["grupos"];
   if (arr.isNull()) return 0;
 

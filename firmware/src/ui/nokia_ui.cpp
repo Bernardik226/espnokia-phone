@@ -19,6 +19,9 @@ void text_bold_center(U8G2& g, int y, const char* s) {
   g.drawUTF8(42 - (int)g.getUTF8Width(s) / 2, y, s);
   if (prev) g.setFont(prev);
 }
+void text_center(U8G2& g, int y, const char* s) {
+  g.drawUTF8(42 - (int)g.getUTF8Width(s) / 2, y, s);
+}
 int bold_width(U8G2& g, const char* s) {
   const uint8_t* prev = g.getU8g2()->font;
   g.setFont(u8g2_font_3310_small_bold);
@@ -27,6 +30,17 @@ int bold_width(U8G2& g, const char* s) {
   return w;
 }
 void softkey(U8G2& g, const char* label) { text_bold_center(g, 47, label); }
+void list_row(U8G2& g, int y, uint8_t w, const char* text, bool selected) {
+  if (selected) { g.drawBox(0, y, w, 9); g.setDrawColor(0); }
+  g.drawUTF8(3, y + 8, text);
+  if (selected) g.setDrawColor(1);
+}
+void inv_str(U8G2& g, int x, int baseline, const char* s) {
+  g.drawBox(x - 1, baseline - 7, (int)g.getStrWidth(s) + 2, 9);
+  g.setDrawColor(0);
+  g.drawStr(x, baseline, s);
+  g.setDrawColor(1);
+}
 void poda(U8G2& g, char* s, int max_w) {
   if ((int)g.getUTF8Width(s) <= max_w) return;
   size_t n = strlen(s);
@@ -40,7 +54,6 @@ void poda(U8G2& g, char* s, int max_w) {
 void no_network(U8G2& g) {
   g.drawXBMP((84 - ICON_NOWIFI_W) / 2, 11, ICON_NOWIFI_W, ICON_NOWIFI_H,
              icon_nowifi_bits);
-  const char* s = tr(STR_CONNECT_WIFI);
-  g.drawUTF8(42 - (int)g.getUTF8Width(s) / 2, 38, s);
+  text_center(g, 38, tr(STR_CONNECT_WIFI));
 }
 }  // namespace nokia_ui

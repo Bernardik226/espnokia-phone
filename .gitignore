@@ -6,8 +6,26 @@ __pycache__/
 .venv/
 .env
 docs/superpowers/
+.superpowers/
 
 # env local (chaves de dev)
 server/.env.local
 
 server/data/
+
+# hardware: só as 2 peças FINAIS de impressão vão pro repo (protocolo 3MF).
+# print/ = frente multicor + capa (só bater o olho e imprimir); sim/ = mockups
+# STL p/ conferir encaixe no FreeCAD; LEIA-ME.txt = manual. Fontes .scad, tools,
+# refs, peças de teste e legados ficam locais (fora do repo).
+hardware/*
+!hardware/Case/
+hardware/Case/*
+!hardware/Case/LEIA-ME.txt
+!hardware/Case/print/
+hardware/Case/print/*
+!hardware/Case/print/frente-multicor.3mf
+!hardware/Case/print/case-capa.3mf
+!hardware/Case/sim/
+hardware/Case/sim/*
+!hardware/Case/sim/sim-tela-modulo.stl
+!hardware/Case/sim/sim-esp32-capa.stl

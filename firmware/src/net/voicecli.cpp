@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "net/conn.h"   // endereco do server + chave (NVS, runtime)
+#include "net/tls_client.h"
 
 namespace voicecli {
 
@@ -41,8 +42,7 @@ bool conecta() {
   uint16_t porta;
   if (!parse_url(https, host, sizeof(host), porta)) return false;
   if (WiFi.status() != WL_CONNECTED) return false;
-  if (https) tls_.setInsecure();  // o segredo do device e a chave, nao o canal
-  cli_ = https ? (WiFiClient*)&tls_ : &plain_;
+  cli_ = net::abrir_cliente(https, plain_, tls_);
   uint32_t t0 = millis();
   if (!cli_->connect(host, porta, 5000)) {
     Serial.printf("[voz] connect falhou (heap %u)\n", ESP.getFreeHeap());
@@ -65,11 +65,11 @@ bool begin(const char* path) {
   snprintf(cab, sizeof(cab),
            "POST %s HTTP/1.1\r\n"
            "Host: %s\r\n"
-           "X-Device-Key: %s\r\n"
+           "%s: %s\r\n"
            "Content-Type: application/octet-stream\r\n"
            "Transfer-Encoding: chunked\r\n"
            "Connection: keep-alive\r\n\r\n",
-           path, host, conn::device_key());
+           path, host, conn::kHeaderDeviceKey, conn::device_key());
   cli_->print(cab);
   return true;
 }

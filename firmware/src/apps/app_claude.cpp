@@ -433,6 +433,7 @@ static void desenha_spinner(U8G2& g, uint32_t now, int x, int y) {
 
 static void render_pensando(U8G2& g, uint32_t now) {
   desenha_pet(g, face_neutro_bits, 0);
+  g.setFont(u8g2_font_3310_small);
   nokia_ui::text_bold(g, 2, 7, tr(STR_THINKING));
   desenha_spinner(g, now, 49, 21);
 }

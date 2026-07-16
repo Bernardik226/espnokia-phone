@@ -6,6 +6,7 @@
 #include <esp_wifi.h>
 #include "net/conn.h"
 #include "net/credstore.h"
+#include "timeutil.h"
 
 namespace provision {
 
@@ -21,6 +22,9 @@ static uint32_t scan_ms_ = 0;
 // sobre o cinza, wordmark bicolor em SVG pixel-art (mesmo bitmap do firmware,
 // em RLE). A lista de redes vem do /scan via JS: cadeado + barras de sinal,
 // toque preenche o campo; rede oculta entra digitando o nome.
+// os limiares de RSSI do JS abaixo (-55/-65/-75, calculo das barras "k=...")
+// sao literais de texto e nao compartilham fonte com o C++: se mudar
+// wifi::kRssi1/2/3 (net/wifi.h), espelhe o mesmo valor aqui manualmente.
 static const char kPage[] PROGMEM = R"html(<!doctype html>
 <html lang="pt-br"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -243,7 +247,7 @@ void start() {
 void tick(uint32_t) {
   dns_.processNextRequest();
   server_.handleClient();
-  if (reboot_ms_ && millis() > reboot_ms_) ESP.restart();
+  if (reboot_ms_ && timeutil::reached(millis(), reboot_ms_)) ESP.restart();
 }
 
 }  // namespace provision

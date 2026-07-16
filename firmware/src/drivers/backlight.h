@@ -8,5 +8,4 @@ void init();                    // restaura nivel salvo e liga o PWM
 void apply(uint8_t l);          // muda o duty na hora (preview, nao persiste)
 void save(uint8_t l);           // aplica e grava na NVS
 uint8_t level();                // nivel persistido
-const char* name(uint8_t l);    // rotulo pra UI
 }  // namespace backlight

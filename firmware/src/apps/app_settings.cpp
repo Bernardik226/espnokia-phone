@@ -214,23 +214,8 @@ static void draw_list(U8G2& g, const char* title, const char* const* items,
   uint8_t top = sel >= kVis ? (uint8_t)(sel - kVis + 1) : 0;
   for (uint8_t i = 0; i < kVis && top + i < n; i++) {
     int y = 11 + i * 9;
-    if (top + i == sel) {
-      g.drawBox(0, y, 84, 9);
-      g.setDrawColor(0);
-      g.drawUTF8(3, y + 8, items[top + i]);
-      g.setDrawColor(1);
-    } else {
-      g.drawUTF8(3, y + 8, items[top + i]);
-    }
+    nokia_ui::list_row(g, y, 84, items[top + i], top + i == sel);
   }
-}
-
-// campo selecionado do editor: texto invertido sobre uma caixa
-static void inv_str(U8G2& g, int x, int baseline, const char* s) {
-  g.drawBox(x - 1, baseline - 7, (int)g.getStrWidth(s) + 2, 9);
-  g.setDrawColor(0);
-  g.drawStr(x, baseline, s);
-  g.setDrawColor(1);
 }
 
 static void render(void* gfx) {
@@ -245,8 +230,7 @@ static void render(void* gfx) {
       break;
     }
     case V_DISPLAY: {
-      const char* names[backlight::kLevels];
-      for (uint8_t i = 0; i < backlight::kLevels; i++) names[i] = backlight::name(i);
+      const char* names[] = {tr(STR_DISP_OFF), tr(STR_DISP_MED), tr(STR_DISP_HIGH)};
       draw_list(g, tr(STR_BACKLIGHT), names, backlight::kLevels, cur);
       nokia_ui::softkey(g, tr(STR_OK));
       break;
@@ -293,12 +277,12 @@ static void render(void* gfx) {
       // campo em edicao por cima, invertido
       int sep_t = (int)g.getStrWidth(":"), sep_d = (int)g.getStrWidth("/");
       switch (dt_field_) {
-        case 0: inv_str(g, tx, 19, hh); break;
-        case 1: inv_str(g, tx + (int)g.getStrWidth(hh) + sep_t, 19, mi); break;
-        case 2: inv_str(g, dx, 30, dd); break;
-        case 3: inv_str(g, dx + (int)g.getStrWidth(dd) + sep_d, 30, mo); break;
+        case 0: nokia_ui::inv_str(g, tx, 19, hh); break;
+        case 1: nokia_ui::inv_str(g, tx + (int)g.getStrWidth(hh) + sep_t, 19, mi); break;
+        case 2: nokia_ui::inv_str(g, dx, 30, dd); break;
+        case 3: nokia_ui::inv_str(g, dx + (int)g.getStrWidth(dd) + sep_d, 30, mo); break;
         case 4:
-          inv_str(g, dx + (int)g.getStrWidth(dd) + (int)g.getStrWidth(mo) + 2 * sep_d, 30, yr);
+          nokia_ui::inv_str(g, dx + (int)g.getStrWidth(dd) + (int)g.getStrWidth(mo) + 2 * sep_d, 30, yr);
           break;
       }
       nokia_ui::softkey(g, tr(dt_field_ < 4 ? STR_OK : STR_SAVE));
@@ -345,7 +329,9 @@ static void render(void* gfx) {
       // QR do "endereco do server/#k=chave": a camera do celular abre o
       // dashboard ja logado. 1 px por modulo, centralizado (quiet zone = o
       // fundo claro do LCD). Versao escolhida pelo tamanho do link.
-      char link[120];
+      // pior caso: url ate 90 (maxlength do form) + "/#k=" (4) + key ate 39
+      // (key_[40] em conn.cpp) + nul = ate 134 chars; 160 da folga.
+      char link[160];
       conn::pair_link(link, sizeof(link));
       static uint8_t qrbuf[256];  // qrcode_getBufferSize(6) = 211, com folga
       QRCode qr;
@@ -379,6 +365,9 @@ static void render(void* gfx) {
         g.drawXBMP(2, 22, ESPNOKIA_LOGO_W, ESPNOKIA_LOGO_H, espnokia_logo_bits);
       } else if (about_page == 1) {  // descricao
         nokia_ui::text_bold_center(g, 8, tr(STR_ABOUT));
+        // "Nokia OS fake" e tagline/flavor (como "CLAWD" em claudemodel.cpp);
+        // "ESP32 + 5110" e nome de peca/hardware. Intencionalmente fixos em
+        // todo idioma, nao sao texto de UI a traduzir.
         g.drawStr(2, 19, "Nokia OS fake");
         g.drawStr(2, 28, "ESP32 + 5110");
       } else {  // specs do sistema
@@ -387,6 +376,8 @@ static void render(void* gfx) {
         g.drawStr(2, 19, buf);
         snprintf(buf, sizeof(buf), tr(STR_RAM_FREE_FMT), (unsigned)(ESP.getFreeHeap() / 1024));
         g.drawUTF8(2, 28, buf);
+        // "CPU 240MHz": spec fixa (frequencia do ESP32), nome proprio de
+        // hardware, intencionalmente nao traduzida.
         g.drawStr(2, 37, "CPU 240MHz");
       }
       snprintf(buf, sizeof(buf), "%u/%u", about_page + 1, kAboutPages);

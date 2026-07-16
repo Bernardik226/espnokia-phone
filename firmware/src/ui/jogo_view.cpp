@@ -19,7 +19,7 @@ static void linha_equipe(U8G2& g, const char* code, const char* nome, int y) {
     snprintf(linha, sizeof(linha), "%s - %s", code, nome);
   if ((int)g.getUTF8Width(linha) > 80)
     snprintf(linha, sizeof(linha), "%s", nome);
-  g.drawUTF8(42 - (int)g.getUTF8Width(linha) / 2, y, linha);
+  nokia_ui::text_center(g, y, linha);
 }
 
 // proxima linha de uma lista "A 9'\nB 67'": copia pra out e avanca o ponteiro
@@ -112,7 +112,7 @@ void jogo_view_detail(U8G2& g, const CopaJogo& j, uint8_t pag,
     snprintf(l2, sizeof(l2), "%02u/%02u %02u:%02u", j.dia, j.mes, j.h, j.m);
     g.drawStr(42 - (int)g.getStrWidth(l2) / 2, 20, l2);
   }
-  g.drawUTF8(42 - (int)g.getUTF8Width(j.info) / 2, 30, j.info);
+  nokia_ui::text_center(g, 30, j.info);
   if (j.live) {
     if (j.min[0]) {  // minuto de jogo ao lado: "AO VIVO 67'"
       bool num = strspn(j.min, "0123456789") == strlen(j.min);
@@ -123,8 +123,7 @@ void jogo_view_detail(U8G2& g, const CopaJogo& j, uint8_t pag,
       nokia_ui::text_bold_center(g, 39, tr(STR_LIVE_BIG));
     }
   } else if (tem_aviso) {
-    g.drawUTF8(42 - (int)g.getUTF8Width(tr(STR_NOTIFY_ON)) / 2, 39,
-               tr(STR_NOTIFY_ON));
+    nokia_ui::text_center(g, 39, tr(STR_NOTIFY_ON));
   } else if (j.s1 >= 0 && j.s2 >= 0) {
     // jogo encerrado: quando foi, com o reloginho de historico
     snprintf(l2, sizeof(l2), "%02u/%02u %02u:%02u", j.dia, j.mes, j.h, j.m);

@@ -45,6 +45,17 @@ enum StrId : uint8_t {
   STR_GAMES, STR_TABLE,
   // conexoes (menu de settings + QR de pareamento do dashboard)
   STR_CONNECTIONS, STR_WIFI_SERVER, STR_DEVICE_QR, STR_SCAN_TO_PAIR,
+  // jogos
+  STR_APP_GAMES, STR_GAME_SNAKE, STR_LEVEL, STR_GAME_OVER, STR_RECORD,
+  STR_NEW_RECORD, STR_NEW_GAME,
+  // niveis do backlight (config > visor)
+  STR_DISP_OFF, STR_DISP_MED, STR_DISP_HIGH,
+  // cabecalhos de tabela (copa/futebol): pontos, jogos, saldo de gols.
+  // curtos de proposito (colunas de ~12-16px) - ver getStrWidth() checado
+  // por fonte real em fonts3310.h antes de escolher as abreviacoes.
+  STR_TBL_PTS, STR_TBL_JOGOS, STR_TBL_SALDO,
+  // sufixo de unidade do timer do relogio (editor de minutos)
+  STR_MIN_SUFFIX,
   STR_COUNT
 };
 
