@@ -101,6 +101,14 @@ Architecture and technical decisions → **[docs/ARQUITETURA.md](docs/ARQUITETUR
 
 > **No PCB, on purpose.** I chose to skip a dedicated board for simplicity and the low component count — I wired everything **by hand** (breadboard + soldering straight to the modules). The real challenge was soldering and securing all the wires; but closed inside the case, it all stays **discreet**. A PCB mainboard is planned for v2.
 
+<table align="center">
+<tr>
+<td align="center" width="33%"><img src="docs/assets/foto-tela.jpg" width="230" alt="close-up of the lit screen showing the eN emblem and the menu"><br><sub><b>Lit screen</b> · eN + menu</sub></td>
+<td align="center" width="33%"><img src="docs/assets/foto-traseira.jpg" width="230" alt="back cover with the eN emblem engraved into the dome"><br><sub><b>Back</b> · logo engraved on the dome</sub></td>
+<td align="center" width="33%"><img src="docs/assets/foto-usb.jpg" width="230" alt="USB port on the base — the ESP32's own micro-USB"><br><sub><b>Base USB</b> · charge + flash via the ESP32</sub></td>
+</tr>
+</table>
+
 ---
 
 ## 🚀 Run / build

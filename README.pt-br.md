@@ -101,6 +101,14 @@ Detalhes de arquitetura e decisões técnicas → **[docs/ARQUITETURA.md](docs/A
 
 > **Sem PCB, de propósito.** Procurei dispensar placa dedicada por simplicidade e pelos poucos componentes — montei tudo **fio a fio** (protoboard + solda direta nos módulos). O desafio foi soldar e fixar bem todos os fios; mas, fechado na case, fica tudo **discreto**. Uma PCB mainboard fica pra v2.
 
+<table align="center">
+<tr>
+<td align="center" width="33%"><img src="docs/assets/foto-tela.jpg" width="230" alt="close da tela acesa mostrando o emblema eN e o menu"><br><sub><b>Tela acesa</b> · eN + menu</sub></td>
+<td align="center" width="33%"><img src="docs/assets/foto-traseira.jpg" width="230" alt="traseira com o emblema eN gravado no domo"><br><sub><b>Traseira</b> · logo gravado no domo</sub></td>
+<td align="center" width="33%"><img src="docs/assets/foto-usb.jpg" width="230" alt="porta USB na base — o micro-USB do próprio ESP32"><br><sub><b>USB na base</b> · carga + flash pelo ESP32</sub></td>
+</tr>
+</table>
+
 ---
 
 ## 🚀 Rodar / build
