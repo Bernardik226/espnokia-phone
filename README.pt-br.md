@@ -26,11 +26,9 @@
 
 Construí este handheld do zero pra reunir num só projeto tudo que eu queria mostrar: **firmware embarcado** num ESP32, uma **case que desenhei e imprimi**, um **backend FastAPI com IA** e um **PWA de configuração**. É o meu portfólio end-to-end — do pixel na tela de 84×48 ao container no deploy. Estética de 2000, recursos de 2026.
 
-<!-- FOTO — descomentar após adicionar docs/assets/foto-espnokia-01.jpg:
 <p align="center">
-  <img src="docs/assets/foto-espnokia-01.jpg" width="420" alt="espnokia montado — o aparelho impresso e ligado sobre a mesa">
+  <img src="docs/assets/foto-espnokia-01.jpg" width="340" alt="espnokia montado — o aparelho impresso e ligado, tela mostrando o app do Claude">
 </p>
--->
 
 <p align="center">
   <img src="docs/assets/boot-hands.gif" width="240" alt="animação de boot da Nokia recriada: duas mãozinhas em pixel se encontram e o logo acende">
@@ -61,11 +59,9 @@ Construí este handheld do zero pra reunir num só projeto tudo que eu queria mo
 </tr>
 </table>
 
-<!-- FOTO — descomentar após adicionar docs/assets/foto-espnokia-02.jpg:
 <p align="center">
-  <img src="docs/assets/foto-espnokia-02.jpg" width="420" alt="espnokia em uso — a tela monocromática rodando um dos apps">
+  <img src="docs/assets/foto-espnokia-02.jpg" width="340" alt="espnokia em uso — o relógio e o pet do Claw'd na tela monocromática">
 </p>
--->
 
 **Configuração pelo PWA.** Um painel web instalável (o "EspNokia Dash") **configura o aparelho**: parear/descobrir por QR, ver o **status online**, escolher a **personalidade do Claude**, o motor de transcrição e colocar a **chave de IA** — sem tela de config no próprio Nokia.
 
@@ -101,7 +97,9 @@ Detalhes de arquitetura e decisões técnicas → **[docs/ARQUITETURA.md](docs/A
 | <img src="docs/assets/components/comp-button.png" width="60" alt="botões"> | **4 botões táteis** | UP · DOWN · OK · C — navegação completa estilo 3310 |
 | <img src="docs/assets/components/comp-buzzer.png" width="60" alt="buzzer"> | **Buzzer passivo** | Toques RTTTL, beeps e o alerta de gol (volume via PWM) |
 | 🎤 | **Mic I2S INMP441** | Capta sua voz pro Claw'd |
-| <img src="docs/assets/components/comp-proto.png" width="60" alt="protoboard"> | **Protoboard + jumpers** | Montagem sem solda — pinagem completa em [`docs/INSTALL.pt-br.md`](docs/INSTALL.pt-br.md) |
+| <img src="docs/assets/components/comp-proto.png" width="60" alt="protoboard"> | **Protoboard + fios** | Montagem sem PCB, fio a fio — pinagem completa em [`docs/INSTALL.pt-br.md`](docs/INSTALL.pt-br.md) |
+
+> **Sem PCB, de propósito.** Procurei dispensar placa dedicada por simplicidade e pelos poucos componentes — montei tudo **fio a fio** (protoboard + solda direta nos módulos). O desafio foi soldar e fixar bem todos os fios; mas, fechado na case, fica tudo **discreto**. Uma PCB mainboard fica pra v2.
 
 ---
 

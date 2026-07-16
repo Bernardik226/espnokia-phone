@@ -26,11 +26,9 @@
 
 I built this handheld from scratch to fold everything I wanted to show into one project: **embedded firmware** on an ESP32, a **case I designed and printed**, an **AI-powered FastAPI backend** and a **configuration PWA**. It's my end-to-end portfolio — from the pixel on the 84×48 screen to the container on deploy. Year-2000 looks, 2026 features.
 
-<!-- PHOTO — uncomment after adding docs/assets/foto-espnokia-01.jpg:
 <p align="center">
-  <img src="docs/assets/foto-espnokia-01.jpg" width="420" alt="assembled espnokia — the printed, powered device on a desk">
+  <img src="docs/assets/foto-espnokia-01.jpg" width="340" alt="assembled espnokia — the printed, powered device showing the Claude app on screen">
 </p>
--->
 
 <p align="center">
   <img src="docs/assets/boot-hands.gif" width="240" alt="the recreated Nokia boot animation: two pixel hands meet and the logo lights up">
@@ -61,11 +59,9 @@ I built this handheld from scratch to fold everything I wanted to show into one 
 </tr>
 </table>
 
-<!-- PHOTO — uncomment after adding docs/assets/foto-espnokia-02.jpg:
 <p align="center">
-  <img src="docs/assets/foto-espnokia-02.jpg" width="420" alt="espnokia in use — the monochrome screen running one of the apps">
+  <img src="docs/assets/foto-espnokia-02.jpg" width="340" alt="espnokia in use — the clock and the Claw'd pet on the monochrome screen">
 </p>
--->
 
 **Configuration via the PWA.** An installable web panel (the "EspNokia Dash") **configures the device**: pair/discover by QR, see the **online status**, pick **Claude's personality**, the transcription engine, and drop in the **AI key** — with no config screen on the Nokia itself.
 
@@ -101,7 +97,9 @@ Architecture and technical decisions → **[docs/ARQUITETURA.md](docs/ARQUITETUR
 | <img src="docs/assets/components/comp-button.png" width="60" alt="buttons"> | **4 tactile buttons** | UP · DOWN · OK · C — full 3310-style navigation |
 | <img src="docs/assets/components/comp-buzzer.png" width="60" alt="buzzer"> | **Passive buzzer** | RTTTL ringtones, beeps and the goal alert (volume via PWM) |
 | 🎤 | **I2S mic INMP441** | Captures your voice for Claw'd |
-| <img src="docs/assets/components/comp-proto.png" width="60" alt="breadboard"> | **Breadboard + jumpers** | Solderless build — full pinout in [`docs/INSTALL.md`](docs/INSTALL.md) |
+| <img src="docs/assets/components/comp-proto.png" width="60" alt="breadboard"> | **Breadboard + wires** | No-PCB, hand-wired build — full pinout in [`docs/INSTALL.md`](docs/INSTALL.md) |
+
+> **No PCB, on purpose.** I chose to skip a dedicated board for simplicity and the low component count — I wired everything **by hand** (breadboard + soldering straight to the modules). The real challenge was soldering and securing all the wires; but closed inside the case, it all stays **discreet**. A PCB mainboard is planned for v2.
 
 ---
 
