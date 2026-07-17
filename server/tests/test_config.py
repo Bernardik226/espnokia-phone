@@ -88,3 +88,28 @@ def test_save_ignora_chaves_de_fora_do_contrato(tmp_path, monkeypatch):
     novo = config.save({"hacker": "rm -rf", "stt": "groq"})
     assert "hacker" not in novo
     assert novo["stt"] == "groq"
+
+
+def test_id8_estavel_e_curto():
+    a = config.id8("chave-aaaa")
+    assert a == config.id8("chave-aaaa") and len(a) == 8
+    assert a != config.id8("chave-bbbb")
+
+
+def test_preco_de_por_familia():
+    # USD/token = (USD/MTok) / 1_000_000
+    assert config.preco_de("claude-haiku-4-5-20251001") == (1/1e6, 5/1e6)
+    assert config.preco_de("claude-3-5-sonnet") == (3/1e6, 15/1e6)
+    assert config.preco_de("claude-opus-4-8") == (15/1e6, 75/1e6)
+
+
+def test_preco_de_case_insensitive_e_fallback():
+    assert config.preco_de("Claude-HAIKU-4") == (1/1e6, 5/1e6)
+    assert config.preco_de("modelo-desconhecido") == (1/1e6, 5/1e6)  # fallback haiku
+    assert config.preco_de("") == (1/1e6, 5/1e6)
+
+
+def test_orcamento_default_zero(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    assert config.load()["orcamento_usd_mes"] == 0.0

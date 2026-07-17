@@ -1,6 +1,7 @@
 """Config local dashboard-ready: config.json em DATA_DIR, semeado dos envs
 na primeira criação e relido a cada request (arquivo pequeno — o dashboard
 futuro edita e vale na hora, sem restart)."""
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -38,6 +39,32 @@ PERSONAS = {
 PERSONA_DEFAULT = "fofo"
 
 
+# preços por MTok (USD): (input, output). O modelo é editável na PWA, então
+# o custo precisa acompanhar — casa por família no nome do modelo.
+PRECOS = {
+    "haiku":  (1.0, 5.0),
+    "sonnet": (3.0, 15.0),
+    "opus":   (15.0, 75.0),
+}
+PRECO_BUSCA = 0.01   # web search server-side da API: US$10 / 1000 buscas
+
+
+def preco_de(model: str):
+    """(preco_in, preco_out) em USD/token pro modelo. Fallback: haiku."""
+    m = (model or "").lower()
+    pin, pout = PRECOS["haiku"]
+    for fam, (i, o) in PRECOS.items():
+        if fam in m:
+            pin, pout = i, o
+            break
+    return pin / 1_000_000, pout / 1_000_000
+
+
+def id8(device: str) -> str:
+    """Hash curto do device: identificador em disco sem expor a chave."""
+    return hashlib.sha256(device.encode()).hexdigest()[:8]
+
+
 def persona_prompt(cfg: dict) -> str:
     """System da personalidade ativa (o combobox guarda só o id dela)."""
     p = PERSONAS.get(cfg.get("persona_id", PERSONA_DEFAULT),
@@ -53,6 +80,7 @@ DEFAULTS = {
     "persona_id": PERSONA_DEFAULT,   # qual personalidade do PERSONAS está ativa
     "max_resposta_chars": 220,
     "web_search": True,      # o pet pode dar 1 busca na internet por fala
+    "orcamento_usd_mes": 0.0,   # teto mensal (USD); 0 = sem orçamento
 }
 
 

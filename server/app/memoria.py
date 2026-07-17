@@ -2,7 +2,6 @@
 resumo acumulativo gerado pelo próprio Claude quando o registro enche.
 data/claw/<id8>/registro.json + memoria.md — arquivos legíveis, de
 propósito: dá pra abrir e ler o que o pet anda guardando."""
-import hashlib
 import json
 import logging
 import os
@@ -63,9 +62,8 @@ class MemoriaService:
 
     def _dir(self, device):
         base = self._base or config.data_dir()
-        id8 = hashlib.sha256(device.encode()).hexdigest()[:8]
-        d = base / "claw" / id8         # a chave do device é secreta:
-        d.mkdir(parents=True, exist_ok=True)   # só o hash vira pasta
+        d = base / "claw" / config.id8(device)   # a chave é secreta: só o hash
+        d.mkdir(parents=True, exist_ok=True)
         return d
 
     def _carrega(self, device):
