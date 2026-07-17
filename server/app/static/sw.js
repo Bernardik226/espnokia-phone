@@ -1,7 +1,8 @@
 // service worker do painel do Claw'd: cacheia a casca (HTML + ícones) pra abrir
 // instantâneo e instalar como app; os dados (API) sempre vão pela rede.
-const CACHE = "espnokia-claud-v1";
-const SHELL = ["/", "/static/icon-192.png", "/static/icon-512.png"];
+const CACHE = "espnokia-claud-v2";
+const SHELL = ["/", "/static/app.css", "/static/app.js",
+               "/static/icon-192.png", "/static/icon-512.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)));
