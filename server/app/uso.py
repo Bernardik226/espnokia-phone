@@ -27,15 +27,16 @@ def agrega(device, now_fn=time.time, dias=30):
                     ts = int(r.get("ts", 0) or 0)
                     ti = int(r.get("tokens_in", 0) or 0)
                     to = int(r.get("tokens_out", 0) or 0)
-                except (json.JSONDecodeError, ValueError, TypeError):
+                    mes = time.strftime("%Y-%m", time.localtime(ts))
+                    chave = time.strftime("%Y-%m-%d", time.localtime(ts))
+                except (json.JSONDecodeError, ValueError, TypeError, OverflowError, OSError):
                     continue          # corrompida / meia-escrita / campo torto: ignora
                 total_usd += usd
                 tokens_in += ti
                 tokens_out += to
                 falas += 1
-                if time.strftime("%Y-%m", time.localtime(ts)) == mes_atual:
+                if mes == mes_atual:
                     mes_usd += usd
-                chave = time.strftime("%Y-%m-%d", time.localtime(ts))  # ano evita fundir anos
                 b = por_dia.setdefault(chave, {"usd": 0.0, "falas": 0, "_ts": ts})
                 b["usd"] += usd
                 b["falas"] += 1

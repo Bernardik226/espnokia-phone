@@ -95,3 +95,14 @@ def test_serie_nao_funde_anos(tmp_path, monkeypatch):
     # mesmo dia/mês, anos diferentes → 2 pontos distintos, não um só somado
     assert len(u["serie"]) == 2
     assert round(sum(p["usd"] for p in u["serie"]), 6) == 0.03
+
+
+def test_ts_fora_de_faixa_ignorado(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    (tmp_path / "uso.jsonl").write_text(
+        json.dumps({"device": config.id8("k1"), "ts": 99999999999999999999,
+                    "custo_usd": 0.01, "tokens_in": 1, "tokens_out": 1}) + "\n"
+        + json.dumps(linha("k1", JUL_A, 0.02)) + "\n",
+        encoding="utf-8")
+    u = uso.agrega("k1", now_fn=lambda: AGORA)
+    assert u["falas"] == 1 and u["total_usd"] == 0.02
