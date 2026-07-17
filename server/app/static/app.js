@@ -1,5 +1,5 @@
 const I18N = {
-  pt:{lang:"🇧🇷 Português",sub:"· painel do Claw'd",key_lbl:"chave do dispositivo",key_ph:"cole a chave aqui",connect:"CONECTAR",err_key:"chave recusada.",err_srv:"servidor não respondeu.",tab_status:"STATUS",tab_config:"CONFIG",lbl_iface:"idioma da interface",lbl_mem:"memória persistente",mem_empty:"(o Claw'd ainda não formou memória)",forget:"ESQUECER TUDO",lbl_talks:"conversas registradas",no_talks:"nenhuma conversa registrada ainda.",me:"eu",lbl_persona:"persona do Claw'd",lbl_stt:"motor de STT",lbl_max:"limite de resposta",lbl_model:"modelo Claude",lbl_web:"busca na web",web_on:"ligada",web_off:"desligada",lbl_anth:"chave Anthropic",ph_anth:"(vazio = manter)",has_yes:"(configurada)",has_no:"(faltando)",save:"SALVAR CONFIG",saved:"config salva ✓",save_fail:"falha ao salvar",confirm_forget:"Apagar TODA a memória e o registro do Claw'd? Não dá pra desfazer.",mem_cleared:"memória apagada",fail:"falha",on:"online",off:"offline",s_version:"versão",s_convs:"conversas guardadas",s_summaries:"resumos na memória",s_stt:"motor de STT",s_model:"modelo",s_web:"busca web",s_anthropic:"chave anthropic",s_mem_upd:"memória atualizada",web_yes:"on",web_no:"off",ok:"ok",miss:"falta"},
+  pt:{lang:"🇧🇷 Português",sub:"· painel do Claw'd",key_lbl:"chave do dispositivo",key_ph:"cole a chave aqui",connect:"CONECTAR",err_key:"chave recusada.",err_srv:"servidor não respondeu.",tab_status:"STATUS",tab_config:"CONFIG",tab_painel:"PAINEL",tab_ia:"IA",tab_mem:"MEMÓRIA",lbl_iface:"idioma da interface",lbl_mem:"memória persistente",mem_empty:"(o Claw'd ainda não formou memória)",forget:"ESQUECER TUDO",lbl_talks:"conversas registradas",no_talks:"nenhuma conversa registrada ainda.",me:"eu",lbl_persona:"persona do Claw'd",lbl_stt:"motor de STT",lbl_max:"limite de resposta",lbl_model:"modelo Claude",lbl_web:"busca na web",web_on:"ligada",web_off:"desligada",lbl_anth:"chave Anthropic",ph_anth:"(vazio = manter)",lbl_groq:"chave Groq",ph_groq:"(vazio = manter)",has_yes:"(configurada)",has_no:"(faltando)",save:"SALVAR CONFIG",saved:"config salva ✓",save_fail:"falha ao salvar",confirm_forget:"Apagar TODA a memória e o registro do Claw'd? Não dá pra desfazer.",mem_cleared:"memória apagada",fail:"falha",on:"online",off:"offline",s_version:"versão",s_convs:"conversas guardadas",s_summaries:"resumos na memória",s_stt:"motor de STT",s_model:"modelo",s_web:"busca web",s_anthropic:"chave anthropic",s_mem_upd:"memória atualizada",web_yes:"on",web_no:"off",ok:"ok",miss:"falta"},
   en:{lang:"🇺🇸 English",sub:"· Claw'd panel",key_lbl:"device key",key_ph:"paste the key here",connect:"CONNECT",err_key:"key rejected.",err_srv:"server did not respond.",tab_status:"STATUS",tab_config:"CONFIG",lbl_iface:"interface language",lbl_mem:"persistent memory",mem_empty:"(Claw'd hasn't formed memory yet)",forget:"FORGET ALL",lbl_talks:"logged talks",no_talks:"no talks logged yet.",me:"me",lbl_persona:"Claw'd persona",lbl_stt:"STT engine",lbl_max:"reply limit",lbl_model:"Claude model",lbl_web:"web search",web_on:"on",web_off:"off",lbl_anth:"Anthropic key",ph_anth:"(empty = keep)",has_yes:"(set)",has_no:"(missing)",save:"SAVE CONFIG",saved:"config saved ✓",save_fail:"save failed",confirm_forget:"Erase ALL of Claw'd's memory and log? This can't be undone.",mem_cleared:"memory erased",fail:"failed",on:"online",off:"offline",s_version:"version",s_convs:"saved talks",s_summaries:"memory summaries",s_stt:"STT engine",s_model:"model",s_web:"web search",s_anthropic:"anthropic key",s_mem_upd:"memory updated",web_yes:"on",web_no:"off",ok:"ok",miss:"missing"},
   es:{lang:"🇪🇸 Español",sub:"· panel de Claw'd",key_lbl:"clave del dispositivo",key_ph:"pega la clave aquí",connect:"CONECTAR",err_key:"clave rechazada.",err_srv:"el servidor no respondió.",tab_status:"ESTADO",tab_config:"CONFIG",lbl_iface:"idioma de la interfaz",lbl_mem:"memoria persistente",mem_empty:"(Claw'd aún no formó memoria)",forget:"OLVIDAR TODO",lbl_talks:"charlas registradas",no_talks:"ninguna charla registrada aún.",me:"yo",lbl_persona:"persona de Claw'd",lbl_stt:"motor STT",lbl_max:"límite de respuesta",lbl_model:"modelo Claude",lbl_web:"búsqueda web",web_on:"activada",web_off:"desactivada",lbl_anth:"clave Anthropic",ph_anth:"(vacío = mantener)",has_yes:"(configurada)",has_no:"(falta)",save:"GUARDAR CONFIG",saved:"config guardada ✓",save_fail:"error al guardar",confirm_forget:"¿Borrar TODA la memoria y el registro de Claw'd? No se puede deshacer.",mem_cleared:"memoria borrada",fail:"error",on:"en línea",off:"desconectado",s_version:"versión",s_convs:"charlas guardadas",s_summaries:"resúmenes en memoria",s_stt:"motor STT",s_model:"modelo",s_web:"búsqueda web",s_anthropic:"clave anthropic",s_mem_upd:"memoria actualizada",web_yes:"on",web_no:"off",ok:"ok",miss:"falta"},
   de:{lang:"🇩🇪 Deutsch",sub:"· Claw'd-Panel",key_lbl:"Geräteschlüssel",key_ph:"Schlüssel hier einfügen",connect:"VERBINDEN",err_key:"Schlüssel abgelehnt.",err_srv:"Server antwortete nicht.",tab_status:"STATUS",tab_config:"KONFIG",lbl_iface:"Sprache der Oberfläche",lbl_mem:"dauerhaftes Gedächtnis",mem_empty:"(Claw'd hat noch kein Gedächtnis)",forget:"ALLES VERGESSEN",lbl_talks:"aufgezeichnete Gespräche",no_talks:"noch keine Gespräche.",me:"ich",lbl_persona:"Claw'd-Persona",lbl_stt:"STT-Engine",lbl_max:"Antwortlimit",lbl_model:"Claude-Modell",lbl_web:"Websuche",web_on:"an",web_off:"aus",lbl_anth:"Anthropic-Schlüssel",ph_anth:"(leer = behalten)",has_yes:"(gesetzt)",has_no:"(fehlt)",save:"KONFIG SPEICHERN",saved:"gespeichert ✓",save_fail:"Speichern fehlgeschlagen",confirm_forget:"Claw'ds GANZES Gedächtnis und Protokoll löschen? Nicht rückgängig machbar.",mem_cleared:"Gedächtnis gelöscht",fail:"Fehler",on:"online",off:"offline",s_version:"Version",s_convs:"gespeicherte Gespräche",s_summaries:"Gedächtniszusammenf.",s_stt:"STT-Engine",s_model:"Modell",s_web:"Websuche",s_anthropic:"Anthropic-Schlüssel",s_mem_upd:"Gedächtnis aktual.",web_yes:"an",web_no:"aus",ok:"ok",miss:"fehlt"},
@@ -86,27 +86,27 @@ async function conectar(){
   lsSet("espnokia_key", KEY);
   document.getElementById("login").classList.add("hide");
   document.getElementById("app").classList.remove("hide");
-  conn(true); aba("status");
+  conn(true); aba("painel");
 }
 function aba(nome){
   for(const b of document.querySelectorAll(".tabs button"))
     b.classList.toggle("sel", b.dataset.t === nome);
-  for(const s of ["status","claude"])
+  for(const s of ["painel","ia","mem"])
     document.getElementById("t-"+s).classList.toggle("hide", s !== nome);
-  if(nome==="status") carregaStatus();
-  if(nome==="claude"){ pag=0; carregaConfig(); carregaMemoria(); carregaTalks(); }
+  if(nome==="painel"){ carregaStatus(); carregaUso(); }
+  if(nome==="ia") carregaConfig();
+  if(nome==="mem"){ pag=0; carregaMemoria(); carregaTalks(); }
 }
 async function carregaStatus(){
   const r = await api("/admin/status"); if(r.status!==200) return conn(false);
   const s = await r.json(); conn(true);
   const ts = s.memoria_ts ? new Date(s.memoria_ts*1000).toLocaleString() : "—";
   document.getElementById("stats").innerHTML = [
-    [t("s_version"),"v"+s.versao], [t("s_convs"),s.conversas],
-    [t("s_summaries"),s.resumidos], [t("s_stt"),s.stt],
-    [t("s_model"),s.model.replace("claude-","")], [t("s_web"),s.web_search?t("web_yes"):t("web_no")],
-    [t("s_anthropic"),s.tem_api_key?t("ok"):t("miss")], [t("s_mem_upd"),ts],
+    [t("s_convs"),s.conversas], [t("s_summaries"),s.resumidos],
+    [t("s_mem_upd"),ts],
   ].map(([k,v])=>`<div class="stat"><b>${v}</b><span>${k}</span></div>`).join("");
 }
+async function carregaUso(){}
 async function carregaMemoria(){
   const r = await api("/claude/memoria"); const m = await r.json();
   document.getElementById("mem").textContent = m.memoria || t("mem_empty");
@@ -128,10 +128,17 @@ async function carregaConfig(){
   ps.innerHTML = (c.personas||[]).map(p=>`<option value="${p.id}">${p.nome}</option>`).join("");
   ps.value = c.persona_id;
   document.getElementById("c_stt").value = c.stt;
+  document.getElementById("c_stt").onchange = toggleGroq;
+  document.getElementById("hasgroq").textContent = c.tem_stt_key?t("has_yes"):t("has_no");
+  toggleGroq();
   document.getElementById("c_max").value = c.max_resposta_chars;
   document.getElementById("c_model").value = c.claude_model;
   document.getElementById("c_web").value = String(c.web_search);
   document.getElementById("haskey").textContent = c.tem_anthropic_key?t("has_yes"):t("has_no");
+}
+function toggleGroq(){
+  const groq = document.getElementById("c_stt").value === "groq";
+  document.getElementById("grow_groq").classList.toggle("hide", !groq);
 }
 async function salvar(){
   const body = {
@@ -143,9 +150,11 @@ async function salvar(){
   };
   const k = document.getElementById("c_key").value.trim();
   if(k) body.anthropic_api_key = k;
+  const gk = document.getElementById("c_groqkey").value.trim();
+  if(gk) body.stt_api_key = gk;
   const r = await api("/admin/config", {method:"POST",
     headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)});
-  if(r.status===200){ toast(t("saved")); document.getElementById("c_key").value=""; }
+  if(r.status===200){ toast(t("saved")); document.getElementById("c_key").value=""; document.getElementById("c_groqkey").value=""; }
   else toast(t("save_fail"));
 }
 async function limpar(){
