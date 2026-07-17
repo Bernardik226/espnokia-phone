@@ -75,12 +75,12 @@ function conn(ok){
   const c = document.getElementById("conn");
   c.className = "dot " + (ok?"on":"off"); c.textContent = ok ? t("on") : t("off");
 }
-async function conectar(){
+async function conectar(fromQR){
   KEY = document.getElementById("key").value.trim();
   const r = await api("/admin/status");
   if(r.status !== 200){
     document.getElementById("loginmsg").textContent =
-      r.status === 401 ? (viaQR ? t("err_qr") : t("err_key")) : t("err_srv");
+      r.status === 401 ? (fromQR ? t("err_qr") : t("err_key")) : t("err_srv");
     conn(false); return;
   }
   lsSet("espnokia_key", KEY);
@@ -213,8 +213,7 @@ function esc(s){ return s.replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt
 // link e a gente loga, guardando a chave so neste navegador (sai da URL depois)
 const _auto = new URLSearchParams(location.hash.slice(1)).get("k")
            || new URLSearchParams(location.search).get("k");
-let viaQR = false;
-if(_auto){ KEY = _auto; viaQR = true; history.replaceState(null, "", location.pathname); }
+if(_auto){ KEY = _auto; history.replaceState(null, "", location.pathname); }
 
 // logotipo espnokia (mesmo wordmark bicolor da pagina AP, 79x8)
 const LOGO = `<svg viewBox="0 0 79 8" shape-rendering="crispEdges"><path fill="#e56825" d="M2 0h7v1h-7zM11 0h7v1h-7zM20 0h8v1h-8zM1 1h8v1h-8zM10 1h8v1h-8zM20 1h9v1h-9zM0 2h2v1h-2zM10 2h2v1h-2zM20 2h2v1h-2zM27 2h2v1h-2zM0 3h7v1h-7zM10 3h7v1h-7zM20 3h9v1h-9zM0 4h7v1h-7zM11 4h7v1h-7zM20 4h8v1h-8zM0 5h2v1h-2zM17 5h2v1h-2zM20 5h2v1h-2zM1 6h8v1h-8zM10 6h8v1h-8zM20 6h2v1h-2zM2 7h7v1h-7zM10 7h7v1h-7zM20 7h2v1h-2z"/><path fill="#1d4487" d="M31 0h3v1h-3zM39 0h2v1h-2zM44 0h8v1h-8zM55 0h2v1h-2zM60 0h3v1h-3zM65 0h2v1h-2zM72 0h4v1h-4zM31 1h4v1h-4zM39 1h2v1h-2zM43 1h10v1h-10zM55 1h2v1h-2zM59 1h3v1h-3zM65 1h2v1h-2zM71 1h6v1h-6zM31 2h5v1h-5zM39 2h2v1h-2zM43 2h2v1h-2zM51 2h2v1h-2zM55 2h2v1h-2zM58 2h3v1h-3zM65 2h2v1h-2zM70 2h3v1h-3zM75 2h2v1h-2zM31 3h2v1h-2zM34 3h2v1h-2zM39 3h2v1h-2zM43 3h2v1h-2zM51 3h2v1h-2zM55 3h5v1h-5zM65 3h2v1h-2zM69 3h4v1h-4zM75 3h3v1h-3zM31 4h2v1h-2zM35 4h2v1h-2zM39 4h2v1h-2zM43 4h2v1h-2zM51 4h2v1h-2zM55 4h5v1h-5zM65 4h2v1h-2zM69 4h2v1h-2zM75 4h2v1h-2zM31 5h2v1h-2zM36 5h2v1h-2zM39 5h2v1h-2zM43 5h2v1h-2zM51 5h2v1h-2zM55 5h2v1h-2zM58 5h3v1h-3zM65 5h2v1h-2zM68 5h10v1h-10zM31 6h2v1h-2zM37 6h4v1h-4zM43 6h10v1h-10zM55 6h2v1h-2zM59 6h3v1h-3zM65 6h2v1h-2zM68 6h10v1h-10zM31 7h2v1h-2zM38 7h3v1h-3zM44 7h8v1h-8zM55 7h2v1h-2zM60 7h3v1h-3zM65 7h2v1h-2zM68 7h2v1h-2zM76 7h2v1h-2z"/></svg>`;
@@ -252,7 +251,7 @@ function montaIcones(){
 
 montaIcones();
 montaSelects(); aplicaI18n(); aplicaTheme();
-if(KEY){ document.getElementById("key").value = KEY; conectar(); }
+if(KEY){ document.getElementById("key").value = KEY; conectar(!!_auto); }
 
 // PWA: instala o app shell pra abrir offline/standalone e virar app na home
 if("serviceWorker" in navigator)
