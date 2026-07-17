@@ -49,6 +49,7 @@ bool conecta() {
     cli_ = nullptr;
     return false;
   }
+  cli_->setNoDelay(true);  // TCP_NODELAY: sem Nagle, cada chunk sobe na hora (corta lag)
   Serial.printf("[voz] conectado em %u ms (heap %u)\n",
                 (unsigned)(millis() - t0), ESP.getFreeHeap());
   return true;
