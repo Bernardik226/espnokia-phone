@@ -20,7 +20,7 @@
     <div class="top">
       <span class="star">✳</span>
       <span class="logo"></span>
-      <span class="right"><select id="lang0" class="lang" onchange="setLang(this.value)"></select></span>
+      <span class="right"><button class="themebtn" onclick="toggleTheme()" aria-label="tema" title="tema">◐</button><select id="lang0" class="lang" onchange="setLang(this.value)"></select></span>
     </div>
     <div class="body">
       <label data-i18n="key_lbl">chave do dispositivo</label>
@@ -37,6 +37,7 @@
         <span class="star">✳</span>
         <span class="logo"></span>
         <span class="right">
+          <button class="themebtn" onclick="toggleTheme()" aria-label="tema" title="tema">◐</button>
           <select id="lang_app" class="lang" onchange="setLang(this.value)"></select>
           <span id="conn" class="dot off">offline</span></span>
       </div>

@@ -1,7 +1,17 @@
   /* mesma paleta do logo espnokia da pagina AP: azul #1d4487 / laranja #e56825 */
   :root{
     --bg:#b9b9b9; --card:#fff; --ink:#1d4487; --ink2:#44598f;
-    --orange:#e56825; --dim:#777; --line:#dde3f0;
+    --orange:#e56825; --dim:#777; --line:#dde3f0; --shadow:var(--ink);
+  }
+  :root[data-theme="dark"]{
+    --bg:#12151f; --card:#1b2030; --ink:#cdd6f4; --ink2:#8aa0d8;
+    --orange:#e56825; --dim:#8890a8; --line:#2a3350; --shadow:#000;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#12151f; --card:#1b2030; --ink:#cdd6f4; --ink2:#8aa0d8;
+      --orange:#e56825; --dim:#8890a8; --line:#2a3350; --shadow:#000;
+    }
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);
@@ -9,7 +19,7 @@
     display:flex;justify-content:center;padding:24px 12px}
   .wrap{width:100%;max-width:680px}
   .card{background:var(--card);border:3px solid var(--ink);
-    box-shadow:8px 8px 0 var(--ink);padding:0;margin-bottom:20px}
+    box-shadow:8px 8px 0 var(--shadow);padding:0;margin-bottom:20px}
   .top{padding:14px 16px;border-bottom:3px solid var(--orange);
     display:flex;align-items:center;gap:10px}
   .logo{display:flex;align-items:center}
@@ -26,7 +36,7 @@
   label .ic{width:13px;height:13px;vertical-align:-2px;margin-right:7px;fill:none;
     stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
   input,select,textarea{width:100%;border:2px solid var(--ink);padding:9px 8px;
-    font:inherit;font-size:14px;background:#fff;border-radius:0;color:var(--ink)}
+    font:inherit;font-size:14px;background:var(--card);border-radius:0;color:var(--ink)}
   textarea{min-height:96px;resize:vertical}
   input:focus,select:focus,textarea:focus{outline:2px solid var(--orange)}
   .row{display:flex;gap:12px} .row>div{flex:1}
@@ -38,7 +48,7 @@
     font-size:12px;letter-spacing:1px;padding:9px 12px}
   button.ghost:active{background:var(--orange);color:#fff}
   .tabs{display:flex;border-bottom:3px solid var(--ink)}
-  .tabs button{flex:1;margin:0;background:#fff;color:var(--ink2);border:0;
+  .tabs button{flex:1;margin:0;background:var(--card);color:var(--ink2);border:0;
     border-right:2px solid var(--line);padding:12px;letter-spacing:1px;font-weight:bold}
   .tabs button:last-child{border-right:0}
   .tabs button.sel{background:var(--ink);color:#fff}
@@ -48,7 +58,7 @@
   .stat{border:2px solid var(--ink);padding:10px 12px}
   .stat b{display:block;font-size:18px;color:var(--orange)}
   .stat span{font-size:10px;color:var(--ink2);text-transform:uppercase;letter-spacing:1px}
-  pre.mem{white-space:pre-wrap;word-wrap:break-word;background:#f4f6fb;
+  pre.mem{white-space:pre-wrap;word-wrap:break-word;background:var(--bg);
     border:2px solid var(--ink);padding:12px;margin:0;color:var(--ink);font-size:13px}
   .talk{border-left:3px solid var(--orange);padding:3px 0 3px 12px;margin:12px 0}
   .talk .meta{color:var(--dim);font-size:10px;text-transform:uppercase;letter-spacing:1px}
@@ -65,7 +75,7 @@
   /* mobile-first: telas estreitas empilham e enxugam a sombra dura */
   @media (max-width:520px){
     body{padding:14px 8px}
-    .card{box-shadow:4px 4px 0 var(--ink);margin-bottom:16px}
+    .card{box-shadow:4px 4px 0 var(--shadow);margin-bottom:16px}
     .top{padding:12px}
     .logo svg{height:16px}
     .body{padding:14px}
@@ -76,3 +86,19 @@
     .toast{left:10px;right:10px;transform:none;text-align:center;
       box-shadow:3px 3px 0 var(--orange)}
   }
+  /* micro-interações: curtas, desligadas em prefers-reduced-motion */
+  .card,.tabs button,button{transition:background .15s,color .15s,
+    transform .08s,box-shadow .08s}
+  button:active,.tabs button:active{transform:translate(2px,2px)}
+  .card:hover{box-shadow:6px 6px 0 var(--shadow)}
+  section{animation:fadein .18s ease-out both}
+  @keyframes fadein{from{opacity:0;transform:translateY(8px)}}
+  .chart .bar{transform-box:fill-box;transform-origin:bottom;
+    animation:grow .3s ease-out both}
+  @keyframes grow{from{transform:scaleY(0)}}
+  .budget-fill{transition:width .4s ease-out}
+  @media (prefers-reduced-motion:reduce){
+    *,section,.chart .bar{animation:none!important;transition:none!important}
+  }
+  button.themebtn{margin:0;padding:4px 8px;background:var(--card);color:var(--ink);
+    border:2px solid var(--ink);font-size:14px;letter-spacing:0}

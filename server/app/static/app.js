@@ -10,7 +10,9 @@ const I18N = {
   ko:{lang:"🇰🇷 한국어",sub:"· Claw'd 대시보드",key_lbl:"기기 키",key_ph:"여기에 키 붙여넣기",connect:"연결",err_key:"키가 거부되었습니다.",err_srv:"서버가 응답하지 않습니다.",tab_status:"상태",tab_config:"설정",lbl_iface:"인터페이스 언어",lbl_mem:"영구 메모리",mem_empty:"(Claw'd가 아직 기억을 형성하지 않았어요)",forget:"모두 잊기",lbl_talks:"대화 기록",no_talks:"아직 대화가 없어요.",me:"나",lbl_persona:"Claw'd 페르소나",lbl_stt:"음성 인식 엔진",lbl_max:"답변 길이 제한",lbl_model:"Claude 모델",lbl_web:"웹 검색",web_on:"켜짐",web_off:"꺼짐",lbl_anth:"Anthropic 키",ph_anth:"(비움 = 유지)",has_yes:"(설정됨)",has_no:"(없음)",save:"설정 저장",saved:"저장됨 ✓",save_fail:"저장 실패",confirm_forget:"Claw'd의 모든 기억과 기록을 지울까요? 되돌릴 수 없어요.",mem_cleared:"기억이 지워졌어요",fail:"실패",on:"온라인",off:"오프라인",s_version:"버전",s_convs:"저장된 대화",s_summaries:"메모리 요약",s_stt:"음성 인식 엔진",s_model:"모델",s_web:"웹 검색",s_anthropic:"Anthropic 키",s_mem_upd:"메모리 업데이트",web_yes:"켜짐",web_no:"꺼짐",ok:"ok",miss:"없음"},
 };
 const LANGS = ["pt","en","es","de","fr","fi","zh","ja","ko"];
-let lang = localStorage.getItem("espnokia_lang")
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+let lang = lsGet("espnokia_lang")
         || (LANGS.includes(navigator.language.slice(0,2)) ? navigator.language.slice(0,2) : "pt");
 function t(k){ return (I18N[lang]||I18N.pt)[k] ?? I18N.pt[k] ?? k; }
 
@@ -42,9 +44,23 @@ function aplicaI18n(){
     if(sel) aba(sel.dataset.t);
   }
 }
-function setLang(v){ lang=v; localStorage.setItem("espnokia_lang",v); aplicaI18n(); }
+function setLang(v){ lang=v; lsSet("espnokia_lang",v); aplicaI18n(); }
 
-let KEY = localStorage.getItem("espnokia_key") || "";
+let theme = lsGet("espnokia_theme") || "";   // "" = segue o sistema
+function aplicaTheme(){
+  if(theme) document.documentElement.setAttribute("data-theme", theme);
+  else document.documentElement.removeAttribute("data-theme");
+}
+function toggleTheme(){
+  const escuro = theme
+    ? theme === "dark"
+    : matchMedia("(prefers-color-scheme:dark)").matches;
+  theme = escuro ? "light" : "dark";
+  lsSet("espnokia_theme", theme);
+  aplicaTheme();
+}
+
+let KEY = lsGet("espnokia_key") || "";
 let pag = 0, pags = 1;
 function api(path, opts={}){
   opts.headers = Object.assign({"X-Device-Key": KEY}, opts.headers||{});
@@ -67,7 +83,7 @@ async function conectar(){
       r.status === 401 ? t("err_key") : t("err_srv");
     conn(false); return;
   }
-  localStorage.setItem("espnokia_key", KEY);
+  lsSet("espnokia_key", KEY);
   document.getElementById("login").classList.add("hide");
   document.getElementById("app").classList.remove("hide");
   conn(true); aba("status");
@@ -181,7 +197,7 @@ function montaIcones(){
 }
 
 montaIcones();
-montaSelects(); aplicaI18n();
+montaSelects(); aplicaI18n(); aplicaTheme();
 if(KEY){ document.getElementById("key").value = KEY; conectar(); }
 
 // PWA: instala o app shell pra abrir offline/standalone e virar app na home
