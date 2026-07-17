@@ -331,3 +331,24 @@ def test_admin_config_rejeita_orcamento_bool(tmp_path, monkeypatch):
            json={"orcamento_usd_mes": True})
     cfg = c.get("/admin/config", headers={"X-Device-Key": "segredo"}).json()
     assert cfg["orcamento_usd_mes"] == 5.0
+
+
+def test_admin_config_traz_catalogo_de_modelos(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    c = monta(device_keys="segredo")
+    cfg = c.get("/admin/config", headers={"X-Device-Key": "segredo"}).json()
+    ids = {m["id"] for m in cfg["modelos"]}
+    assert "claude-haiku-4-5-20251001" in ids and "claude-sonnet-5" in ids
+    assert all(set(m) == {"id", "nome"} for m in cfg["modelos"])
+
+
+def test_admin_config_so_aceita_modelo_do_catalogo(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    c = monta(device_keys="segredo")
+    H = {"X-Device-Key": "segredo"}
+    c.post("/admin/config", headers=H, json={"claude_model": "claude-sonnet-5"})
+    assert c.get("/admin/config", headers=H).json()["claude_model"] == "claude-sonnet-5"
+    # fora do catálogo (e vazio) é ignorado — mantém o anterior (integridade)
+    c.post("/admin/config", headers=H, json={"claude_model": "gpt-4"})
+    c.post("/admin/config", headers=H, json={"claude_model": ""})
+    assert c.get("/admin/config", headers=H).json()["claude_model"] == "claude-sonnet-5"

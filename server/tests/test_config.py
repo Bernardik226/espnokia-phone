@@ -9,12 +9,13 @@ def test_primeira_carga_cria_config_semeado_do_env(tmp_path, monkeypatch):
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
     monkeypatch.delenv("STT_BACKEND", raising=False)
     cfg = config.load()
-    assert cfg["anthropic_api_key"] == "sk-teste"
+    assert cfg["anthropic_api_key"] == "sk-teste"   # injetada do env
     assert cfg["claude_model"] == "claude-haiku-4-5-20251001"
     assert cfg["stt"] == "local"
     assert cfg["max_resposta_chars"] == 220
     salvo = json.loads((tmp_path / "config.json").read_text())
-    assert salvo["anthropic_api_key"] == "sk-teste"
+    assert "anthropic_api_key" not in salvo   # chave NUNCA vai pro disco
+    assert salvo["claude_model"] == "claude-haiku-4-5-20251001"
 
 
 def test_chave_groq_no_env_vira_backend_default(tmp_path, monkeypatch):
@@ -45,9 +46,9 @@ def test_edicao_no_arquivo_vale_na_proxima_leitura(tmp_path, monkeypatch):
     config.load()
     arq = tmp_path / "config.json"
     cfg = json.loads(arq.read_text())
-    cfg["anthropic_api_key"] = "sk-editada"
+    cfg["max_resposta_chars"] = 99
     arq.write_text(json.dumps(cfg))
-    assert config.load()["anthropic_api_key"] == "sk-editada"
+    assert config.load()["max_resposta_chars"] == 99
 
 
 def test_chave_faltando_no_arquivo_ganha_default(tmp_path, monkeypatch):
@@ -113,3 +114,29 @@ def test_orcamento_default_zero(tmp_path, monkeypatch):
     monkeypatch.setenv("DATA_DIR", str(tmp_path))
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     assert config.load()["orcamento_usd_mes"] == 0.0
+
+
+def test_chave_vem_do_env_ignora_config_json(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-env")
+    # mesmo com uma chave velha grudada no config.json, o env manda
+    (tmp_path / "config.json").write_text('{"anthropic_api_key": "sk-velha"}')
+    assert config.load()["anthropic_api_key"] == "sk-env"
+
+
+def test_save_nunca_persiste_chave(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-env")
+    monkeypatch.setenv("GROQ_API_KEY", "gsk-env")
+    config.save({"persona_id": "poeta"})
+    salvo = json.loads((tmp_path / "config.json").read_text())
+    assert "anthropic_api_key" not in salvo and "stt_api_key" not in salvo
+    assert salvo["persona_id"] == "poeta"
+
+
+def test_modelo_catalogo_so_haiku_e_sonnet():
+    ids = {m["id"] for m in config.MODELOS}
+    assert ids == config.IDS_MODELO
+    assert config.MODELO_DEFAULT in config.IDS_MODELO
+    assert any("haiku" in i for i in ids) and any("sonnet" in i for i in ids)
+    assert not any("opus" in i for i in ids)   # só os recentes, sem opus/vazio

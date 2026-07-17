@@ -188,10 +188,13 @@ def create_app(copa_service=None, live_scores=None, device_keys=None,
         return {"persona_id": cfg["persona_id"],
                 "personas": [{"id": k, "nome": v["nome"]}
                              for k, v in config.PERSONAS.items()],
-                "claude_model": cfg["claude_model"], "stt": cfg["stt"],
+                "claude_model": cfg["claude_model"],
+                "modelos": config.MODELOS,   # catálogo fechado (haiku/sonnet)
+                "stt": cfg["stt"],
                 "max_resposta_chars": cfg["max_resposta_chars"],
                 "web_search": cfg["web_search"],
                 "orcamento_usd_mes": cfg["orcamento_usd_mes"],
+                # chaves só do env do server: a PWA só vê "tem/não tem"
                 "tem_anthropic_key": bool(cfg["anthropic_api_key"]),
                 "tem_stt_key": bool(cfg["stt_api_key"])}
 
@@ -199,16 +202,16 @@ def create_app(copa_service=None, live_scores=None, device_keys=None,
     async def admin_config_post(request: Request):
         body = await request.json()
         muda = {k: body[k] for k in
-                ("claude_model", "stt", "max_resposta_chars", "web_search")
+                ("stt", "max_resposta_chars", "web_search")
                 if k in body}
         if body.get("persona_id") in config.PERSONAS:   # só id conhecido entra
             muda["persona_id"] = body["persona_id"]
+        if body.get("claude_model") in config.IDS_MODELO:  # só modelo do catálogo
+            muda["claude_model"] = body["claude_model"]
         orc = body.get("orcamento_usd_mes")
         if isinstance(orc, (int, float)) and not isinstance(orc, bool) and orc >= 0:
             muda["orcamento_usd_mes"] = float(orc)
-        for k in ("anthropic_api_key", "stt_api_key"):
-            if body.get(k):     # vazio nao apaga a chave existente sem querer
-                muda[k] = body[k]
+        # chaves de API NÃO entram: vêm só do env do server
         return config.save(muda) and {"ok": True}
 
     @app.get("/manifest.json", include_in_schema=False)

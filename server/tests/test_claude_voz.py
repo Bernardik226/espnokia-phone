@@ -268,11 +268,11 @@ def test_e2e_chave_aparelho_dashboard(tmp_path, monkeypatch):
     assert c.get("/admin/status", headers={"X-Device-Key": "curta"}).status_code == 401
 
 
-def test_e2e_chave_anthropic_pelo_dashboard(tmp_path, monkeypatch):
-    # define a chave da API pelo dashboard e confirma que o pet passa a falar
-    # com ela (e que ela fica salva, mas NUNCA volta crua pro navegador)
+def test_e2e_chave_anthropic_vem_do_env(tmp_path, monkeypatch):
+    # a chave da API vem do env do server (não da PWA): o pet fala com ela,
+    # o dashboard só mostra "configurada", ela nunca volta crua nem vai pro disco
     monkeypatch.setenv("DATA_DIR", str(tmp_path))
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-doenv")
     visto = {}
 
     def chat_spy(cfg, system, msgs):
@@ -284,22 +284,20 @@ def test_e2e_chave_anthropic_pelo_dashboard(tmp_path, monkeypatch):
     c = TestClient(create_app(device_keys="*", voz=voz))
     K = "a" * 32
 
-    # 1) define a chave pelo dashboard
-    assert c.post("/admin/config", headers={"X-Device-Key": K},
-                  json={"anthropic_api_key": "sk-ant-minha"}).status_code == 200
-    # 2) dashboard mostra "configurada", nunca a chave crua
+    # dashboard mostra "configurada", nunca a chave crua
     cfg = c.get("/admin/config", headers={"X-Device-Key": K}).json()
     assert cfg["tem_anthropic_key"] is True and "anthropic_api_key" not in cfg
-    # 3) o espnokia fala -> usa exatamente a chave definida
+    # o pet fala -> usa exatamente a chave do env
     c.post("/claude/voz", content=b"\x00" * 40, headers={"X-Device-Key": K})
-    assert visto["key"] == "sk-ant-minha"
-    # 4) ficou salva no config.json (vale enquanto o server roda)
+    assert visto["key"] == "sk-ant-doenv"
+    # a chave NUNCA é persistida no config.json
     salvo = json.loads((tmp_path / "config.json").read_text(encoding="utf-8"))
-    assert salvo["anthropic_api_key"] == "sk-ant-minha"
-    # 5) campo vazio NÃO apaga a chave já configurada
-    c.post("/admin/config", headers={"X-Device-Key": K}, json={"anthropic_api_key": ""})
-    salvo = json.loads((tmp_path / "config.json").read_text(encoding="utf-8"))
-    assert salvo["anthropic_api_key"] == "sk-ant-minha"
+    assert "anthropic_api_key" not in salvo
+    # POST tentando injetar uma "chave" é ignorado — o env segue mandando
+    c.post("/admin/config", headers={"X-Device-Key": K},
+           json={"anthropic_api_key": "sk-hacker"})
+    c.post("/claude/voz", content=b"\x00" * 40, headers={"X-Device-Key": K})
+    assert visto["key"] == "sk-ant-doenv"
 
 
 def test_uso_logado_com_custo_por_modelo(tmp_path, monkeypatch):
