@@ -51,6 +51,11 @@
         <section id="t-painel">
           <div class="grid" id="stats"></div>
           <div id="dash"></div>
+          <label data-i18n="lbl_orc">orçamento mensal (USD)</label>
+          <div class="row">
+            <div><input id="c_orc" type="number" min="0" step="0.5"></div>
+            <div><button data-i18n="save_orc" onclick="salvarOrc()">SALVAR</button></div>
+          </div>
         </section>
 
         <section id="t-ia" class="hide">

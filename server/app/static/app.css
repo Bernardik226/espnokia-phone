@@ -58,6 +58,14 @@
   .stat{border:2px solid var(--ink);padding:10px 12px}
   .stat b{display:block;font-size:18px;color:var(--orange)}
   .stat span{font-size:10px;color:var(--ink2);text-transform:uppercase;letter-spacing:1px}
+  .chart{width:100%;height:auto;margin:6px 0;overflow:visible}
+  .chart .bar{fill:var(--orange)}
+  .chart .axis{stroke:var(--ink2);stroke-width:1}
+  .budget{height:16px;border:2px solid var(--ink);background:var(--card);margin-top:8px}
+  .budget-fill{height:100%;background:var(--ink)}
+  .budget.warn .budget-fill{background:var(--orange)}
+  .budget.over{border-color:var(--orange)}
+  .budget.over .budget-fill{background:var(--orange)}
   pre.mem{white-space:pre-wrap;word-wrap:break-word;background:var(--bg);
     border:2px solid var(--ink);padding:12px;margin:0;color:var(--ink);font-size:13px}
   .talk{border-left:3px solid var(--orange);padding:3px 0 3px 12px;margin:12px 0}
