@@ -11,10 +11,6 @@ from app.memoria import MAX_R_BYTES, MemoriaService, corta_utf8
 
 MAX_CORPO = 500 * 1024          # ~15,6 s de PCM16 16 kHz
 MAX_TOKENS = 300
-# preço do Haiku 4.5 em USD/token (1 USD in, 5 USD out por MTok);
-# vira config quando o dashboard chegar
-PRECO_IN = 1.00 / 1_000_000
-PRECO_OUT = 5.00 / 1_000_000
 
 
 def _chat_anthropic(cfg, system, mensagens):
@@ -30,10 +26,12 @@ def _chat_anthropic(cfg, system, mensagens):
                                 max_tokens=MAX_TOKENS,
                                 system=system, messages=mensagens,
                                 tools=tools)
-    # com busca, o content mistura blocos de tool use: o texto e o que vale
+    # com busca, o content mistura blocos de tool use: o texto é o que vale
     texto = " ".join(b.text.strip() for b in r.content
                      if b.type == "text").strip()
-    return texto, r.usage.input_tokens, r.usage.output_tokens
+    buscas = getattr(getattr(r.usage, "server_tool_use", None),
+                     "web_search_requests", 0) or 0
+    return texto, r.usage.input_tokens, r.usage.output_tokens, buscas
 
 
 class VozService:
@@ -75,25 +73,27 @@ class VozService:
         mensagens = (self.memoria.recentes(device) +
                      [{"role": "user", "content": falei}])
         try:
-            resposta, t_in, t_out = (self.chat_fn or _chat_anthropic)(
-                cfg, system, mensagens)
+            res = (self.chat_fn or _chat_anthropic)(cfg, system, mensagens)
         except Exception:
             logging.exception("claude api falhou")
             return 502, {"erro": "sem resposta do claude"}
+        resposta, t_in, t_out = res[0], res[1], res[2]
+        buscas = res[3] if len(res) > 3 else 0
         # corta a resposta no mesmo teto do registro (MAX_R_BYTES, UTF-8-safe):
-        # a fala em tempo real e o histórico passam a mostrar EXATAMENTE o mesmo
-        # texto — sem o caso de aparecer inteira na hora e cortada no registro
+        # a fala em tempo real e o histórico mostram EXATAMENTE o mesmo texto
         resposta = corta_utf8(resposta, MAX_R_BYTES)
         self.memoria.grava_par(device, falei, resposta, t)
         try:
-            self._loga_uso(device, t_in, t_out)
+            self._loga_uso(device, t_in, t_out, buscas, cfg["claude_model"])
         except OSError:
             logging.warning("falha ao gravar uso.jsonl", exc_info=True)
         return 200, {"falei": falei, "resposta": resposta}
 
-    def _loga_uso(self, device, t_in, t_out):
-        linha = {"ts": int(self.now_fn()), "device": device,
-                 "tokens_in": t_in, "tokens_out": t_out,
-                 "custo_usd": round(t_in * PRECO_IN + t_out * PRECO_OUT, 6)}
+    def _loga_uso(self, device, t_in, t_out, buscas, model):
+        pin, pout = config.preco_de(model)
+        custo = round(t_in * pin + t_out * pout + buscas * config.PRECO_BUSCA, 6)
+        linha = {"ts": int(self.now_fn()), "device": config.id8(device),
+                 "tokens_in": t_in, "tokens_out": t_out, "buscas": buscas,
+                 "custo_usd": custo}
         with open(config.data_dir() / "uso.jsonl", "a") as f:
             f.write(json.dumps(linha, ensure_ascii=False) + "\n")

@@ -166,10 +166,11 @@ def test_uso_jsonl_appendado(tmp_path, monkeypatch):
     linhas = (tmp_path / "uso.jsonl").read_text().strip().splitlines()
     assert len(linhas) == 2
     uso = json.loads(linhas[0])
-    assert uso["device"] == "k1"
+    assert uso["device"] == config.id8("k1")
     assert uso["tokens_in"] == 42
     assert uso["tokens_out"] == 17
     assert uso["custo_usd"] > 0
+    assert uso["buscas"] == 0
 
 
 def test_conversa_grava_par_no_registro(tmp_path, monkeypatch):
@@ -299,3 +300,27 @@ def test_e2e_chave_anthropic_pelo_dashboard(tmp_path, monkeypatch):
     c.post("/admin/config", headers={"X-Device-Key": K}, json={"anthropic_api_key": ""})
     salvo = json.loads((tmp_path / "config.json").read_text(encoding="utf-8"))
     assert salvo["anthropic_api_key"] == "sk-ant-minha"
+
+
+def test_uso_logado_com_custo_por_modelo(tmp_path, monkeypatch):
+    # chat_ok devolve (texto, 42 in, 17 out); modelo default = haiku (1/5 MTok)
+    client, _ = faz_client(tmp_path, monkeypatch)
+    assert post(client).status_code == 200
+    linhas = (tmp_path / "uso.jsonl").read_text().splitlines()
+    assert len(linhas) == 1
+    r = json.loads(linhas[0])
+    assert r["tokens_in"] == 42 and r["tokens_out"] == 17
+    assert r["buscas"] == 0
+    assert r["device"] == config.id8("k1")          # hash, nunca a chave crua
+    assert r["custo_usd"] == round(42/1e6 + 17*5/1e6, 6)
+
+
+def test_uso_soma_custo_do_web_search(tmp_path, monkeypatch):
+    def chat_busca(cfg, system, mensagens):
+        return "achei!", 10, 20, 2                   # 2 buscas
+    client, _ = faz_client(tmp_path, monkeypatch, chat_fn=chat_busca)
+    assert post(client).status_code == 200
+    r = json.loads((tmp_path / "uso.jsonl").read_text().splitlines()[0])
+    assert r["buscas"] == 2
+    esperado = round(10/1e6 + 20*5/1e6 + 2*config.PRECO_BUSCA, 6)
+    assert r["custo_usd"] == esperado
