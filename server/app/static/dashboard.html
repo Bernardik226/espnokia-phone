@@ -1,6 +1,4 @@
 <!doctype html>
-<html lang="pt-br">
-<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>espnokia · Claw'd</title>
@@ -12,15 +10,17 @@
 <meta name="apple-mobile-web-app-title" content="EspNokia Dash">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="stylesheet" href="/static/app.css">
-</head>
-<body>
+
 <div class="wrap">
   <!-- login -->
   <div id="login" class="card">
     <div class="top">
       <span class="star">✳</span>
       <span class="logo"></span>
-      <span class="right"><button class="themebtn" onclick="toggleTheme()" aria-label="tema" title="tema">◐</button><select id="lang0" class="lang" onchange="setLang(this.value)"></select></span>
+      <span class="right">
+        <button class="iconbtn" onclick="toggleTheme()" aria-label="tema" title="tema">◐</button>
+        <select id="lang0" class="lang" onchange="setLang(this.value)"></select>
+      </span>
     </div>
     <div class="body">
       <p class="muted" data-i18n="login_qr">aponte a câmera pro QR do aparelho (Config &gt; Conexões) — ele já loga aqui. Ou cole a chave abaixo.</p>
@@ -32,80 +32,24 @@
   </div>
 
   <!-- app -->
-  <div id="app" class="hide">
-    <div class="card">
-      <div class="top">
-        <span class="star">✳</span>
-        <span class="logo"></span>
-        <span class="right">
-          <button class="themebtn" onclick="toggleTheme()" aria-label="tema" title="tema">◐</button>
-          <select id="lang_app" class="lang" onchange="setLang(this.value)"></select>
-          <span id="conn" class="dot off">offline</span></span>
-      </div>
-      <div class="tabs">
-        <button data-t="painel" class="sel" data-i18n="tab_painel" onclick="aba('painel')">PAINEL</button>
-        <button data-t="ia" data-i18n="tab_ia" onclick="aba('ia')">IA</button>
-        <button data-t="mem" data-i18n="tab_mem" onclick="aba('mem')">MEMÓRIA</button>
-      </div>
-
-      <div class="body">
-        <section id="t-painel">
-          <div class="grid" id="stats"></div>
-          <div id="dash"></div>
-          <label data-i18n="lbl_orc">orçamento mensal (USD)</label>
-          <div class="row">
-            <div><input id="c_orc" type="number" min="0" step="0.5"></div>
-            <div><button data-i18n="save_orc" onclick="salvarOrc()">SALVAR</button></div>
-          </div>
-        </section>
-
-        <section id="t-ia" class="hide">
-          <!-- configuração do pet -->
-          <label data-i18n="lbl_persona">personalidade do Claw'd</label>
-          <select id="c_persona"></select>
-          <div class="row">
-            <div><label data-i18n="lbl_stt">motor de STT</label>
-              <select id="c_stt"><option value="local">local (whisper)</option>
-                <option value="groq">groq</option></select></div>
-            <div><label data-i18n="lbl_max">limite de resposta</label>
-              <input id="c_max" type="number" min="40" max="240"></div>
-          </div>
-          <label data-i18n="lbl_model">modelo Claude</label>
-          <input id="c_model" type="text">
-          <div class="row" style="margin-top:6px">
-            <div><label data-i18n="lbl_web">busca na web</label>
-              <select id="c_web"><option value="true" data-i18n="web_on">ligada</option>
-                <option value="false" data-i18n="web_off">desligada</option></select></div>
-            <div><label data-i18n="lbl_anth">chave Anthropic <span id="haskey" class="muted"></span></label>
-              <input id="c_key" type="password" data-i18n-ph="ph_anth" placeholder="(vazio = manter)"></div>
-          </div>
-          <div id="grow_groq" class="hide">
-            <label data-i18n="lbl_groq">chave Groq <span id="hasgroq" class="muted"></span></label>
-            <input id="c_groqkey" type="password" data-i18n-ph="ph_groq" placeholder="(vazio = manter)">
-          </div>
-          <button data-i18n="save" onclick="salvar()">SALVAR CONFIG</button>
-        </section>
-
-        <section id="t-mem" class="hide">
-          <!-- memória persistente -->
-          <label data-i18n="lbl_mem">memória persistente</label>
-          <pre class="mem" id="mem">—</pre>
-          <button class="ghost" data-i18n="forget" onclick="limpar()">ESQUECER TUDO</button>
-          <!-- conversas -->
-          <label style="margin-top:20px" data-i18n="lbl_talks">conversas registradas</label>
-          <div id="talks"></div>
-          <div class="pag hide" id="pag">
-            <button onclick="pagina(-1)">‹</button>
-            <span id="paginfo"></span>
-            <button onclick="pagina(1)">›</button>
-          </div>
-        </section>
-      </div>
+  <div id="app" class="card hide">
+    <div class="top">
+      <button class="iconbtn" onclick="toggleDrawer()" aria-label="menu" title="menu">☰</button>
+      <span class="star">✳</span>
+      <span class="logo"></span>
+      <span class="right">
+        <button class="iconbtn" onclick="toggleTheme()" aria-label="tema" title="tema">◐</button>
+        <select id="lang_app" class="lang" onchange="setLang(this.value)"></select>
+        <span id="conn" class="dot off">offline</span>
+      </span>
+    </div>
+    <div class="body">
+      <div id="home" class="grid3"></div>
+      <div id="panel" class="panel hide"></div>
     </div>
   </div>
 </div>
-<div id="toast" class="toast"></div>
 
+<div id="drawerwrap"></div>
+<div id="toast" class="toast"></div>
 <script src="/static/app.js"></script>
-</body>
-</html>
