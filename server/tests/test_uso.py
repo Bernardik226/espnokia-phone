@@ -73,3 +73,25 @@ def test_linha_corrompida_ignorada(tmp_path, monkeypatch):
         encoding="utf-8")
     u = uso.agrega("k1", now_fn=lambda: AGORA)
     assert u["falas"] == 1 and u["total_usd"] == 0.02
+
+
+def test_linha_shape_torto_ignorada(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    (tmp_path / "uso.jsonl").write_text(
+        "null\n"                                              # JSON válido, não-dict
+        + json.dumps({"device": config.id8("k1"), "ts": "abc",
+                      "custo_usd": "x"}) + "\n"               # campos não-numéricos
+        + json.dumps(linha("k1", JUL_A, 0.02)) + "\n",       # linha boa
+        encoding="utf-8")
+    u = uso.agrega("k1", now_fn=lambda: AGORA)
+    assert u["falas"] == 1 and u["total_usd"] == 0.02
+
+
+def test_serie_nao_funde_anos(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    jul_2025 = int(time.mktime((2025, 7, 10, 12, 0, 0, 0, 0, -1)))
+    escreve(tmp_path, [linha("k1", jul_2025, 0.01), linha("k1", JUL_A, 0.02)])
+    u = uso.agrega("k1", now_fn=lambda: AGORA)
+    # mesmo dia/mês, anos diferentes → 2 pontos distintos, não um só somado
+    assert len(u["serie"]) == 2
+    assert round(sum(p["usd"] for p in u["serie"]), 6) == 0.03

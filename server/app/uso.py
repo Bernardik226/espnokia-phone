@@ -21,20 +21,22 @@ def agrega(device, now_fn=time.time, dias=30):
             for ln in f:
                 try:
                     r = json.loads(ln)
-                except (json.JSONDecodeError, ValueError):
-                    continue          # linha corrompida / meia-escrita: ignora
-                if r.get("device") != alvo:
-                    continue
-                usd = float(r.get("custo_usd", 0) or 0)
-                ts = int(r.get("ts", 0) or 0)
+                    if not isinstance(r, dict) or r.get("device") != alvo:
+                        continue
+                    usd = float(r.get("custo_usd", 0) or 0)
+                    ts = int(r.get("ts", 0) or 0)
+                    ti = int(r.get("tokens_in", 0) or 0)
+                    to = int(r.get("tokens_out", 0) or 0)
+                except (json.JSONDecodeError, ValueError, TypeError):
+                    continue          # corrompida / meia-escrita / campo torto: ignora
                 total_usd += usd
-                tokens_in += int(r.get("tokens_in", 0) or 0)
-                tokens_out += int(r.get("tokens_out", 0) or 0)
+                tokens_in += ti
+                tokens_out += to
                 falas += 1
                 if time.strftime("%Y-%m", time.localtime(ts)) == mes_atual:
                     mes_usd += usd
-                dia = time.strftime("%d/%m", time.localtime(ts))
-                b = por_dia.setdefault(dia, {"usd": 0.0, "falas": 0, "_ts": ts})
+                chave = time.strftime("%Y-%m-%d", time.localtime(ts))  # ano evita fundir anos
+                b = por_dia.setdefault(chave, {"usd": 0.0, "falas": 0, "_ts": ts})
                 b["usd"] += usd
                 b["falas"] += 1
                 b["_ts"] = max(b["_ts"], ts)
