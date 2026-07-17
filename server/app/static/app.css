@@ -94,9 +94,9 @@
   section{animation:fadein .18s ease-out both}
   @keyframes fadein{from{opacity:0;transform:translateY(8px)}}
   .chart .bar{transform-box:fill-box;transform-origin:bottom;
-    animation:grow .3s ease-out both}
+    animation:grow .25s ease-out both}
   @keyframes grow{from{transform:scaleY(0)}}
-  .budget-fill{transition:width .4s ease-out}
+  .budget-fill{transition:width .25s ease-out}
   @media (prefers-reduced-motion:reduce){
     *,section,.chart .bar{animation:none!important;transition:none!important}
   }
