@@ -216,14 +216,16 @@ def test_admin_status_exige_chave():
     assert c.get("/admin/status").status_code == 401
 
 
-def test_admin_status_traz_versao_e_contagem(tmp_path, monkeypatch):
+def test_admin_status_so_saude_sem_config(tmp_path, monkeypatch):
     monkeypatch.setenv("DATA_DIR", str(tmp_path))
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     c = monta(device_keys="segredo")
     s = c.get("/admin/status", headers={"X-Device-Key": "segredo"}).json()
     assert s["versao"] == "0.5.0"
     assert s["conversas"] == 0 and s["resumidos"] == 0
-    assert "stt" in s and "model" in s
+    assert "memoria_ts" in s
+    # config vive em /admin/config: status não repete
+    assert "stt" not in s and "model" not in s and "tem_api_key" not in s
 
 
 def test_admin_config_nunca_vaza_a_chave_crua(tmp_path, monkeypatch):
@@ -288,3 +290,32 @@ def test_pwa_manifest_sw_e_icone():
     assert m.status_code == 200 and m.json()["name"] == "EspNokia Dash"
     assert c.get("/sw.js").status_code == 200
     assert c.get("/static/icon-192.png").status_code == 200
+
+
+def test_admin_uso_shape_vazio(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    c = monta(device_keys="segredo")
+    u = c.get("/admin/uso", headers={"X-Device-Key": "segredo"}).json()
+    assert u["falas"] == 0 and u["total_usd"] == 0
+    assert u["serie"] == [] and u["mes_pct"] is None
+    assert u["orcamento_usd_mes"] == 0
+
+
+def test_admin_uso_exige_chave():
+    c = monta(device_keys="segredo")
+    assert c.get("/admin/uso").status_code == 401
+
+
+def test_admin_config_salva_orcamento(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    c = monta(device_keys="segredo")
+    r = c.post("/admin/config", headers={"X-Device-Key": "segredo"},
+               json={"orcamento_usd_mes": 5.5})
+    assert r.status_code == 200
+    cfg = c.get("/admin/config", headers={"X-Device-Key": "segredo"}).json()
+    assert cfg["orcamento_usd_mes"] == 5.5
+    # valor inválido é ignorado (não corrompe)
+    c.post("/admin/config", headers={"X-Device-Key": "segredo"},
+           json={"orcamento_usd_mes": -3})
+    cfg = c.get("/admin/config", headers={"X-Device-Key": "segredo"}).json()
+    assert cfg["orcamento_usd_mes"] == 5.5

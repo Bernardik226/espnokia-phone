@@ -6,7 +6,7 @@ from fastapi import BackgroundTasks, Depends, FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from app import config, stt
+from app import config, stt, uso
 from app.auth import make_auth
 from app.claude_voz import VozService
 from app.copa import JANELA_S, CopaService
@@ -167,14 +167,18 @@ def create_app(copa_service=None, live_scores=None, device_keys=None,
     # --- dashboard web (sobe junto com o server) ---
     @app.get("/admin/status", dependencies=[auth])
     def admin_status(request: Request):
+        # só saúde: a config (modelo/stt/web/chave) vive em /admin/config,
+        # o custo em /admin/uso — status não repete
         device = request.headers.get("x-device-key", "")
-        cfg = config.load()
         mem = voz.memoria.memoria(device)
-        return {"versao": VERSION, "stt": cfg["stt"],
-                "model": cfg["claude_model"], "web_search": cfg["web_search"],
-                "tem_api_key": bool(cfg["anthropic_api_key"]),
+        return {"versao": VERSION,
                 "conversas": voz.memoria.pares(device, 0)["total"],
                 "resumidos": mem["resumidos"], "memoria_ts": mem["ts"]}
+
+    @app.get("/admin/uso", dependencies=[auth])
+    def admin_uso(request: Request):
+        device = request.headers.get("x-device-key", "")
+        return uso.agrega(device)
 
     @app.get("/admin/config", dependencies=[auth])
     def admin_config_get():
@@ -187,6 +191,7 @@ def create_app(copa_service=None, live_scores=None, device_keys=None,
                 "claude_model": cfg["claude_model"], "stt": cfg["stt"],
                 "max_resposta_chars": cfg["max_resposta_chars"],
                 "web_search": cfg["web_search"],
+                "orcamento_usd_mes": cfg["orcamento_usd_mes"],
                 "tem_anthropic_key": bool(cfg["anthropic_api_key"]),
                 "tem_stt_key": bool(cfg["stt_api_key"])}
 
@@ -198,6 +203,9 @@ def create_app(copa_service=None, live_scores=None, device_keys=None,
                 if k in body}
         if body.get("persona_id") in config.PERSONAS:   # só id conhecido entra
             muda["persona_id"] = body["persona_id"]
+        orc = body.get("orcamento_usd_mes")
+        if isinstance(orc, (int, float)) and not isinstance(orc, bool) and orc >= 0:
+            muda["orcamento_usd_mes"] = float(orc)
         for k in ("anthropic_api_key", "stt_api_key"):
             if body.get(k):     # vazio nao apaga a chave existente sem querer
                 muda[k] = body[k]
