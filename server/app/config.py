@@ -49,7 +49,7 @@ PRECOS = {
 PRECO_BUSCA = 0.01   # web search server-side da API: US$10 / 1000 buscas
 
 
-def preco_de(model: str):
+def preco_de(model: str) -> tuple[float, float]:
     """(preco_in, preco_out) em USD/token pro modelo. Fallback: haiku."""
     m = (model or "").lower()
     pin, pout = PRECOS["haiku"]

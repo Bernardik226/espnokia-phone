@@ -225,7 +225,7 @@ def test_admin_status_so_saude_sem_config(tmp_path, monkeypatch):
     assert s["conversas"] == 0 and s["resumidos"] == 0
     assert "memoria_ts" in s
     # config vive em /admin/config: status não repete
-    assert "stt" not in s and "model" not in s and "tem_api_key" not in s
+    assert "stt" not in s and "model" not in s and "tem_api_key" not in s and "web_search" not in s
 
 
 def test_admin_config_nunca_vaza_a_chave_crua(tmp_path, monkeypatch):
@@ -319,3 +319,15 @@ def test_admin_config_salva_orcamento(tmp_path, monkeypatch):
            json={"orcamento_usd_mes": -3})
     cfg = c.get("/admin/config", headers={"X-Device-Key": "segredo"}).json()
     assert cfg["orcamento_usd_mes"] == 5.5
+
+
+def test_admin_config_rejeita_orcamento_bool(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    c = monta(device_keys="segredo")
+    c.post("/admin/config", headers={"X-Device-Key": "segredo"},
+           json={"orcamento_usd_mes": 5.0})
+    # bool nao pode virar 1.0 (True e int em Python) — deve ser ignorado
+    c.post("/admin/config", headers={"X-Device-Key": "segredo"},
+           json={"orcamento_usd_mes": True})
+    cfg = c.get("/admin/config", headers={"X-Device-Key": "segredo"}).json()
+    assert cfg["orcamento_usd_mes"] == 5.0
