@@ -81,11 +81,8 @@ static void on_render(void* gfx) {
   g.setFont(u8g2_font_4x6_tr);
   snprintf(buf, sizeof(buf), "%u", jogo.score);
   g.drawStr(1, 6, buf);
-  if (recorde) {                               // recorde no meio do header
-    snprintf(buf, sizeof(buf), "hi%u", recorde);
-    int w = g.getStrWidth(buf);
-    g.drawStr((84 - w) / 2, 6, buf);
-  }
+  if (recorde)                                 // badge HS★ padrão, centralizado
+    nokia_ui::hiscore(g, (84 - nokia_ui::hiscore_w(g, recorde)) / 2, 0, recorde);
   for (uint8_t i = 0; i < jogo.vidas && i < 6; i++)   // vidas: quadradinhos
     g.drawBox(83 - i * 4, 1, 2, 2);
   // tijolos (1px de folga entre eles)

@@ -1,10 +1,35 @@
 #include "nokia_ui.h"
+#include <stdio.h>
 #include <string.h>
 #include "assets.h"
 #include "fonts3310.h"
 #include "i18n.h"
 
 namespace nokia_ui {
+
+// estrelinha 5x5 (sparkle de 4 pontas) — miolo cheio pra ler bem no 1-bit
+void draw_star(U8G2& g, int x, int y) {
+  g.drawVLine(x + 2, y, 5);
+  g.drawHLine(x, y + 2, 5);
+  g.drawPixel(x + 1, y + 1); g.drawPixel(x + 3, y + 1);
+  g.drawPixel(x + 1, y + 3); g.drawPixel(x + 3, y + 3);
+}
+int hiscore_w(U8G2& g, uint32_t value) {
+  char b[16]; snprintf(b, sizeof(b), "HS%lu", (unsigned long)value);
+  const uint8_t* prev = g.getU8g2()->font;
+  g.setFont(u8g2_font_4x6_tr);
+  int w = 6 + (int)g.getStrWidth(b);   // 5px estrela + 1 de folga + texto
+  if (prev) g.setFont(prev);
+  return w;
+}
+void hiscore(U8G2& g, int x, int y, uint32_t value) {
+  const uint8_t* prev = g.getU8g2()->font;
+  draw_star(g, x, y + 1);
+  char b[16]; snprintf(b, sizeof(b), "HS%lu", (unsigned long)value);
+  g.setFont(u8g2_font_4x6_tr);
+  g.drawStr(x + 6, y + 6, b);
+  if (prev) g.setFont(prev);
+}
 // negrito real (fonte 3310 small bold), preservando a fonte corrente do
 // caller; drawUTF8 em vez de drawStr pra aceitar os acentos das traducoes
 void text_bold(U8G2& g, int x, int y, const char* s) {

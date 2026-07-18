@@ -50,7 +50,12 @@ static void fim_se_travou() {
   }
 }
 static void aplica(G2Dir d) {
-  if (g2048_move(jogo, d)) { buzzer::beep(2000, 12); fim_se_travou(); }
+  uint32_t antes = jogo.score;
+  if (g2048_move(jogo, d)) {
+    if (jogo.score > antes) buzzer::beep(1760, 28);   // fundiu: nota mais alta e cheia
+    else buzzer::beep(880, 16);                        // só deslizou: clique seco
+    fim_se_travou();
+  }
 }
 
 static bool on_input(Button b, BtnEvent e) {
@@ -101,16 +106,16 @@ static bool on_input(Button b, BtnEvent e) {
 static void on_tick(uint32_t) {}
 
 static void draw_grid(U8G2& g) {
-  g.setFont(u8g2_font_4x6_tr);
+  g.setFont(u8g2_font_5x8_tr);                 // números maiores (era 4x6, ilegível)
   for (uint8_t y = 0; y < 4; y++)
     for (uint8_t x = 0; x < 4; x++) {
-      int px = 2 + x * 20, py = 16 + y * 8;
-      g.drawFrame(px, py, 20, 8);
+      int px = x * 21, py = 10 + y * 9;         // célula 21x10, matriz ocupa a tela
+      g.drawFrame(px, py, 21, 10);
       uint8_t e = jogo.cell[y * 4 + x];
       if (e) {
         char b[7]; snprintf(b, sizeof(b), "%u", 1u << e);
         int w = g.getStrWidth(b);
-        g.drawStr(px + (20 - w) / 2, py + 6, b);
+        g.drawStr(px + (21 - w) / 2, py + 8, b);
       }
     }
 }
@@ -154,15 +159,11 @@ static void on_render(void* gfx) {
     return;
   }
 
-  // PLAY / OVER
-  g.setFont(u8g2_font_7x13B_tr);
+  // PLAY / OVER — header compacto: score à esquerda, badge HS★ à direita
+  g.setFont(u8g2_font_5x8_tr);
   snprintf(buf, sizeof(buf), "%lu", (unsigned long)jogo.score);
-  g.drawStr(2, 12, buf);
-  g.setFont(u8g2_font_4x6_tr);
-  snprintf(buf, sizeof(buf), "hi %lu", (unsigned long)recorde);
-  int w = g.getStrWidth(buf);
-  g.drawStr(84 - w - 1, 6, buf);
-  g.drawHLine(0, 14, 84);
+  g.drawStr(1, 8, buf);
+  nokia_ui::hiscore(g, 84 - nokia_ui::hiscore_w(g, recorde), 0, recorde);
   draw_grid(g);
   if (view == OVER) {
     g.setDrawColor(0); g.drawBox(8, 18, 68, 22); g.setDrawColor(1);

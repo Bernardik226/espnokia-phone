@@ -18,6 +18,12 @@ void text_center(U8G2& g, int y, const char* s);
 int bold_width(U8G2& g, const char* s);
 // label de softkey centrado na base (negrito 3310, baseline 47)
 void softkey(U8G2& g, const char* label);
+// estrelinha 5x5 (canto sup-esq em x,y) — usada no badge de recorde
+void draw_star(U8G2& g, int x, int y);
+// badge de recorde PADRÃO dos jogos: estrela + "HS" + valor (fonte 4x6), com
+// o topo em (x,y). hiscore_w devolve a largura pra alinhar à direita.
+void hiscore(U8G2& g, int x, int y, uint32_t value);
+int hiscore_w(U8G2& g, uint32_t value);
 // uma linha de lista na posicao y; se selected, barra invertida de
 // largura w (box em (0,y,w,9), texto em x=3,y+8) — nao cuida de
 // windowing/scrollbar, so a linha; o caller decide o que mais desenhar

@@ -28,10 +28,10 @@ static void render(void* gfx) {
   char hh[3] = {hhmm[0], hhmm[1], '\0'};
   char hhc[4] = {hhmm[0], hhmm[1], ':', '\0'};
   char mm[3] = {hhmm[3], hhmm[4], '\0'};
-  int tx = 82 - nokia_ui::bold_width(g, hhmm);
+  int tx = 82 - nokia_ui::bold_width(g, hhmm) - 1;   // -1 compensa a folga extra abaixo
   nokia_ui::text_bold(g, tx, 8, hh);
-  nokia_ui::text_bold(g, tx + nokia_ui::bold_width(g, hhc), 8, mm);
-  // +1px pra o ':' não encostar nas horas e centralizar no vão HH<->MM
+  nokia_ui::text_bold(g, tx + nokia_ui::bold_width(g, hhc) + 1, 8, mm);  // +1px afasta HH<->MM
+  // ':' +1px pra não encostar nas horas, no vão entre HH e MM
   if (colon) nokia_ui::text_bold(g, tx + nokia_ui::bold_width(g, hh) + 1, 8, ":");
   // marca do projeto no lugar do nome da operadora: emblema eN + wordmark
   g.drawXBMP(24, 9, ESPNOKIA_EMBLEM_W, ESPNOKIA_EMBLEM_H, espnokia_emblem_bits);

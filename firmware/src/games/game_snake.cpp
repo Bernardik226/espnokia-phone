@@ -195,10 +195,11 @@ static void on_render(void* gfx) {
     return;
   }
 
-  // PLAY / OVER — placar grande tipo "0036" + linha + campo
+  // PLAY / OVER — placar grande tipo "0036" + badge HS★ + linha + campo
   g.setFont(u8g2_font_7x13B_tr);
   snprintf(buf, sizeof(buf), "%04u", jogo.score);
   g.drawStr(2, 12, buf);
+  nokia_ui::hiscore(g, 84 - nokia_ui::hiscore_w(g, recorde), 0, recorde);
   g.drawHLine(0, 14, 84);
   draw_campo(g);
   if (view == OVER) {
