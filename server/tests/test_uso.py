@@ -9,10 +9,20 @@ def escreve(tmp_path, linhas):
         "".join(json.dumps(x) + "\n" for x in linhas), encoding="utf-8")
 
 
-def linha(device, ts, usd, ti=10, to=20, buscas=0):
+def linha(device, ts, usd, ti=10, to=20, buscas=0, seg=0.0, stt_c=0.0):
     return {"ts": ts, "device": config.id8(device),
             "tokens_in": ti, "tokens_out": to, "buscas": buscas,
-            "custo_usd": usd}
+            "custo_usd": usd, "segundos": seg, "custo_stt": stt_c}
+
+
+def test_agrega_segundos_e_custo_groq(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    escreve(tmp_path, [linha("k1", JUL_A, 0.02, seg=1.5, stt_c=0.001),
+                       linha("k1", JUL_B, 0.03, seg=2.5, stt_c=0.002)])
+    u = uso.agrega("k1", now_fn=lambda: AGORA)
+    assert u["segundos"] == 4.0
+    assert u["custo_stt"] == 0.003
+    assert u["total_geral"] == round(0.05 + 0.003, 6)
 
 
 JUN = int(time.mktime((2026, 6, 15, 12, 0, 0, 0, 0, -1)))   # dia no mês passado

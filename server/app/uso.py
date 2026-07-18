@@ -12,7 +12,7 @@ from app import config
 def agrega(device, now_fn=time.time, dias=30):
     alvo = config.id8(device)
     arq = config.data_dir() / "uso.jsonl"
-    total_usd = mes_usd = 0.0
+    total_usd = mes_usd = segundos_total = custo_stt_total = 0.0
     tokens_in = tokens_out = falas = 0
     por_dia = {}                      # "dd/mm" -> {"usd", "falas", "_ts"}
     mes_atual = time.strftime("%Y-%m", time.localtime(now_fn()))
@@ -27,6 +27,8 @@ def agrega(device, now_fn=time.time, dias=30):
                     ts = int(r.get("ts", 0) or 0)
                     ti = int(r.get("tokens_in", 0) or 0)
                     to = int(r.get("tokens_out", 0) or 0)
+                    seg = float(r.get("segundos", 0) or 0)
+                    stt_c = float(r.get("custo_stt", 0) or 0)
                     mes = time.strftime("%Y-%m", time.localtime(ts))
                     chave = time.strftime("%Y-%m-%d", time.localtime(ts))
                 except (json.JSONDecodeError, ValueError, TypeError, OverflowError, OSError):
@@ -34,6 +36,8 @@ def agrega(device, now_fn=time.time, dias=30):
                 total_usd += usd
                 tokens_in += ti
                 tokens_out += to
+                segundos_total += seg
+                custo_stt_total += stt_c
                 falas += 1
                 if mes == mes_atual:
                     mes_usd += usd
@@ -50,6 +54,9 @@ def agrega(device, now_fn=time.time, dias=30):
         "tokens_in": tokens_in,
         "tokens_out": tokens_out,
         "medio_usd": round(total_usd / falas, 6) if falas else 0.0,
+        "segundos": round(segundos_total, 1),
+        "custo_stt": round(custo_stt_total, 6),          # gasto Groq (STT)
+        "total_geral": round(total_usd + custo_stt_total, 6),  # Claude + Groq
         "serie": [{"d": time.strftime("%d/%m", time.localtime(b["_ts"])),
                    "usd": round(b["usd"], 6), "falas": b["falas"]}
                   for b in serie],

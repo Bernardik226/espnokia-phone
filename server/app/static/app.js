@@ -39,6 +39,16 @@ Object.assign(I18N.fi,{dr_theme:"Vaalea/tumma teema",dr_lang:"Kieli",dr_devid:"L
 Object.assign(I18N.zh,{dr_theme:"浅色/深色主题",dr_lang:"语言",dr_devid:"设备 ID"});
 Object.assign(I18N.ja,{dr_theme:"テーマ (明/暗)",dr_lang:"言語",dr_devid:"デバイスID"});
 Object.assign(I18N.ko,{dr_theme:"밝게/어둡게",dr_lang:"언어",dr_devid:"기기 ID"});
+// estatísticas: gasto Claude vs Groq, total geral, segundos falados
+Object.assign(I18N.pt,{u_total:"Claude",u_groq:"Groq",u_geral:"geral",u_seg:"segundos"});
+Object.assign(I18N.en,{u_total:"Claude",u_groq:"Groq",u_geral:"overall",u_seg:"seconds"});
+Object.assign(I18N.es,{u_total:"Claude",u_groq:"Groq",u_geral:"total",u_seg:"segundos"});
+Object.assign(I18N.de,{u_total:"Claude",u_groq:"Groq",u_geral:"gesamt",u_seg:"Sek."});
+Object.assign(I18N.fr,{u_total:"Claude",u_groq:"Groq",u_geral:"total",u_seg:"secondes"});
+Object.assign(I18N.fi,{u_total:"Claude",u_groq:"Groq",u_geral:"yht.",u_seg:"sekunnit"});
+Object.assign(I18N.zh,{u_total:"Claude",u_groq:"Groq",u_geral:"合计",u_seg:"秒"});
+Object.assign(I18N.ja,{u_total:"Claude",u_groq:"Groq",u_geral:"合計",u_seg:"秒"});
+Object.assign(I18N.ko,{u_total:"Claude",u_groq:"Groq",u_geral:"합계",u_seg:"초"});
 
 const LANGS = ["pt","en","es","de","fr","fi","zh","ja","ko"];
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
@@ -218,8 +228,9 @@ function toggleDevId(){ devidShown=!devidShown; const e=document.getElementById(
 // --- painéis (cada um monta seu conteúdo em #pbody) ---
 async function pStats(el){
   const u = await (await api("/admin/uso")).json();
-  const tiles = [[t("u_mes"),usd(u.mes_usd)],[t("u_total"),usd(u.total_usd)],[t("u_falas"),u.falas],
-    [t("u_medio"),usd(u.medio_usd)],[t("u_tin"),milhar(u.tokens_in)],[t("u_tout"),milhar(u.tokens_out)]]
+  const tiles = [[t("u_mes"),usd(u.mes_usd)],[t("u_total"),usd(u.total_usd)],[t("u_groq"),usd(u.custo_stt)],
+    [t("u_geral"),usd(u.total_geral)],[t("u_falas"),u.falas],[t("u_seg"),Math.round(u.segundos)+"s"],
+    [t("u_tin"),milhar(u.tokens_in)],[t("u_tout"),milhar(u.tokens_out)]]
     .map(([k,v])=>`<div class="stat"><b>${v}</b><span>${k}</span></div>`).join("");
   el.innerHTML = `<div class="grid">${tiles}</div>${budgetBar(u)}`
     + `<div class="charts">`

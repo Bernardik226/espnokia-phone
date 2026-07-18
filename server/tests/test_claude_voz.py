@@ -313,6 +313,23 @@ def test_uso_logado_com_custo_por_modelo(tmp_path, monkeypatch):
     assert r["custo_usd"] == round(42/1e6 + 17*5/1e6, 6)
 
 
+def test_uso_segundos_e_custo_groq(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    config.save({"stt": "groq"})              # STT via Groq → cobra por segundo
+    client, _ = faz_client(tmp_path, monkeypatch)
+    post(client, corpo=b"\x00" * 32000)       # 32000 B = 1 s de PCM16 16kHz mono
+    r = json.loads((tmp_path / "uso.jsonl").read_text().splitlines()[0])
+    assert r["segundos"] == 1.0
+    assert r["custo_stt"] == round(config.PRECO_STT_SEG, 6)   # 1 s de Groq
+    # STT local não cobra
+    (tmp_path / "uso.jsonl").unlink()
+    config.save({"stt": "local"})
+    client2, _ = faz_client(tmp_path, monkeypatch)
+    post(client2, corpo=b"\x00" * 32000)
+    r2 = json.loads((tmp_path / "uso.jsonl").read_text().splitlines()[0])
+    assert r2["custo_stt"] == 0.0 and r2["segundos"] == 1.0
+
+
 def test_uso_soma_custo_do_web_search(tmp_path, monkeypatch):
     def chat_busca(cfg, system, mensagens):
         return "achei!", 10, 20, 2                   # 2 buscas

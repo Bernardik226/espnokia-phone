@@ -84,16 +84,20 @@ class VozService:
         resposta = corta_utf8(resposta, MAX_R_BYTES)
         self.memoria.grava_par(device, falei, resposta, t)
         try:
-            self._loga_uso(device, t_in, t_out, buscas, cfg["claude_model"])
+            self._loga_uso(device, t_in, t_out, buscas, cfg["claude_model"],
+                           len(corpo), cfg["stt"])
         except OSError:
             logging.warning("falha ao gravar uso.jsonl", exc_info=True)
         return 200, {"falei": falei, "resposta": resposta}
 
-    def _loga_uso(self, device, t_in, t_out, buscas, model):
+    def _loga_uso(self, device, t_in, t_out, buscas, model, corpo_bytes, stt):
         pin, pout = config.preco_de(model)
         custo = round(t_in * pin + t_out * pout + buscas * config.PRECO_BUSCA, 6)
+        segundos = round(corpo_bytes / 32000, 3)   # PCM16 16kHz mono = 32000 B/s
+        # STT: Groq cobra por segundo de áudio; whisper local é grátis
+        custo_stt = round(segundos * config.PRECO_STT_SEG, 6) if stt == "groq" else 0.0
         linha = {"ts": int(self.now_fn()), "device": config.id8(device),
                  "tokens_in": t_in, "tokens_out": t_out, "buscas": buscas,
-                 "custo_usd": custo}
+                 "custo_usd": custo, "segundos": segundos, "custo_stt": custo_stt}
         with open(config.data_dir() / "uso.jsonl", "a") as f:
             f.write(json.dumps(linha, ensure_ascii=False) + "\n")

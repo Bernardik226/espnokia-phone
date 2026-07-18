@@ -47,6 +47,8 @@ PRECOS = {
     "opus":   (15.0, 75.0),
 }
 PRECO_BUSCA = 0.01   # web search server-side da API: US$10 / 1000 buscas
+# Groq whisper-large-v3-turbo: ~US$0,04/h de áudio (estimativa; STT local = grátis)
+PRECO_STT_SEG = 0.04 / 3600   # USD por segundo de áudio transcrito na Groq
 
 
 def preco_de(model: str) -> tuple[float, float]:
