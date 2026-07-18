@@ -19,6 +19,16 @@ Object.assign(I18N.fi, {tl_stats:"Tilastot",tl_persona:"Persoona",tl_model:"Mall
 Object.assign(I18N.zh, {tl_stats:"统计",tl_persona:"人格",tl_model:"模型",tl_stt:"转录",tl_web:"网络搜索",tl_max:"回复",tl_orc:"预算",tl_talks:"对话",tl_mem:"记忆",dr_device:"设备",dr_conn:"连接",dr_about:"关于",adicional:"更多",stt_local:"本地 (whisper)",stt_groq:"Groq (API)",key_env:"密钥在服务器上设置 (环境变量)",conv_dia:"每日对话",s_version:"版本",anth_key:"Anthropic 密钥",groq_key:"Groq 密钥",dev_url:"服务器地址",copiar:"复制密钥",copiado:"密钥已复制 ✓",sobre:"运行在 ESP32 上的类诺基亚手持设备 — 此面板配置 Claw'd (语音 AI)，显示费用/用量和记忆。"});
 Object.assign(I18N.ja, {tl_stats:"統計",tl_persona:"人格",tl_model:"モデル",tl_stt:"文字起こし",tl_web:"ウェブ検索",tl_max:"返信",tl_orc:"予算",tl_talks:"会話",tl_mem:"メモリ",dr_device:"デバイス",dr_conn:"接続",dr_about:"情報",adicional:"その他",stt_local:"ローカル (whisper)",stt_groq:"Groq (API)",key_env:"キーはサーバー側で設定します (環境変数)",conv_dia:"1日あたりの会話",s_version:"バージョン",anth_key:"Anthropic キー",groq_key:"Groq キー",dev_url:"サーバーURL",copiar:"キーをコピー",copiado:"キーをコピーしました ✓",sobre:"ESP32 上の Nokia 風ハンドヘルド — このパネルで Claw'd (音声AI) を設定し、費用/使用量とメモリを表示します。"});
 Object.assign(I18N.ko, {tl_stats:"통계",tl_persona:"페르소나",tl_model:"모델",tl_stt:"전사",tl_web:"웹 검색",tl_max:"답변",tl_orc:"예산",tl_talks:"대화",tl_mem:"메모리",dr_device:"기기",dr_conn:"연결",dr_about:"정보",adicional:"더보기",stt_local:"로컬 (whisper)",stt_groq:"Groq (API)",key_env:"키는 서버에서 설정됩니다 (환경 변수)",conv_dia:"하루 대화 수",s_version:"버전",anth_key:"Anthropic 키",groq_key:"Groq 키",dev_url:"서버 URL",copiar:"키 복사",copiado:"키 복사됨 ✓",sobre:"ESP32 기반 노키아 스타일 핸드헬드 — 이 패널에서 Claw'd (음성 AI)를 설정하고 비용/사용량과 메모리를 봅니다."});
+// tile Claw'd (IA+STT+persona) + subseção STT + label conversas (grade coesa)
+Object.assign(I18N.pt,{tl_clawd:"Claw'd",sub_stt:"Transcrição (STT)",lbl_talks:"conversas"});
+Object.assign(I18N.en,{tl_clawd:"Claw'd",sub_stt:"Transcription (STT)",lbl_talks:"talks"});
+Object.assign(I18N.es,{tl_clawd:"Claw'd",sub_stt:"Transcripción (STT)",lbl_talks:"charlas"});
+Object.assign(I18N.de,{tl_clawd:"Claw'd",sub_stt:"Transkription (STT)",lbl_talks:"Gespräche"});
+Object.assign(I18N.fr,{tl_clawd:"Claw'd",sub_stt:"Transcription (STT)",lbl_talks:"conversations"});
+Object.assign(I18N.fi,{tl_clawd:"Claw'd",sub_stt:"Litterointi (STT)",lbl_talks:"jutut"});
+Object.assign(I18N.zh,{tl_clawd:"Claw'd",sub_stt:"转录 (STT)",lbl_talks:"对话"});
+Object.assign(I18N.ja,{tl_clawd:"Claw'd",sub_stt:"文字起こし (STT)",lbl_talks:"会話"});
+Object.assign(I18N.ko,{tl_clawd:"Claw'd",sub_stt:"전사 (STT)",lbl_talks:"대화"});
 
 const LANGS = ["pt","en","es","de","fr","fi","zh","ja","ko"];
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
@@ -101,20 +111,24 @@ async function conectar(fromQR){
   lsSet("espnokia_key", KEY);
   document.getElementById("login").classList.add("hide");
   document.getElementById("app").classList.remove("hide");
-  conn(true); renderHome(); home();
+  conn(true); renderHome();
+  const salvo = lsGet("espnokia_panel");   // reload cai na mesma página
+  if(salvo && RENDER[salvo]) abrir(salvo); else home();
 }
 
 // --- gráfico de barras no tempo (SVG na mão, estilo estatística), genérico ---
 function chartSVG(serie, campo, fmt){
   if(!serie.length) return `<p class="muted">${t("uso_vazio")}</p>`;
-  const H=64, W=serie.length*14+8, max=Math.max(...serie.map(p=>p[campo]), 1e-9);
+  // compacto: viewBox baixo + preserveAspectRatio=none (altura fixa no CSS,
+  // largura estica) — não escala pra cima quando há poucos dias
+  const H=40, W=serie.length*10+6, max=Math.max(...serie.map(p=>p[campo]), 1e-9);
   const barras = serie.map((p,i)=>{
-    const h=Math.max(1, Math.round(p[campo]/max*(H-14)));
-    return `<rect class="bar" x="${i*14+6}" y="${H-10-h}" width="8" height="${h}">`
+    const h=Math.max(1, Math.round(p[campo]/max*(H-8)));
+    return `<rect class="bar" x="${i*10+5}" y="${H-6-h}" width="6" height="${h}">`
          + `<title>${p.d}: ${fmt(p[campo])}</title></rect>`;
   }).join("");
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img">`
-       + `<line class="axis" x1="6" y1="${H-10}" x2="${W-2}" y2="${H-10}"/>${barras}</svg>`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img">`
+       + `<line class="axis" x1="4" y1="${H-6}" x2="${W-2}" y2="${H-6}"/>${barras}</svg>`;
 }
 function budgetBar(u){
   if(!u.orcamento_usd_mes) return "";
@@ -126,6 +140,7 @@ function budgetBar(u){
 
 // --- grade 3x3 + painéis ---
 const IC = {
+  clawd:'<circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="10.5" r="0.7"/><circle cx="15" cy="10.5" r="0.7"/><path d="M8.5 14.5c1.8 1.6 5.2 1.6 7 0"/>',
   stats:'<path d="M4 20V11M9.5 20V5M15 20v-8M20.5 20V8M3 20h18"/>',
   persona:'<circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="10.5" r="0.7"/><circle cx="15" cy="10.5" r="0.7"/><path d="M8.5 14.5c1.8 1.6 5.2 1.6 7 0"/>',
   model:'<rect x="6" y="6" width="12" height="12" rx="1.5"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/>',
@@ -136,8 +151,8 @@ const IC = {
   talks:'<path d="M4 5h16v10H10l-4 3.5V15H4z"/>',
   mem:'<rect x="5" y="4" width="14" height="16" rx="1"/><path d="M9 4v6l1.5-1.2L12 10V4"/>',
 };
-const TILES = ["stats","persona","model","stt","web","max","orc","talks","mem"];
-const TITLE = {stats:"tl_stats",persona:"tl_persona",model:"tl_model",stt:"tl_stt",web:"tl_web",
+const TILES = ["clawd","stats","mem"];   // 3 blocos coesos
+const TITLE = {clawd:"tl_clawd",stats:"tl_stats",persona:"tl_persona",model:"tl_model",stt:"tl_stt",web:"tl_web",
   max:"tl_max",orc:"tl_orc",talks:"tl_talks",mem:"tl_mem",device:"dr_device",conn:"dr_conn",about:"dr_about"};
 function renderHome(){
   document.getElementById("home").innerHTML = TILES.map(id=>
@@ -145,14 +160,17 @@ function renderHome(){
   ).join("");
 }
 function abrir(id){
-  atual = id;
+  atual = id; lsSet("espnokia_panel", id);   // persiste p/ o reload voltar aqui
   document.getElementById("home").classList.add("hide");
   const p = document.getElementById("panel"); p.classList.remove("hide");
-  p.innerHTML = `<div class="phead"><button class="back" onclick="home()" aria-label="voltar">‹</button><h2>${t(TITLE[id])}</h2></div><div id="pbody"></div>`;
+  p.innerHTML = `<div class="phead"><button class="back" onclick="home()" aria-label="voltar">‹</button>`
+    + `<h2>${t(TITLE[id])}</h2>`
+    + `<button class="refresh" onclick="abrir('${id}')" aria-label="atualizar" title="atualizar">↻</button></div>`
+    + `<div id="pbody"></div>`;
   RENDER[id](document.getElementById("pbody"));
 }
 function home(){
-  atual = null;
+  atual = null; lsSet("espnokia_panel", "");
   document.getElementById("panel").classList.add("hide");
   document.getElementById("home").classList.remove("hide");
 }
@@ -181,47 +199,33 @@ async function pStats(el){
     [t("u_medio"),usd(u.medio_usd)],[t("u_tin"),milhar(u.tokens_in)],[t("u_tout"),milhar(u.tokens_out)]]
     .map(([k,v])=>`<div class="stat"><b>${v}</b><span>${k}</span></div>`).join("");
   el.innerHTML = `<div class="grid">${tiles}</div>${budgetBar(u)}`
-    + `<label>${t("lbl_chart")}</label>${chartSVG(u.serie,"usd",usd)}`
-    + `<label>${t("conv_dia")}</label>${chartSVG(u.serie,"falas",n=>n+"")}`;
+    + `<div class="charts">`
+    + `<div><label>${t("lbl_chart")}</label>${chartSVG(u.serie,"usd",usd)}</div>`
+    + `<div><label>${t("conv_dia")}</label>${chartSVG(u.serie,"falas",n=>n+"")}</div>`
+    + `</div>`
+    + `<label>${t("lbl_orc")}</label><div class="row">`
+    + `<div><input id="f_orc" type="number" min="0" step="0.5" value="${u.orcamento_usd_mes||''}"></div>`
+    + `<div><button onclick="salvarOrc()">${t("save_orc")}</button></div></div>`;
 }
-async function pPersona(el){
+// Claw'd: IA (persona/modelo/busca/limite) + STT (subseção) + status das chaves (do env)
+async function pClawd(el){
   const c = await getCfg();
-  el.innerHTML = `<label>${t("lbl_persona")}</label>
-    <select id="f_persona">${opts(c.personas.map(p=>[p.id,p.nome]), c.persona_id)}</select>
-    <button onclick="salvarCfg({persona_id:v('f_persona')})">${t("save")}</button>`;
+  const badge = ok => `<span class="keystat ${ok?'ok':'miss'}">${ok?t("has_yes"):t("has_no")}</span>`;
+  el.innerHTML =
+    `<label>${t("lbl_persona")}</label><select id="f_persona">${opts(c.personas.map(p=>[p.id,p.nome]),c.persona_id)}</select>`
+    +`<label>${t("lbl_model")}</label><select id="f_model">${opts(c.modelos.map(m=>[m.id,m.nome]),c.claude_model)}</select>`
+    +`<label>${t("lbl_web")}</label><select id="f_web">${opts([["true",t("web_on")],["false",t("web_off")]],String(c.web_search))}</select>`
+    +`<label>${t("lbl_max")}</label><input id="f_max" type="number" min="40" max="240" value="${c.max_resposta_chars}">`
+    +`<div class="sub">${t("sub_stt")}</div>`
+    +`<label>${t("lbl_stt")}</label><select id="f_stt">${opts([["local",t("stt_local")],["groq",t("stt_groq")]],c.stt)}</select>`
+    +`<p class="muted">${t("anth_key")}: ${badge(c.tem_anthropic_key)} · ${t("groq_key")}: ${badge(c.tem_stt_key)}<br>${t("key_env")}</p>`
+    +`<button onclick="salvarClawd()">${t("save")}</button>`;
 }
-async function pModel(el){
-  const c = await getCfg();
-  el.innerHTML = `<label>${t("lbl_model")}</label>
-    <select id="f_model">${opts(c.modelos.map(m=>[m.id,m.nome]), c.claude_model)}</select>
-    <button onclick="salvarCfg({claude_model:v('f_model')})">${t("save")}</button>`;
+function salvarClawd(){
+  salvarCfg({persona_id:v('f_persona'),claude_model:v('f_model'),web_search:v('f_web')==='true',
+    max_resposta_chars:parseInt(v('f_max'))||220,stt:v('f_stt')});
 }
-async function pStt(el){
-  const c = await getCfg();
-  el.innerHTML = `<label>${t("lbl_stt")}</label>
-    <select id="f_stt">${opts([["local",t("stt_local")],["groq",t("stt_groq")]], c.stt)}</select>
-    <p class="muted">Groq: <span class="keystat ${c.tem_stt_key?'ok':'miss'}">${c.tem_stt_key?t("has_yes"):t("has_no")}</span> — ${t("key_env")}</p>
-    <button onclick="salvarCfg({stt:v('f_stt')})">${t("save")}</button>`;
-}
-async function pWeb(el){
-  const c = await getCfg();
-  el.innerHTML = `<label>${t("lbl_web")}</label>
-    <select id="f_web">${opts([["true",t("web_on")],["false",t("web_off")]], String(c.web_search))}</select>
-    <button onclick="salvarCfg({web_search:v('f_web')==='true'})">${t("save")}</button>`;
-}
-async function pMax(el){
-  const c = await getCfg();
-  el.innerHTML = `<label>${t("lbl_max")}</label>
-    <input id="f_max" type="number" min="40" max="240" value="${c.max_resposta_chars}">
-    <button onclick="salvarCfg({max_resposta_chars:parseInt(v('f_max'))||220})">${t("save")}</button>`;
-}
-async function pOrc(el){
-  const c = await getCfg();
-  el.innerHTML = `<label>${t("lbl_orc")}</label>
-    <input id="f_orc" type="number" min="0" step="0.5" value="${c.orcamento_usd_mes||''}">
-    <button onclick="salvarCfg({orcamento_usd_mes:parseFloat(v('f_orc'))||0})">${t("save_orc")}</button>`;
-}
-async function pTalks(el){ pag=0; await renderTalks(el); }
+async function salvarOrc(){ await salvarCfg({orcamento_usd_mes:parseFloat(v('f_orc'))||0}); abrir('stats'); }
 async function renderTalks(el){
   const d = await (await api("/claude/registro?pag="+pag)).json();
   pags = d.pags || 1;
@@ -233,11 +237,13 @@ async function renderTalks(el){
     + `<span>${pag+1} / ${pags}</span><button onclick="talksPag(1)">›</button></div>` : "";
   el.innerHTML = lista + nav;
 }
-function talksPag(d){ pag = Math.max(0, Math.min(pags-1, pag+d)); renderTalks(document.getElementById("pbody")); }
+function talksPag(d){ pag = Math.max(0, Math.min(pags-1, pag+d)); renderTalks(document.getElementById("talksbox")); }
 async function pMem(el){
   const m = await (await api("/claude/memoria")).json();
-  el.innerHTML = `<pre class="mem">${esc(m.memoria) || t("mem_empty")}</pre>
-    <button class="ghost" onclick="limpar()">${t("forget")}</button>`;
+  el.innerHTML = `<label>${t("lbl_mem")}</label><pre class="mem">${esc(m.memoria) || t("mem_empty")}</pre>`
+    + `<button class="ghost" onclick="limpar()">${t("forget")}</button>`
+    + `<label style="margin-top:18px">${t("lbl_talks")}</label><div id="talksbox"></div>`;
+  pag=0; renderTalks(document.getElementById("talksbox"));
 }
 async function limpar(){
   if(!confirm(t("confirm_forget"))) return;
@@ -272,8 +278,7 @@ async function pAbout(el){
   el.innerHTML = `<div class="kv"><span>espnokia · Claw'd</span><b>v${s.versao}</b></div>
     <p class="muted">${t("sobre")}</p>`;
 }
-const RENDER = {stats:pStats,persona:pPersona,model:pModel,stt:pStt,web:pWeb,max:pMax,orc:pOrc,
-  talks:pTalks,mem:pMem,device:pDevice,conn:pConn,about:pAbout};
+const RENDER = {clawd:pClawd,stats:pStats,mem:pMem,device:pDevice,conn:pConn,about:pAbout};
 
 // pareamento por QR: o aparelho gera .../#k=<chave>; a câmera abre o link e a
 // gente loga, guardando a chave só neste navegador (sai da URL depois)

@@ -37,6 +37,8 @@
   label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:1px;
     color:var(--ink2);margin:14px 0 4px}
   label:first-child{margin-top:0}
+  .sub{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--orange);
+    border-top:2px solid var(--line);margin:18px 0 2px;padding-top:12px;font-weight:bold}
   label .ic{width:13px;height:13px;vertical-align:-2px;margin-right:7px;fill:none;
     stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
   input,select,textarea{width:100%;border:2px solid var(--ink);padding:9px 8px;
@@ -73,11 +75,15 @@
     border:2px solid var(--ink);font-size:16px;font-weight:bold}
   .phead .back:active{background:var(--orange);color:#fff;border-color:var(--orange)}
   .phead h2{margin:0;font-size:14px;letter-spacing:1px;text-transform:uppercase;color:var(--ink)}
+  .phead .refresh{margin:0 0 0 auto;padding:6px 12px;background:var(--card);color:var(--ink);
+    border:2px solid var(--ink);font-size:15px;font-weight:bold}
+  .phead .refresh:active{background:var(--orange);color:#fff;border-color:var(--orange)}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .stat{border:2px solid var(--ink);padding:10px 12px}
   .stat b{display:block;font-size:18px;color:var(--orange)}
   .stat span{font-size:10px;color:var(--ink2);text-transform:uppercase;letter-spacing:1px}
-  .chart{width:100%;height:auto;margin:4px 0;overflow:visible}
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .chart{display:block;width:100%;height:52px;margin:2px 0}
   .chart .bar{fill:var(--orange)}
   .chart .axis{stroke:var(--ink2);stroke-width:1}
   .budget{height:16px;border:2px solid var(--ink);background:var(--card);margin-top:8px}
@@ -118,7 +124,7 @@
     .card{box-shadow:4px 4px 0 var(--shadow);margin-bottom:16px}
     .body{padding:14px} .row{flex-direction:column;gap:0}
     .grid3{gap:8px} .tile span{font-size:9px}
-    .grid{gap:8px} select.lang{font-size:12px}
+    .grid{gap:8px} select.lang{font-size:12px} .charts{grid-template-columns:1fr}
     .toast{left:10px;right:10px;transform:none;text-align:center;box-shadow:3px 3px 0 var(--orange)}
   }
   /* micro-interações CSS-only, desligadas em prefers-reduced-motion */
