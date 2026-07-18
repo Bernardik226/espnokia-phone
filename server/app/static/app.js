@@ -29,6 +29,16 @@ Object.assign(I18N.fi,{tl_clawd:"Claw'd",sub_stt:"Litterointi (STT)",lbl_talks:"
 Object.assign(I18N.zh,{tl_clawd:"Claw'd",sub_stt:"转录 (STT)",lbl_talks:"对话"});
 Object.assign(I18N.ja,{tl_clawd:"Claw'd",sub_stt:"文字起こし (STT)",lbl_talks:"会話"});
 Object.assign(I18N.ko,{tl_clawd:"Claw'd",sub_stt:"전사 (STT)",lbl_talks:"대화"});
+// tema/idioma/device-id movidos pro menu lateral
+Object.assign(I18N.pt,{dr_theme:"Tema claro/escuro",dr_lang:"Idioma",dr_devid:"Device ID"});
+Object.assign(I18N.en,{dr_theme:"Light/dark theme",dr_lang:"Language",dr_devid:"Device ID"});
+Object.assign(I18N.es,{dr_theme:"Tema claro/oscuro",dr_lang:"Idioma",dr_devid:"ID del dispositivo"});
+Object.assign(I18N.de,{dr_theme:"Hell/Dunkel",dr_lang:"Sprache",dr_devid:"Geräte-ID"});
+Object.assign(I18N.fr,{dr_theme:"Thème clair/sombre",dr_lang:"Langue",dr_devid:"ID appareil"});
+Object.assign(I18N.fi,{dr_theme:"Vaalea/tumma teema",dr_lang:"Kieli",dr_devid:"Laitetunnus"});
+Object.assign(I18N.zh,{dr_theme:"浅色/深色主题",dr_lang:"语言",dr_devid:"设备 ID"});
+Object.assign(I18N.ja,{dr_theme:"テーマ (明/暗)",dr_lang:"言語",dr_devid:"デバイスID"});
+Object.assign(I18N.ko,{dr_theme:"밝게/어둡게",dr_lang:"언어",dr_devid:"기기 ID"});
 
 const LANGS = ["pt","en","es","de","fr","fi","zh","ja","ko"];
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
@@ -57,6 +67,8 @@ function aplicaI18n(){
   const c = document.getElementById("conn"); if(c) conn(c.classList.contains("on"));
   const app = document.getElementById("app");
   if(app && !app.classList.contains("hide")){ renderHome(); if(atual) abrir(atual); }
+  const w = document.getElementById("drawerwrap");   // drawer aberto: re-renderiza no novo idioma
+  if(w && w.innerHTML) renderDrawer();
 }
 function setLang(v){ lang=v; lsSet("espnokia_lang",v); aplicaI18n(); }
 
@@ -175,22 +187,33 @@ function home(){
   document.getElementById("home").classList.remove("hide");
 }
 
-// drawer (hambúrguer)
-function toggleDrawer(){
-  const w = document.getElementById("drawerwrap");
-  if(w.innerHTML){ w.innerHTML=""; return; }
-  w.innerHTML = `<div class="scrim" onclick="closeDrawer()"></div>
+// drawer (hambúrguer): tema, idioma, device id (ocultável) + adicional
+let devidShown = false;
+function drawerHTML(){
+  const langopts = LANGS.map(l=>`<option value="${l}"${l===lang?" selected":""}>${I18N[l].lang}</option>`).join("");
+  const devid = devidShown ? esc(KEY) : "•".repeat(12);
+  return `<div class="scrim" onclick="closeDrawer()"></div>
   <div class="drawer">
     <div class="logo"></div>
-    <div class="dsec">${t("adicional")}</div>
+    <button class="ditem" onclick="toggleTheme()">◐ ${t("dr_theme")}</button>
+    <div class="dsec">${t("dr_lang")}</div>
+    <select onchange="setLang(this.value)">${langopts}</select>
+    <div class="dsec">${t("dr_devid")}</div>
+    <div class="devid"><code id="devid_txt">${devid}</code>`
+    +`<button class="iconbtn" onclick="toggleDevId()" aria-label="mostrar/ocultar" title="mostrar/ocultar">👁</button>`
+    +`<button class="iconbtn" onclick="copiarChave()" aria-label="copiar" title="copiar">⧉</button></div>`
+    +`<div class="dsec">${t("adicional")}</div>
     <button class="ditem" onclick="fromDrawer('device')">${t("dr_device")}</button>
     <button class="ditem" onclick="fromDrawer('conn')">${t("dr_conn")}</button>
     <button class="ditem" onclick="fromDrawer('about')">${t("dr_about")}</button>
   </div>`;
-  for(const el of w.querySelectorAll(".logo")) el.innerHTML = LOGO;
 }
+function fillLogos(root){ for(const el of root.querySelectorAll(".logo")) el.innerHTML = LOGO; }
+function renderDrawer(){ const w=document.getElementById("drawerwrap"); w.innerHTML=drawerHTML(); fillLogos(w); }
+function toggleDrawer(){ const w=document.getElementById("drawerwrap"); if(w.innerHTML){ w.innerHTML=""; return; } renderDrawer(); }
 function closeDrawer(){ document.getElementById("drawerwrap").innerHTML=""; }
 function fromDrawer(id){ closeDrawer(); abrir(id); }
+function toggleDevId(){ devidShown=!devidShown; const e=document.getElementById("devid_txt"); if(e) e.textContent = devidShown?KEY:"•".repeat(12); }
 
 // --- painéis (cada um monta seu conteúdo em #pbody) ---
 async function pStats(el){
@@ -288,7 +311,7 @@ if(_auto){ KEY = _auto; history.replaceState(null, "", location.pathname); }
 
 // logotipo espnokia (mesmo wordmark bicolor da página AP, 79x8)
 const LOGO = `<svg viewBox="0 0 79 8" shape-rendering="crispEdges"><path fill="#e56825" d="M2 0h7v1h-7zM11 0h7v1h-7zM20 0h8v1h-8zM1 1h8v1h-8zM10 1h8v1h-8zM20 1h9v1h-9zM0 2h2v1h-2zM10 2h2v1h-2zM20 2h2v1h-2zM27 2h2v1h-2zM0 3h7v1h-7zM10 3h7v1h-7zM20 3h9v1h-9zM0 4h7v1h-7zM11 4h7v1h-7zM20 4h8v1h-8zM0 5h2v1h-2zM17 5h2v1h-2zM20 5h2v1h-2zM1 6h8v1h-8zM10 6h8v1h-8zM20 6h2v1h-2zM2 7h7v1h-7zM10 7h7v1h-7zM20 7h2v1h-2z"/><path fill="#1d4487" d="M31 0h3v1h-3zM39 0h2v1h-2zM44 0h8v1h-8zM55 0h2v1h-2zM60 0h3v1h-3zM65 0h2v1h-2zM72 0h4v1h-4zM31 1h4v1h-4zM39 1h2v1h-2zM43 1h10v1h-10zM55 1h2v1h-2zM59 1h3v1h-3zM65 1h2v1h-2zM71 1h6v1h-6zM31 2h5v1h-5zM39 2h2v1h-2zM43 2h2v1h-2zM51 2h2v1h-2zM55 2h2v1h-2zM58 2h3v1h-3zM65 2h2v1h-2zM70 2h3v1h-3zM75 2h2v1h-2zM31 3h2v1h-2zM34 3h2v1h-2zM39 3h2v1h-2zM43 3h2v1h-2zM51 3h2v1h-2zM55 3h5v1h-5zM65 3h2v1h-2zM69 3h4v1h-4zM75 3h3v1h-3zM31 4h2v1h-2zM35 4h2v1h-2zM39 4h2v1h-2zM43 4h2v1h-2zM51 4h2v1h-2zM55 4h5v1h-5zM65 4h2v1h-2zM69 4h2v1h-2zM75 4h2v1h-2zM31 5h2v1h-2zM36 5h2v1h-2zM39 5h2v1h-2zM43 5h2v1h-2zM51 5h2v1h-2zM55 5h2v1h-2zM58 5h3v1h-3zM65 5h2v1h-2zM68 5h10v1h-10zM31 6h2v1h-2zM37 6h4v1h-4zM43 6h10v1h-10zM55 6h2v1h-2zM59 6h3v1h-3zM65 6h2v1h-2zM68 6h10v1h-10zM31 7h2v1h-2zM38 7h3v1h-3zM44 7h8v1h-8zM55 7h2v1h-2zM60 7h3v1h-3zM65 7h2v1h-2zM68 7h2v1h-2zM76 7h2v1h-2z"/></svg>`;
-for(const el of document.querySelectorAll(".logo")) el.innerHTML = LOGO;
+fillLogos(document);
 
 montaSelects(); aplicaI18n(); aplicaTheme();
 if(KEY){ document.getElementById("key").value = KEY; conectar(!!_auto); }

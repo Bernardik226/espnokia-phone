@@ -115,6 +115,10 @@
   .ditem{width:100%;text-align:left;margin:0 0 8px;background:var(--card);color:var(--ink);
     border:2px solid var(--ink);padding:9px 10px;font-size:13px;font-weight:normal;letter-spacing:0}
   .ditem:active{background:var(--orange);color:#fff;border-color:var(--orange)}
+  .drawer select{margin-bottom:6px}
+  .devid{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+  .devid code{flex:1;font-size:11px;word-break:break-all;color:var(--ink2);
+    border:2px solid var(--line);padding:6px 8px;min-width:0}
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:20;
     background:var(--ink);color:#fff;padding:10px 22px;font-weight:bold;letter-spacing:1px;
     box-shadow:5px 5px 0 var(--orange);opacity:0;transition:opacity .25s}

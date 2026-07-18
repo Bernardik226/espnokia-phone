@@ -1,6 +1,6 @@
 // service worker do painel do Claw'd: cacheia a casca (HTML + ícones) pra abrir
 // instantâneo e instalar como app; os dados (API) sempre vão pela rede.
-const CACHE = "espnokia-claud-v4";
+const CACHE = "espnokia-claud-v5";
 const SHELL = ["/", "/static/app.css", "/static/app.js",
                "/static/icon-192.png", "/static/icon-512.png"];
 
