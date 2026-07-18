@@ -64,6 +64,8 @@ enum StrId : uint8_t {
   STR_WALLPAPER, STR_WALL_NEUTRO, STR_WALL_PONTOS,
   // cronometro do app relogio
   STR_STOPWATCH, STR_RESET,
+  // alarme (quanto falta) e toggle de mostrar a data no menu inicial
+  STR_RINGS_IN, STR_SHOW_DATE,
   STR_COUNT
 };
 

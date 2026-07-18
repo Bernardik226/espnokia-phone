@@ -25,7 +25,7 @@ static char ring_label_[16];
 // timer regressivo: volatil de proposito (reboot cancela, como nos fornos)
 static bool timer_on_ = false;
 static uint32_t timer_end_ = 0;
-static uint16_t timer_min_ = 0;
+static char timer_lbl_[12] = {0};   // rotulo mostrado no overlay ao disparar
 
 static void load() {
   if (loaded_) return;
@@ -83,11 +83,17 @@ void trigger(StrId title, const char* label) {
   sound::ringtone();
 }
 
-void timer_start(uint16_t minutos) {
-  timer_min_ = minutos;
-  timer_end_ = millis() + (uint32_t)minutos * 60000;
+void timer_start_s(uint32_t segundos) {
+  if (segundos == 0) segundos = 1;
+  timer_end_ = millis() + segundos * 1000;
   timer_on_ = true;
+  if (segundos % 60 == 0)
+    snprintf(timer_lbl_, sizeof(timer_lbl_), "%u min", (unsigned)(segundos / 60));
+  else
+    snprintf(timer_lbl_, sizeof(timer_lbl_), "%u:%02u",
+             (unsigned)(segundos / 60), (unsigned)(segundos % 60));
 }
+void timer_start(uint16_t minutos) { timer_start_s((uint32_t)minutos * 60); }
 void timer_cancel() { timer_on_ = false; }
 uint32_t timer_left_s() {
   if (!timer_on_) return 0;
@@ -104,9 +110,7 @@ void tick(uint32_t now) {
   }
   if (timer_on_ && timeutil::reached(now, timer_end_)) {
     timer_on_ = false;
-    char lbl[16];
-    snprintf(lbl, sizeof(lbl), "%u min", timer_min_);
-    trigger(STR_TIME_UP, lbl);
+    trigger(STR_TIME_UP, timer_lbl_);
     return;
   }
   if (!armed_) return;

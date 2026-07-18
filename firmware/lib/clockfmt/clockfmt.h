@@ -5,6 +5,10 @@
 // (ex.: vindos do RTC).
 void hhmm_format(uint8_t hour, uint8_t minute, char out[6]);
 
+// Como hhmm_format, mas respeitando 12/24h. Em 12h a hora vira 1..12 (00h→12,
+// 13h→01) e *pm (se != nullptr) indica se é a metade PM do dia (hour >= 12).
+void hhmm_format12(uint8_t hour, uint8_t minute, bool fmt24, char out[6], bool* pm);
+
 // Fallback sem RTC: relógio "anda" a partir de 12:00 no boot (estilo
 // videocassete). colon_on diz se o ':' aparece (pisca a cada segundo,
 // como nos Nokia reais).

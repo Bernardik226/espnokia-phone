@@ -55,6 +55,13 @@ int bold_width(U8G2& g, const char* s) {
   return w;
 }
 void softkey(U8G2& g, const char* label) { text_bold_center(g, 47, label); }
+
+void softkey_action(U8G2& g, const char* label, bool up_held) {
+  softkey(g, label);
+  int cx = 80, cy = 44, r = 2;                 // canto inferior direito
+  if (up_held) g.drawDisc(cx, cy, r);          // acesa no hold
+  else g.drawCircle(cx, cy, r);                // solta: só o contorno
+}
 void list_row(U8G2& g, int y, uint8_t w, const char* text, bool selected) {
   if (selected) { g.drawBox(0, y, w, 9); g.setDrawColor(0); }
   g.drawUTF8(3, y + 8, text);

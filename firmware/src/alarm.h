@@ -18,8 +18,9 @@ bool armed(uint8_t dia, uint8_t mes, uint8_t h, uint8_t m);  // aviso deste jogo
 bool armed_at(uint8_t& h, uint8_t& m);  // ha alarme armado? devolve a hora
 void trigger(StrId title, const char* label);  // overlay + toque, na hora
 
-// timer regressivo (minutos): conta por millis, dispara trigger(STR_TIME_UP)
-void timer_start(uint16_t minutos);
+// timer regressivo: conta por millis, dispara trigger(STR_TIME_UP)
+void timer_start(uint16_t minutos);   // atalho de minutos
+void timer_start_s(uint32_t segundos);
 void timer_cancel();
 uint32_t timer_left_s();            // 0 = nenhum timer rodando
 

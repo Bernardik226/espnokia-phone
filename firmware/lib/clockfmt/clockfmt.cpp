@@ -9,6 +9,12 @@ void hhmm_format(uint8_t h, uint8_t m, char out[6]) {
   out[5] = '\0';
 }
 
+void hhmm_format12(uint8_t hour, uint8_t minute, bool fmt24, char out[6], bool* pm) {
+  if (pm) *pm = hour >= 12;
+  uint8_t h = fmt24 ? hour : (uint8_t)(hour % 12 == 0 ? 12 : hour % 12);
+  hhmm_format(h, minute, out);
+}
+
 void clock_format(uint32_t ms, char out[6], bool* colon_on) {
   uint32_t total_min = ms / 60000UL;
   hhmm_format((uint8_t)((12 + total_min / 60) % 24), (uint8_t)(total_min % 60), out);

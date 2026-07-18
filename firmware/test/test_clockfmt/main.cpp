@@ -34,6 +34,20 @@ void test_hhmm_format_pads_zeros() {
   hhmm_format(0, 0, s);
   TEST_ASSERT_EQUAL_STRING("00:00", s);
 }
+void test_hhmm_format12_converts_and_flags_pm() {
+  char s[6]; bool pm;
+  hhmm_format12(0, 30, false, s, &pm);            // meia-noite em 12h -> 12:30 AM
+  TEST_ASSERT_EQUAL_STRING("12:30", s);
+  TEST_ASSERT_FALSE(pm);
+  hhmm_format12(13, 5, false, s, &pm);            // 13h -> 01:05 PM
+  TEST_ASSERT_EQUAL_STRING("01:05", s);
+  TEST_ASSERT_TRUE(pm);
+  hhmm_format12(12, 0, false, s, &pm);            // meio-dia -> 12:00 PM
+  TEST_ASSERT_EQUAL_STRING("12:00", s);
+  TEST_ASSERT_TRUE(pm);
+  hhmm_format12(13, 5, true, s, &pm);             // 24h nao converte
+  TEST_ASSERT_EQUAL_STRING("13:05", s);
+}
 void test_days_in_month_handles_leap_years() {
   TEST_ASSERT_EQUAL_UINT8(31, days_in_month(2026, 1));
   TEST_ASSERT_EQUAL_UINT8(28, days_in_month(2026, 2));
@@ -56,6 +70,7 @@ int main() {
   RUN_TEST(test_wraps_past_midnight);
   RUN_TEST(test_colon_blinks_each_second);
   RUN_TEST(test_hhmm_format_pads_zeros);
+  RUN_TEST(test_hhmm_format12_converts_and_flags_pm);
   RUN_TEST(test_days_in_month_handles_leap_years);
   RUN_TEST(test_date_weekday_known_dates);
   return UNITY_END();

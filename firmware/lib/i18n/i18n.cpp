@@ -6,7 +6,8 @@
 static const char* const kStr[STR_COUNT][LANG_COUNT] = {
   /* NONE        */ {"", "", "", "", "", ""},
   /* APP_CLOCK   */ {"Relógio", "Clock", "Reloj", "Horloge", "Uhr", "Kello"},
-  /* APP_WEATHER */ {"Clima", "Weather", "Clima", "Météo", "Wetter", "Sää"},
+  /* APP_WEATHER */ {"Termômetro", "Thermometer", "Termómetro", "Thermomètre",
+                     "Thermometer", "Lämpömittari"},
   /* APP_TONES   */ {"Toques", "Tones", "Tonos", "Sonneries", "Töne", "Äänet"},
   /* APP_SETTINGS*/ {"Config", "Settings", "Ajustes", "Réglages",
                      "Einstellungen", "Asetukset"},
@@ -167,6 +168,9 @@ static const char* const kStr[STR_COUNT][LANG_COUNT] = {
   /* STOPWATCH   */ {"Cronômetro", "Stopwatch", "Cronómetro", "Chrono",
                      "Stoppuhr", "Sekuntikello"},
   /* RESET       */ {"Zerar", "Reset", "Reiniciar", "Réinit.", "Reset", "Nollaa"},
+  /* RINGS_IN    */ {"Toca em", "Rings in", "Suena en", "Dans", "In", "Ajassa"},
+  /* SHOW_DATE   */ {"Mostrar data", "Show date", "Mostrar fecha",
+                     "Afficher date", "Datum zeigen", "Näytä pvm"},
 };
 
 static const char* const kDay[LANG_COUNT][7] = {

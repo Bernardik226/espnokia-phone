@@ -5,6 +5,7 @@
 #include "clockfmt.h"
 #include "i18n.h"
 #include "sound.h"
+#include "timeprefs.h"
 #include "version.h"
 #include "drivers/backlight.h"
 #include "drivers/buzzer.h"
@@ -128,13 +129,16 @@ static bool input(Button b, BtnEvent e) {
       view = V_ROOT; cur = 0;
       return true;
     case V_DATETIME:
-      if (b == BTN_UP || b == BTN_DOWN) { cur ^= 1; return true; }  // 2 itens
+      if (b == BTN_UP)   { cur = (cur + 2) % 3; return true; }  // 3 itens
+      if (b == BTN_DOWN) { cur = (cur + 1) % 3; return true; }
       if (b == BTN_OK) {
         if (cur == 0) {
           ntp_sync_set(!ntp_sync_);
           if (!ntp_sync_) dt_edit_open();  // desligou o auto → acerta na hora
-        } else {
+        } else if (cur == 1) {
           dt_edit_open();
+        } else {
+          timeprefs::set_show_date(!timeprefs::show_date());  // data no menu inicial
         }
         return true;
       }
@@ -251,23 +255,23 @@ static void render(void* gfx) {
     }
     case V_DATETIME: {
       nokia_ui::text_bold_center(g, 8, tr(STR_DATETIME));
-      const char* items[] = {tr(STR_SYNC), tr(STR_SET_NOW)};
-      for (uint8_t i = 0; i < 2; i++) {
+      const char* items[] = {tr(STR_SYNC), tr(STR_SET_NOW), tr(STR_SHOW_DATE)};
+      for (uint8_t i = 0; i < 3; i++) {
         int y = 11 + i * 9;
         bool sel = (cur == i);
         if (sel) { g.drawBox(0, y, 84, 9); g.setDrawColor(0); }
         g.drawUTF8(3, y + 8, items[i]);
-        if (i == 0) {  // checkbox do toggle, a direita
+        if (i == 0 || i == 2) {  // checkbox dos toggles (Sincronizar / Mostrar data)
+          bool on = (i == 0) ? ntp_sync_ : timeprefs::show_date();
           g.drawFrame(73, y + 2, 7, 7);
-          if (ntp_sync_) {
+          if (on) {
             g.drawLine(74, y + 5, 75, y + 7);
             g.drawLine(75, y + 7, 78, y + 3);
           }
         }
         if (sel) g.setDrawColor(1);
       }
-      if (!rtc::present()) g.drawUTF8(3, 38, tr(STR_NO_RTC));
-      nokia_ui::softkey(g, tr(cur == 0 ? STR_CHANGE : STR_SELECT));
+      nokia_ui::softkey(g, tr(cur == 1 ? STR_SELECT : STR_CHANGE));
       break;
     }
     case V_DT_EDIT: {

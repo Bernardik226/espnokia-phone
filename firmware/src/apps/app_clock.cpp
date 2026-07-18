@@ -5,23 +5,26 @@
 #include "clockfmt.h"
 #include "i18n.h"
 #include "sound.h"
+#include "timeprefs.h"
 #include "drivers/rtc.h"
 #include "ui/assets.h"
 #include "ui/fonts3310.h"
 #include "ui/nokia_ui.h"
 
-// Estilo Clock (Menu 11) do 3310: hora grande no centro. OK abre as opcoes
-// {Alarme, Timer}. O alarme usa o slot unico do alarme:: (proxima ocorrencia
-// de HH:MM, persiste na NVS); o timer conta minutos por millis e dispara o
-// overlay TEMPO! — ambos tocam o toque padrao do sistema.
+// Estilo Clock (Menu 11) do 3310: hora grande no centro. OK abre {Alarme,
+// Timer, Cronômetro}. O alarme usa o slot único do alarme:: (persiste na NVS);
+// o timer (MM:SS) conta por millis e dispara o overlay TEMPO!. O botão UP é a
+// tecla de AÇÃO da tela (bolinha no HUD): no relógio alterna 12/24h, no
+// cronômetro zera.
 enum View : uint8_t { V_CLOCK, V_MENU, V_ALARM, V_TIMER, V_STOPWATCH };
 static View view = V_CLOCK;
 static uint8_t cur = 0;
+static bool up_held_ = false;          // UP (tecla de ação) pressionado agora
 static bool al_status_ = false;        // V_ALARM mostrando o alarme armado
 static uint8_t al_h_, al_m_, al_field_;
-static uint16_t tm_min_ = 5;           // minutos do editor do timer
+static uint8_t tm_min_ = 5, tm_sec_ = 0, tm_field_ = 0;  // editor MM:SS do timer
 
-// cronômetro (crescente): OK inicia/pausa, DOWN zera (parado), C volta ao menu.
+// cronômetro (crescente): OK inicia/pausa, UP zera, C volta ao menu.
 // Estado por millis; segue contando mesmo se sair do app (como cronômetro real)
 static bool sw_run_ = false;
 static uint32_t sw_start_ = 0, sw_accum_ = 0;
@@ -54,10 +57,12 @@ static void alarm_open() {
 }
 
 static bool input(Button b, BtnEvent e) {
+  if (b == BTN_UP) up_held_ = (e == EV_PRESS);   // bolinha da tecla de ação
   if (e != EV_PRESS) return false;
   switch (view) {
     case V_CLOCK:
       if (b == BTN_OK) { view = V_MENU; cur = 0; return true; }
+      if (b == BTN_UP) { timeprefs::set_fmt24(!timeprefs::fmt24()); return true; }  // ação: 12/24h
       return false;  // C nao consumido → shell volta pro menu
     case V_MENU:
       if (b == BTN_UP)   { cur = (cur + 2) % 3; return true; }
@@ -107,14 +112,22 @@ static bool input(Button b, BtnEvent e) {
         view = V_MENU;  // C volta (timer segue contando)
         return true;
       }
-      if (b == BTN_UP) { tm_min_ = tm_min_ % 99 + 1; return true; }
-      if (b == BTN_DOWN) { tm_min_ = (tm_min_ + 97) % 99 + 1; return true; }
+      if (b == BTN_UP || b == BTN_DOWN) {   // ajusta o campo ativo (MM ou SS)
+        int8_t d = (b == BTN_UP) ? 1 : -1;
+        if (tm_field_ == 0) tm_min_ = (uint8_t)((tm_min_ + 100 + d) % 100);   // 0..99
+        else tm_sec_ = (uint8_t)((tm_sec_ + 60 + d) % 60);
+        return true;
+      }
       if (b == BTN_OK) {
-        alarme::timer_start(tm_min_);
+        if (tm_field_ == 0) { tm_field_ = 1; return true; }   // MM -> SS
+        alarme::timer_start_s((uint32_t)tm_min_ * 60 + tm_sec_);
         sound::play(sound::SND_CONFIRM);
+        tm_field_ = 0;
         return true;  // fica na tela: vira o countdown
       }
-      view = V_MENU;  // C volta
+      // C: volta um campo; no primeiro, sai pro menu
+      if (tm_field_ > 0) tm_field_--;
+      else view = V_MENU;
       return true;
     case V_STOPWATCH:
       if (b == BTN_OK) {
@@ -122,7 +135,7 @@ static bool input(Button b, BtnEvent e) {
         else { sw_start_ = millis(); sw_run_ = true; }                        // inicia
         return true;
       }
-      if (b == BTN_DOWN && !sw_run_) { sw_accum_ = 0; return true; }          // zera (parado)
+      if (b == BTN_UP) { sw_accum_ = 0; sw_start_ = millis(); return true; }  // ação: zera
       view = V_MENU;  // C volta (o cronômetro segue contando se estava rodando)
       return true;
   }
@@ -136,9 +149,10 @@ static void render(void* gfx) {
     case V_CLOCK: {
       char hhmm[6];
       bool colon = ((millis() / 1000) % 2) == 0;
+      bool pm = false;
       rtc::DateTime dt;
       bool tem = rtc::now(dt);
-      if (tem) hhmm_format(dt.hour, dt.min, hhmm);
+      if (tem) hhmm_format12(dt.hour, dt.min, timeprefs::fmt24(), hhmm, &pm);
       else clock_format(millis(), hhmm, &colon);
 
       // HH e MM em posição fixa; ':' só quando aceso -> piscar limpo (nada de
@@ -153,18 +167,22 @@ static void render(void* gfx) {
       if (colon) g.drawStr(x + (int)g.getStrWidth(hh), 30, ":");
 
       g.setFont(u8g2_font_3310_small);
+      if (tem && !timeprefs::fmt24()) {   // marca AM/PM no topo direito
+        const char* ap = pm ? "PM" : "AM";
+        g.drawStr(82 - (int)g.getStrWidth(ap), 8, ap);
+      }
       uint32_t left = alarme::timer_left_s();
       if (left) {  // timer rodando: regressivo discreto sob a hora
         char t[8];
         snprintf(t, sizeof(t), "%02u:%02u", (unsigned)(left / 60), (unsigned)(left % 60));
         g.drawStr(42 - (int)g.getStrWidth(t) / 2, 40, t);
-      } else if (tem) {  // senão, a data (dia da semana + DD/MM) sob a hora
+      } else if (tem && timeprefs::show_date()) {  // data (dia + DD/MM), se ligada
         char d[20];
         snprintf(d, sizeof(d), "%s %02u/%02u",
                  day_name(date_weekday(dt.year, dt.month, dt.day)), dt.day, dt.month);
         g.drawUTF8(42 - (int)g.getUTF8Width(d) / 2, 40, d);
       }
-      nokia_ui::softkey(g, tr(STR_OPTIONS));
+      nokia_ui::softkey_action(g, tr(STR_OPTIONS), up_held_);   // UP: alterna 12/24h
       break;
     }
     case V_MENU: {
@@ -186,10 +204,18 @@ static void render(void* gfx) {
       }
       char hhmm[6];
       hhmm_format(al_h_, al_m_, hhmm);
-      if (al_status_) {  // armado: hora grande + Desligar
+      if (al_status_) {  // armado: hora grande + quanto falta + Desligar
         g.setFont(u8g2_font_VCR_OSD_tn);
-        g.drawStr(42 - (int)g.getStrWidth(hhmm) / 2, 33, hhmm);
+        g.drawStr(42 - (int)g.getStrWidth(hhmm) / 2, 29, hhmm);
         g.setFont(u8g2_font_3310_small);
+        rtc::DateTime dt;
+        if (rtc::now(dt)) {  // faltam Xh Ym até a próxima ocorrência
+          int rem = ((al_h_ * 60 + al_m_) - (dt.hour * 60 + dt.min) + 1440) % 1440;
+          if (rem == 0) rem = 1440;
+          char r[24];
+          snprintf(r, sizeof(r), "%s %dh%02d", tr(STR_RINGS_IN), rem / 60, rem % 60);
+          nokia_ui::text_center(g, 40, r);
+        }
         nokia_ui::softkey(g, tr(STR_TURN_OFF));
         break;
       }
@@ -212,14 +238,14 @@ static void render(void* gfx) {
         nokia_ui::softkey(g, tr(STR_TURN_OFF));
         break;
       }
-      char m[8];
-      snprintf(m, sizeof(m), "%u", tm_min_);
-      const char* minsuf = tr(STR_MIN_SUFFIX);
-      int wm = (int)g.getStrWidth(m), wmin = (int)g.getUTF8Width(minsuf);
-      int x = 42 - (wm + wmin) / 2;
-      nokia_ui::inv_str(g, x, 25, m);
-      g.drawUTF8(x + wm, 25, minsuf);
-      nokia_ui::softkey(g, tr(STR_OK));
+      // editor MM:SS (dois campos, mesmo estilo do alarme): OK avança MM->SS
+      char t[6];
+      snprintf(t, sizeof(t), "%02u:%02u", tm_min_, tm_sec_);
+      int x = 42 - (int)g.getStrWidth(t) / 2;
+      g.drawStr(x, 25, t);
+      char part[3] = {t[tm_field_ ? 3 : 0], t[tm_field_ ? 4 : 1], '\0'};
+      nokia_ui::inv_str(g, tm_field_ ? x + (int)g.getStrWidth("00:") : x, 25, part);
+      nokia_ui::softkey(g, tr(tm_field_ == 0 ? STR_OK : STR_SAVE));
       break;
     }
     case V_STOPWATCH: {
@@ -231,8 +257,8 @@ static void render(void* gfx) {
       g.setFont(u8g2_font_7x13B_tr);
       g.drawStr(42 - (int)g.getStrWidth(t) / 2, 30, t);
       g.setFont(u8g2_font_3310_small);
-      if (!sw_run_ && ms) nokia_ui::text_center(g, 40, tr(STR_RESET));
-      nokia_ui::softkey(g, tr(sw_run_ ? STR_STOP : STR_START));
+      if (ms) nokia_ui::text_center(g, 40, tr(STR_RESET));   // UP zera (a qualquer hora)
+      nokia_ui::softkey_action(g, tr(sw_run_ ? STR_STOP : STR_START), up_held_);
       break;
     }
   }

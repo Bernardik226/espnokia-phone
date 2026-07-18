@@ -18,6 +18,10 @@ void text_center(U8G2& g, int y, const char* s);
 int bold_width(U8G2& g, const char* s);
 // label de softkey centrado na base (negrito 3310, baseline 47)
 void softkey(U8G2& g, const char* label);
+// como softkey, mas com a bolinha do BOTÃO DE AÇÃO (UP) no canto inf-direito:
+// contorno quando solto, preenchida (acesa) enquanto up_held — dica visual da
+// tecla de ação/alternância que o app oferece naquela tela
+void softkey_action(U8G2& g, const char* label, bool up_held);
 // estrelinha 5x5 (canto sup-esq em x,y) — usada no badge de recorde
 void draw_star(U8G2& g, int x, int y);
 // badge de recorde PADRÃO dos jogos: estrela + "HS" + valor (fonte 4x6), com
