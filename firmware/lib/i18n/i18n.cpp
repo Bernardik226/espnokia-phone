@@ -157,6 +157,9 @@ static const char* const kStr[STR_COUNT][LANG_COUNT] = {
                      "Breakout"},
   /* YOU_WIN     */ {"Você venceu!", "You win!", "¡Ganaste!", "Gagné !",
                      "Gewonnen!", "Voitit!"},
+  /* START       */ {"Iniciar", "Start", "Iniciar", "Démarrer", "Start", "Aloita"},
+  /* SOUND       */ {"Som", "Sound", "Sonido", "Son", "Ton", "Ääni"},
+  /* MUTE        */ {"Mudo", "Mute", "Silencio", "Muet", "Stumm", "Vaimea"},
 };
 
 static const char* const kDay[LANG_COUNT][7] = {

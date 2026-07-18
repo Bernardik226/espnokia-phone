@@ -22,16 +22,16 @@ static void render(void* gfx) {
   else clock_format(millis(), hhmm, &colon);
 
   g.setFont(u8g2_font_3310_small);
-  // hora bold no topo direito (como no 3310); posicao fixa medida na bold
-  // pra nao pular quando o colon pisca: desenha "HH:MM" e apaga so o ':'
+  // hora bold no topo direito (como no 3310). Pra o ':' piscar LIMPO (apaga
+  // por inteiro, sem sobrar meio ponto), HH e MM ficam em posicao fixa e o
+  // ':' so e desenhado quando aceso — nada de apagar por cima.
+  char hh[3] = {hhmm[0], hhmm[1], '\0'};
+  char hhc[4] = {hhmm[0], hhmm[1], ':', '\0'};
+  char mm[3] = {hhmm[3], hhmm[4], '\0'};
   int tx = 82 - nokia_ui::bold_width(g, hhmm);
-  nokia_ui::text_bold(g, tx, 8, hhmm);
-  if (!colon) {
-    char hh[3] = {hhmm[0], hhmm[1], '\0'};
-    g.setDrawColor(0);
-    g.drawBox(tx + nokia_ui::bold_width(g, hh), 0, nokia_ui::bold_width(g, ":"), 9);
-    g.setDrawColor(1);
-  }
+  nokia_ui::text_bold(g, tx, 8, hh);
+  nokia_ui::text_bold(g, tx + nokia_ui::bold_width(g, hhc), 8, mm);
+  if (colon) nokia_ui::text_bold(g, tx + nokia_ui::bold_width(g, hh), 8, ":");
   // marca do projeto no lugar do nome da operadora: emblema eN + wordmark
   g.drawXBMP(24, 9, ESPNOKIA_EMBLEM_W, ESPNOKIA_EMBLEM_H, espnokia_emblem_bits);
   g.drawXBMP(2, 31, ESPNOKIA_LOGO_W, ESPNOKIA_LOGO_H, espnokia_logo_bits);

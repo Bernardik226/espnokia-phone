@@ -17,6 +17,8 @@ void play(Snd s);
 void ringtone();                 // toca o toque escolhido no app Toques
 uint8_t volume();                // 0=baixo 1=medio 2=alto
 void set_volume(uint8_t lvl);    // aplica no buzzer e persiste
+bool muted();                    // mute geral do sistema
+void set_muted(bool m);          // aplica no buzzer e persiste
 uint8_t ringtone_idx();          // indice no catalogo do app Toques
 void set_ringtone(uint8_t idx);  // persiste
 }  // namespace sound

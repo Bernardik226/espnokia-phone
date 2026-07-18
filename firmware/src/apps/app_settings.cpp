@@ -107,7 +107,7 @@ static bool input(Button b, BtnEvent e) {
         if (cur == 0) { view = V_DISPLAY; cur = backlight::level(); }
         else if (cur == 1) { view = V_DATETIME; cur = 0; }
         else if (cur == 2) { view = V_CONN; cur = 0; }
-        else if (cur == 3) { view = V_VOL; cur = sound::volume(); }
+        else if (cur == 3) { view = V_VOL; cur = sound::muted() ? 0 : sound::volume() + 1; }
         else if (cur == 4) { view = V_LANG; cur = (uint8_t)i18n_lang(); }
         else { view = V_ABOUT; about_page = 0; }
         return true;
@@ -179,14 +179,20 @@ static bool input(Button b, BtnEvent e) {
       view = V_WIFI;  // C volta pro status
       return true;
     case V_VOL:
+      // 4 itens: 0=Mudo, 1/2/3 = baixo/medio/alto (volume 0/1/2)
       if (b == BTN_UP || b == BTN_DOWN) {  // demo ao vivo, nao persiste
-        cur = (b == BTN_UP) ? (cur + 2) % 3 : (cur + 1) % 3;
-        buzzer::set_volume(cur);
-        sound::play(sound::SND_KEY);  // ouve o nivel na hora
+        cur = (b == BTN_UP) ? (cur + 3) % 4 : (cur + 1) % 4;
+        buzzer::set_mute(cur == 0);
+        if (cur > 0) { buzzer::set_volume(cur - 1); sound::play(sound::SND_KEY); }
         return true;
       }
-      if (b == BTN_OK) { sound::set_volume(cur); view = V_ROOT; cur = 3; return true; }
-      // C cancela: reverte pro volume persistido
+      if (b == BTN_OK) {
+        sound::set_muted(cur == 0);
+        if (cur > 0) sound::set_volume(cur - 1);
+        view = V_ROOT; cur = 3; return true;
+      }
+      // C cancela: reverte pro estado persistido (mute + volume)
+      buzzer::set_mute(sound::muted());
       buzzer::set_volume(sound::volume());
       view = V_ROOT; cur = 3;
       return true;
@@ -346,8 +352,8 @@ static void render(void* gfx) {
       break;
     }
     case V_VOL: {
-      const char* items[] = {tr(STR_VOL_LOW), tr(STR_VOL_MED), tr(STR_VOL_HIGH)};
-      draw_list(g, tr(STR_VOLUME), items, 3, cur);
+      const char* items[] = {tr(STR_MUTE), tr(STR_VOL_LOW), tr(STR_VOL_MED), tr(STR_VOL_HIGH)};
+      draw_list(g, tr(STR_VOLUME), items, 4, cur);
       nokia_ui::softkey(g, tr(STR_OK));
       break;
     }

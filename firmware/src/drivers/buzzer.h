@@ -4,6 +4,8 @@
 namespace buzzer {
 void init();
 void set_volume(uint8_t lvl);                  // 0=baixo 1=medio 2=alto (duty PWM)
+void set_mute(bool m);                         // mute geral do sistema (cala tudo)
+bool muted();
 void beep(uint16_t freq_hz, uint16_t dur_ms);  // bip de tecla; mudo se tune tocando
 void play(const char* rtttl);                  // toca tune, não-bloqueante
 void stop();

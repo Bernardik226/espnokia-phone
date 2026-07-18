@@ -11,6 +11,7 @@ static const uint8_t kCh = 0;
 // ressonancia da capsula. A escada e por loudness ouvida, nao por duty.
 static const uint16_t kDuty[] = {12, 512, 96};
 static uint8_t vol_ = 2;
+static bool muted_ = false;         // mute geral do sistema
 static Rtttl rtttl_;
 static bool playing_ = false;       // tune em andamento
 static uint32_t tone_end_ = 0;      // fim do som da nota (90% — gap audível)
@@ -30,12 +31,15 @@ static void tone_for(uint16_t f, uint16_t tone_ms, uint16_t note_ms, uint32_t no
   note_end_ = now + note_ms;
 }
 void set_volume(uint8_t lvl) { vol_ = lvl > 2 ? 2 : lvl; }
+void set_mute(bool m) { muted_ = m; if (m) stop(); }
+bool muted() { return muted_; }
 // um piezo, um canal: o tune tem prioridade (fiel ao 3310 — tecla muda durante toque)
 void beep(uint16_t f, uint16_t ms) {
-  if (playing_) return;
+  if (playing_ || muted_) return;
   tone_for(f, ms, ms, millis());
 }
 void play(const char* tune) {
+  if (muted_) return;
   stop();
   playing_ = rtttl_.begin(tune);
   if (playing_) { uint32_t now = millis(); tone_end_ = now; note_end_ = now; }

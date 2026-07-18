@@ -58,6 +58,8 @@ enum StrId : uint8_t {
   STR_MIN_SUFFIX,
   // jogos novos (2048, breakout) e tela de vitoria
   STR_GAME_2048, STR_GAME_BREAKOUT, STR_YOU_WIN,
+  // menu do jogo (iniciar / som / mudo)
+  STR_START, STR_SOUND, STR_MUTE,
   STR_COUNT
 };
 

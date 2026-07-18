@@ -66,6 +66,33 @@ void test_fim_de_jogo_tabuleiro_travado(void) {
   TEST_ASSERT_FALSE(g2048_can_move(g));
 }
 
+void test_funde_para_cima(void) {
+  Game2048 g;
+  uint8_t v[16] = {1,0,0,0, 1,0,0,0, 0,0,0,0, 0,0,0,0};   // coluna 0: 2,2 no topo
+  set(g, v);
+  TEST_ASSERT_TRUE(g2048_move(g, G2_UP));
+  TEST_ASSERT_EQUAL_UINT8(2, g.cell[0]);                  // 4 no topo (y=0,x=0)
+  TEST_ASSERT_EQUAL_UINT32(4, g.score);
+}
+
+void test_funde_para_baixo(void) {
+  Game2048 g;
+  uint8_t v[16] = {1,0,0,0, 1,0,0,0, 0,0,0,0, 0,0,0,0};   // coluna 0: 2,2 no topo
+  set(g, v);
+  TEST_ASSERT_TRUE(g2048_move(g, G2_DOWN));
+  TEST_ASSERT_EQUAL_UINT8(2, g.cell[12]);                 // 4 na base (y=3,x=0)
+  TEST_ASSERT_EQUAL_UINT32(4, g.score);
+}
+
+void test_funde_para_direita(void) {
+  Game2048 g;
+  uint8_t v[16] = {1,1,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};   // linha 0: 2,2 à esquerda
+  set(g, v);
+  TEST_ASSERT_TRUE(g2048_move(g, G2_RIGHT));
+  TEST_ASSERT_EQUAL_UINT8(2, g.cell[3]);                  // 4 na direita (y=0,x=3)
+  TEST_ASSERT_EQUAL_UINT32(4, g.score);
+}
+
 void test_init_poe_duas_pecas(void) {
   Game2048 g;
   g2048_init(g, 12345);
@@ -83,6 +110,9 @@ int main(int, char**) {
   RUN_TEST(test_peca_fundida_nao_funde_de_novo);
   RUN_TEST(test_movimento_sem_mudanca_retorna_falso);
   RUN_TEST(test_fim_de_jogo_tabuleiro_travado);
+  RUN_TEST(test_funde_para_cima);
+  RUN_TEST(test_funde_para_baixo);
+  RUN_TEST(test_funde_para_direita);
   RUN_TEST(test_init_poe_duas_pecas);
   return UNITY_END();
 }

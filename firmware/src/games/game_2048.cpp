@@ -5,28 +5,40 @@
 #include "game2048.h"
 #include "i18n.h"
 #include "drivers/buzzer.h"
+#include "sound.h"
 #include "ui/fonts3310.h"
 #include "ui/nokia_ui.h"
 
-// Controle: UP=cima, DOWN=baixo, OK=direita, C(toque)=esquerda;
-// segurar C ~600ms sai pro submenu. OVER: OK reinicia, C sai.
+// Menu -> (Iniciar / Score / Config) -> jogo.
+// Jogar: UP=cima, DOWN=baixo, OK=direita, C(toque)=esquerda; segurar C ~600ms
+// volta ao menu; no menu, C sai do jogo. Config tem só mudo/liga do som.
 static const uint32_t kHoldExitMs = 600;
-enum V2 : uint8_t { PLAY, OVER };
+enum V2 : uint8_t { MENU, PLAY, OVER, SCORE, CONFIG };
 static V2 view;
 static Game2048 jogo;
 static uint32_t recorde;
 static bool novo_recorde;
+static uint8_t menu_sel;          // 0=Iniciar, 1=Score, 2=Config
 static uint32_t c_press_ms;
 
-static void load_nvs() { Preferences p; p.begin("g2048", true); recorde = p.getULong("hi", 0); p.end(); }
-static void save_nvs() { Preferences p; p.begin("g2048", false); p.putULong("hi", recorde); p.end(); }
+// o som respeita o mute GERAL do sistema (buzzer/sound) — o Config só alterna ele
+static void load_nvs() {
+  Preferences p; p.begin("g2048", true);
+  recorde = p.getULong("hi", 0);
+  p.end();
+}
+static void save_nvs() {
+  Preferences p; p.begin("g2048", false);
+  p.putULong("hi", recorde);
+  p.end();
+}
 
-static void novo_jogo() {
+static void comeca() {
   g2048_init(jogo, millis() ? millis() : 1);
   novo_recorde = false;
   view = PLAY;
 }
-static void on_enter() { load_nvs(); novo_jogo(); }
+static void on_enter() { load_nvs(); menu_sel = 0; view = MENU; }
 static void on_exit() { buzzer::stop(); }
 
 static void fim_se_travou() {
@@ -42,25 +54,47 @@ static void aplica(G2Dir d) {
 }
 
 static bool on_input(Button b, BtnEvent e) {
-  if (view == OVER) {
-    if (e != EV_PRESS) return true;
-    if (b == BTN_OK) { novo_jogo(); return true; }
-    return false;                              // C/outros: cede o controle (sai)
-  }
-  // PLAY — C acumula esquerda / segurar sai
-  if (b == BTN_C) {
-    if (e == EV_PRESS) { c_press_ms = millis(); return true; }
-    if (e == EV_RELEASE) {
-      if (millis() - c_press_ms >= kHoldExitMs) return false;   // segurar C sai
-      aplica(G2_LEFT);
+  switch (view) {
+    case MENU:
+      if (e != EV_PRESS) return true;
+      if (b == BTN_UP)   { menu_sel = (menu_sel + 2) % 3; return true; }
+      if (b == BTN_DOWN) { menu_sel = (menu_sel + 1) % 3; return true; }
+      if (b == BTN_OK) {
+        if (menu_sel == 0) { buzzer::beep(1200, 40); comeca(); }
+        else if (menu_sel == 1) view = SCORE;
+        else view = CONFIG;
+        return true;
+      }
+      return false;                            // C: sai do jogo (pra lista)
+    case PLAY:
+      if (b == BTN_C) {
+        if (e == EV_PRESS) { c_press_ms = millis(); return true; }
+        if (e == EV_RELEASE) {
+          if (millis() - c_press_ms >= kHoldExitMs) { view = MENU; return true; }  // segurar C volta ao menu
+          aplica(G2_LEFT);
+          return true;
+        }
+        return true;
+      }
+      if (e != EV_PRESS) return true;
+      if (b == BTN_UP) aplica(G2_UP);
+      else if (b == BTN_DOWN) aplica(G2_DOWN);
+      else if (b == BTN_OK) aplica(G2_RIGHT);
       return true;
-    }
-    return true;
+    case OVER:
+      if (e != EV_PRESS) return true;
+      if (b == BTN_OK) { comeca(); return true; }
+      view = MENU; return true;                // C/outros volta ao menu
+    case SCORE:
+      if (e != EV_PRESS) return true;
+      view = MENU; return true;                // qualquer tecla volta
+    case CONFIG:
+      if (e != EV_PRESS) return true;
+      if (b == BTN_C) { view = MENU; return true; }
+      sound::set_muted(!sound::muted());       // OK/UP/DOWN alternam o mute do sistema
+      if (!sound::muted()) buzzer::beep(1500, 30);
+      return true;
   }
-  if (e != EV_PRESS) return true;
-  if (b == BTN_UP) aplica(G2_UP);
-  else if (b == BTN_DOWN) aplica(G2_DOWN);
-  else if (b == BTN_OK) aplica(G2_RIGHT);
   return true;
 }
 
@@ -84,6 +118,43 @@ static void draw_grid(U8G2& g) {
 static void on_render(void* gfx) {
   U8G2& g = *(U8G2*)gfx;
   char buf[16];
+
+  if (view == MENU) {
+    g.setFont(u8g2_font_3310_small);
+    nokia_ui::text_bold_center(g, 9, tr(STR_GAME_2048));
+    const char* it[3] = {tr(STR_START), tr(STR_RECORD), tr(STR_OPTIONS)};
+    for (uint8_t i = 0; i < 3; i++) {
+      int y = 13 + i * 10;
+      bool sel = (i == menu_sel);
+      if (sel) { g.drawBox(0, y, 84, 10); g.setDrawColor(0); }
+      g.drawUTF8(4, y + 8, it[i]);
+      if (sel) g.setDrawColor(1);
+    }
+    nokia_ui::softkey(g, tr(STR_SELECT));
+    return;
+  }
+  if (view == SCORE) {
+    g.setFont(u8g2_font_3310_small);
+    nokia_ui::text_bold_center(g, 14, tr(STR_RECORD));
+    g.setFont(u8g2_font_logisoso24_tn);
+    snprintf(buf, sizeof(buf), "%lu", (unsigned long)recorde);
+    int w = g.getStrWidth(buf);
+    g.drawStr((84 - w) / 2, 46, buf);
+    return;
+  }
+  if (view == CONFIG) {
+    g.setFont(u8g2_font_3310_small);
+    nokia_ui::text_bold_center(g, 14, tr(STR_SOUND));
+    const char* estado = sound::muted() ? tr(STR_MUTE) : "ON";
+    g.setFont(u8g2_font_7x13B_tr);
+    int w = g.getStrWidth(estado);
+    g.drawStr((84 - w) / 2, 34, estado);
+    g.setFont(u8g2_font_3310_small);
+    nokia_ui::softkey(g, tr(STR_CHANGE));
+    return;
+  }
+
+  // PLAY / OVER
   g.setFont(u8g2_font_7x13B_tr);
   snprintf(buf, sizeof(buf), "%lu", (unsigned long)jogo.score);
   g.drawStr(2, 12, buf);

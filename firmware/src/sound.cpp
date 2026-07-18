@@ -9,12 +9,14 @@ static Preferences prefs_;
 static bool loaded_ = false;
 static uint8_t vol_ = 2;   // 3310 saia de fabrica no talo
 static uint8_t tone_ = 0;  // Nokia tune
+static bool mute_ = false;
 
 static void load() {
   if (loaded_) return;
   prefs_.begin("espnokia");
   vol_ = prefs_.getUChar("vol", 2);
   tone_ = prefs_.getUChar("tone", 0);
+  mute_ = prefs_.getBool("mute", false);
   if (vol_ > 2) vol_ = 2;
   if (tone_ >= tones_count()) tone_ = 0;
   loaded_ = true;
@@ -23,6 +25,7 @@ static void load() {
 void init() {
   load();
   buzzer::set_volume(vol_);
+  buzzer::set_mute(mute_);
 }
 
 // bips multi-nota como mini-RTTTL: ganham o gap e o timing do player de
@@ -51,6 +54,14 @@ void set_volume(uint8_t lvl) {
   vol_ = lvl > 2 ? 2 : lvl;
   buzzer::set_volume(vol_);
   prefs_.putUChar("vol", vol_);
+}
+
+bool muted() { load(); return mute_; }
+void set_muted(bool m) {
+  load();
+  mute_ = m;
+  buzzer::set_mute(m);
+  prefs_.putBool("mute", m);
 }
 
 uint8_t ringtone_idx() {
