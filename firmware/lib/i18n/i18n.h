@@ -62,6 +62,8 @@ enum StrId : uint8_t {
   STR_START, STR_SOUND, STR_MUTE,
   // wallpaper da tela inicial (config do sistema)
   STR_WALLPAPER, STR_WALL_NEUTRO, STR_WALL_PONTOS,
+  // cronometro do app relogio
+  STR_STOPWATCH, STR_RESET,
   STR_COUNT
 };
 

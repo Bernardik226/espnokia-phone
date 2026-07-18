@@ -164,6 +164,9 @@ static const char* const kStr[STR_COUNT][LANG_COUNT] = {
                      "Hintergrund", "Taustakuva"},
   /* WALL_NEUTRO */ {"Neutro", "Plain", "Neutro", "Neutre", "Neutral", "Neutraali"},
   /* WALL_PONTOS */ {"Pontos", "Dots", "Puntos", "Points", "Punkte", "Pisteet"},
+  /* STOPWATCH   */ {"Cronômetro", "Stopwatch", "Cronómetro", "Chrono",
+                     "Stoppuhr", "Sekuntikello"},
+  /* RESET       */ {"Zerar", "Reset", "Reiniciar", "Réinit.", "Reset", "Nollaa"},
 };
 
 static const char* const kDay[LANG_COUNT][7] = {

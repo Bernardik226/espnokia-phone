@@ -14,12 +14,18 @@
 // {Alarme, Timer}. O alarme usa o slot unico do alarme:: (proxima ocorrencia
 // de HH:MM, persiste na NVS); o timer conta minutos por millis e dispara o
 // overlay TEMPO! — ambos tocam o toque padrao do sistema.
-enum View : uint8_t { V_CLOCK, V_MENU, V_ALARM, V_TIMER };
+enum View : uint8_t { V_CLOCK, V_MENU, V_ALARM, V_TIMER, V_STOPWATCH };
 static View view = V_CLOCK;
 static uint8_t cur = 0;
 static bool al_status_ = false;        // V_ALARM mostrando o alarme armado
 static uint8_t al_h_, al_m_, al_field_;
 static uint16_t tm_min_ = 5;           // minutos do editor do timer
+
+// cronômetro (crescente): OK inicia/pausa, DOWN zera (parado), C volta ao menu.
+// Estado por millis; segue contando mesmo se sair do app (como cronômetro real)
+static bool sw_run_ = false;
+static uint32_t sw_start_ = 0, sw_accum_ = 0;
+static uint32_t sw_elapsed() { return sw_accum_ + (sw_run_ ? (millis() - sw_start_) : 0); }
 
 static void on_enter() { view = V_CLOCK; }
 
@@ -54,10 +60,12 @@ static bool input(Button b, BtnEvent e) {
       if (b == BTN_OK) { view = V_MENU; cur = 0; return true; }
       return false;  // C nao consumido → shell volta pro menu
     case V_MENU:
-      if (b == BTN_UP || b == BTN_DOWN) { cur ^= 1; return true; }  // 2 itens
+      if (b == BTN_UP)   { cur = (cur + 2) % 3; return true; }
+      if (b == BTN_DOWN) { cur = (cur + 1) % 3; return true; }
       if (b == BTN_OK) {
         if (cur == 0) alarm_open();
-        else view = V_TIMER;
+        else if (cur == 1) view = V_TIMER;
+        else view = V_STOPWATCH;
         return true;
       }
       view = V_CLOCK;  // C volta
@@ -108,6 +116,15 @@ static bool input(Button b, BtnEvent e) {
       }
       view = V_MENU;  // C volta
       return true;
+    case V_STOPWATCH:
+      if (b == BTN_OK) {
+        if (sw_run_) { sw_accum_ += millis() - sw_start_; sw_run_ = false; }  // pausa
+        else { sw_start_ = millis(); sw_run_ = true; }                        // inicia
+        return true;
+      }
+      if (b == BTN_DOWN && !sw_run_) { sw_accum_ = 0; return true; }          // zera (parado)
+      view = V_MENU;  // C volta (o cronômetro segue contando se estava rodando)
+      return true;
   }
   return false;
 }
@@ -120,34 +137,40 @@ static void render(void* gfx) {
       char hhmm[6];
       bool colon = ((millis() / 1000) % 2) == 0;
       rtc::DateTime dt;
-      if (rtc::now(dt)) hhmm_format(dt.hour, dt.min, hhmm);
+      bool tem = rtc::now(dt);
+      if (tem) hhmm_format(dt.hour, dt.min, hhmm);
       else clock_format(millis(), hhmm, &colon);
 
+      // HH e MM em posição fixa; ':' só quando aceso -> piscar limpo (nada de
+      // apagar por cima, que sobrava meio ponto)
       g.setFont(u8g2_font_VCR_OSD_tn);
-      // posicao fixa: desenha "HH:MM" e, no piscar, apaga so o ':' com um box
-      int w = (int)g.getStrWidth(hhmm);
-      int x = 42 - w / 2;
-      g.drawStr(x, 30, hhmm);
-      if (!colon) {
-        char hh[3] = {hhmm[0], hhmm[1], '\0'};
-        g.setDrawColor(0);
-        g.drawBox(x + (int)g.getStrWidth(hh), 12, (int)g.getStrWidth(":"), 20);
-        g.setDrawColor(1);
-      }
+      char hh[3] = {hhmm[0], hhmm[1], '\0'};
+      char hhc[4] = {hhmm[0], hhmm[1], ':', '\0'};
+      char mm[3] = {hhmm[3], hhmm[4], '\0'};
+      int x = 42 - (int)g.getStrWidth(hhmm) / 2;
+      g.drawStr(x, 30, hh);
+      g.drawStr(x + (int)g.getStrWidth(hhc), 30, mm);
+      if (colon) g.drawStr(x + (int)g.getStrWidth(hh), 30, ":");
+
       g.setFont(u8g2_font_3310_small);
       uint32_t left = alarme::timer_left_s();
       if (left) {  // timer rodando: regressivo discreto sob a hora
         char t[8];
         snprintf(t, sizeof(t), "%02u:%02u", (unsigned)(left / 60), (unsigned)(left % 60));
-        g.drawStr(42 - (int)g.getStrWidth(t) / 2, 39, t);
+        g.drawStr(42 - (int)g.getStrWidth(t) / 2, 40, t);
+      } else if (tem) {  // senão, a data (dia da semana + DD/MM) sob a hora
+        char d[20];
+        snprintf(d, sizeof(d), "%s %02u/%02u",
+                 day_name(date_weekday(dt.year, dt.month, dt.day)), dt.day, dt.month);
+        g.drawUTF8(42 - (int)g.getUTF8Width(d) / 2, 40, d);
       }
       nokia_ui::softkey(g, tr(STR_OPTIONS));
       break;
     }
     case V_MENU: {
       nokia_ui::text_bold_center(g, 8, tr(STR_APP_CLOCK));
-      const char* items[] = {tr(STR_ALARM), tr(STR_TIMER)};
-      for (uint8_t i = 0; i < 2; i++) {
+      const char* items[] = {tr(STR_ALARM), tr(STR_TIMER), tr(STR_STOPWATCH)};
+      for (uint8_t i = 0; i < 3; i++) {
         int y = 11 + i * 9;
         nokia_ui::list_row(g, y, 84, items[i], i == cur);
       }
@@ -197,6 +220,19 @@ static void render(void* gfx) {
       nokia_ui::inv_str(g, x, 25, m);
       g.drawUTF8(x + wm, 25, minsuf);
       nokia_ui::softkey(g, tr(STR_OK));
+      break;
+    }
+    case V_STOPWATCH: {
+      nokia_ui::text_bold_center(g, 8, tr(STR_STOPWATCH));
+      uint32_t ms = sw_elapsed();
+      char t[12];
+      snprintf(t, sizeof(t), "%02u:%02u.%02u", (unsigned)(ms / 60000),
+               (unsigned)((ms / 1000) % 60), (unsigned)((ms / 10) % 100));
+      g.setFont(u8g2_font_7x13B_tr);
+      g.drawStr(42 - (int)g.getStrWidth(t) / 2, 30, t);
+      g.setFont(u8g2_font_3310_small);
+      if (!sw_run_ && ms) nokia_ui::text_center(g, 40, tr(STR_RESET));
+      nokia_ui::softkey(g, tr(sw_run_ ? STR_STOP : STR_START));
       break;
     }
   }
