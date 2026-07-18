@@ -31,7 +31,8 @@ static void render(void* gfx) {
   int tx = 82 - nokia_ui::bold_width(g, hhmm);
   nokia_ui::text_bold(g, tx, 8, hh);
   nokia_ui::text_bold(g, tx + nokia_ui::bold_width(g, hhc), 8, mm);
-  if (colon) nokia_ui::text_bold(g, tx + nokia_ui::bold_width(g, hh), 8, ":");
+  // +1px pra o ':' não encostar nas horas e centralizar no vão HH<->MM
+  if (colon) nokia_ui::text_bold(g, tx + nokia_ui::bold_width(g, hh) + 1, 8, ":");
   // marca do projeto no lugar do nome da operadora: emblema eN + wordmark
   g.drawXBMP(24, 9, ESPNOKIA_EMBLEM_W, ESPNOKIA_EMBLEM_H, espnokia_emblem_bits);
   g.drawXBMP(2, 31, ESPNOKIA_LOGO_W, ESPNOKIA_LOGO_H, espnokia_logo_bits);
