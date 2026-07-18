@@ -56,6 +56,8 @@ enum StrId : uint8_t {
   STR_TBL_PTS, STR_TBL_JOGOS, STR_TBL_SALDO,
   // sufixo de unidade do timer do relogio (editor de minutos)
   STR_MIN_SUFFIX,
+  // jogos novos (2048, breakout) e tela de vitoria
+  STR_GAME_2048, STR_GAME_BREAKOUT, STR_YOU_WIN,
   STR_COUNT
 };
 

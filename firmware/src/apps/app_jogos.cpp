@@ -2,12 +2,14 @@
 #include <U8g2lib.h>
 #include "i18n.h"
 #include "games/game_snake.h"
+#include "games/game_2048.h"
+#include "games/game_breakout.h"
 #include "ui/assets.h"
 #include "ui/fonts3310.h"
 #include "ui/nokia_ui.h"
 
 // Cada jogo e um App; o app_jogos faz o submenu e delega ao jogo ativo.
-static const App* const kGames[] = {&game_snake};
+static const App* const kGames[] = {&game_snake, &game_2048, &game_breakout};
 static const uint8_t kCount = sizeof(kGames) / sizeof(kGames[0]);
 
 enum View : uint8_t { LIST, PLAYING };

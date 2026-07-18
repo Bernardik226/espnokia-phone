@@ -152,6 +152,11 @@ static const char* const kStr[STR_COUNT][LANG_COUNT] = {
   /* TBL_JOGOS   */ {"J", "PJ", "PJ", "J", "Sp", "O"},
   /* TBL_SALDO   */ {"S", "GD", "DG", "Di", "TD", "ME"},
   /* MIN_SUFFIX  */ {" min", " min", " min", " min", " min", " min"},
+  /* GAME_2048   */ {"2048", "2048", "2048", "2048", "2048", "2048"},
+  /* GAME_BREAKOUT*/{"Breakout", "Breakout", "Breakout", "Breakout", "Breakout",
+                     "Breakout"},
+  /* YOU_WIN     */ {"Você venceu!", "You win!", "¡Ganaste!", "Gagné !",
+                     "Gewonnen!", "Voitit!"},
 };
 
 static const char* const kDay[LANG_COUNT][7] = {
