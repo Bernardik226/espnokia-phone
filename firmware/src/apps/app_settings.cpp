@@ -15,6 +15,7 @@
 #include "ui/assets.h"
 #include "ui/fonts3310.h"
 #include "ui/nokia_ui.h"
+#include "ui/wallpaper.h"
 
 // Configuracoes em arvore rasa: V_ROOT lista as secoes; V_DISPLAY ajusta o
 // backlight com preview ao vivo (so persiste no OK); V_DATETIME tem o toggle
@@ -25,14 +26,14 @@
 // vivo (so persiste no OK, como o backlight); V_LANG troca o idioma do
 // sistema (vale na hora e persiste); V_ABOUT tem 3 paginas (UP/DOWN).
 enum View : uint8_t { V_ROOT, V_DISPLAY, V_DATETIME, V_DT_EDIT, V_CONN,
-                      V_WIFI, V_WIFI_MENU, V_QR, V_VOL, V_LANG, V_ABOUT };
+                      V_WIFI, V_WIFI_MENU, V_QR, V_VOL, V_LANG, V_ABOUT, V_WALL };
 static const uint8_t kAboutPages = 3;
 static View view = V_ROOT;
 static uint8_t cur = 0;         // cursor da lista corrente
 static uint8_t about_page = 0;  // 0..kAboutPages-1
 
 static const StrId kRoot[] = {STR_DISPLAY, STR_DATETIME, STR_CONNECTIONS,
-                              STR_VOLUME, STR_LANGUAGE, STR_ABOUT};
+                              STR_VOLUME, STR_LANGUAGE, STR_WALLPAPER, STR_ABOUT};
 static const uint8_t kRootCount = sizeof(kRoot) / sizeof(kRoot[0]);
 
 // toggle "Sincronizar" persistido na NVS; a F2 le pra decidir NTP no boot.
@@ -109,6 +110,7 @@ static bool input(Button b, BtnEvent e) {
         else if (cur == 2) { view = V_CONN; cur = 0; }
         else if (cur == 3) { view = V_VOL; cur = sound::muted() ? 0 : sound::volume() + 1; }
         else if (cur == 4) { view = V_LANG; cur = (uint8_t)i18n_lang(); }
+        else if (cur == 5) { view = V_WALL; cur = wallpaper::current(); }
         else { view = V_ABOUT; about_page = 0; }
         return true;
       }
@@ -195,6 +197,12 @@ static bool input(Button b, BtnEvent e) {
       buzzer::set_mute(sound::muted());
       buzzer::set_volume(sound::volume());
       view = V_ROOT; cur = 3;
+      return true;
+    case V_WALL:
+      if (b == BTN_UP)   { cur = (cur + wallpaper::count() - 1) % wallpaper::count(); return true; }
+      if (b == BTN_DOWN) { cur = (cur + 1) % wallpaper::count(); return true; }
+      if (b == BTN_OK)   { wallpaper::set(cur); view = V_ROOT; cur = 5; return true; }
+      view = V_ROOT; cur = 5;   // C cancela (nao salva)
       return true;
     case V_LANG:
       if (b == BTN_UP) { cur = (cur + LANG_COUNT - 1) % LANG_COUNT; return true; }
@@ -355,6 +363,13 @@ static void render(void* gfx) {
       const char* items[] = {tr(STR_MUTE), tr(STR_VOL_LOW), tr(STR_VOL_MED), tr(STR_VOL_HIGH)};
       draw_list(g, tr(STR_VOLUME), items, 4, cur);
       nokia_ui::softkey(g, tr(STR_OK));
+      break;
+    }
+    case V_WALL: {
+      wallpaper::draw_at(g, cur);            // preview em tela cheia do selecionado
+      g.setDrawColor(0); g.drawBox(0, 40, 84, 8); g.setDrawColor(1);
+      g.drawHLine(0, 40, 84);                // faixa do nome no rodapé
+      nokia_ui::text_bold_center(g, 47, wallpaper::name(cur));
       break;
     }
     case V_LANG: {

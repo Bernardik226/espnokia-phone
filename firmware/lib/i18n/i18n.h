@@ -60,6 +60,8 @@ enum StrId : uint8_t {
   STR_GAME_2048, STR_GAME_BREAKOUT, STR_YOU_WIN,
   // menu do jogo (iniciar / som / mudo)
   STR_START, STR_SOUND, STR_MUTE,
+  // wallpaper da tela inicial (config do sistema)
+  STR_WALLPAPER, STR_WALL_NEUTRO, STR_WALL_PONTOS,
   STR_COUNT
 };
 

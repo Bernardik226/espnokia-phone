@@ -160,6 +160,10 @@ static const char* const kStr[STR_COUNT][LANG_COUNT] = {
   /* START       */ {"Iniciar", "Start", "Iniciar", "Démarrer", "Start", "Aloita"},
   /* SOUND       */ {"Som", "Sound", "Sonido", "Son", "Ton", "Ääni"},
   /* MUTE        */ {"Mudo", "Mute", "Silencio", "Muet", "Stumm", "Vaimea"},
+  /* WALLPAPER   */ {"Papel de parede", "Wallpaper", "Fondo", "Fond d'écran",
+                     "Hintergrund", "Taustakuva"},
+  /* WALL_NEUTRO */ {"Neutro", "Plain", "Neutro", "Neutre", "Neutral", "Neutraali"},
+  /* WALL_PONTOS */ {"Pontos", "Dots", "Puntos", "Points", "Punkte", "Pisteet"},
 };
 
 static const char* const kDay[LANG_COUNT][7] = {

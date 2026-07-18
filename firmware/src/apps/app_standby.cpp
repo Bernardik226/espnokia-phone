@@ -8,6 +8,7 @@
 #include "ui/assets.h"
 #include "ui/fonts3310.h"
 #include "ui/nokia_ui.h"
+#include "ui/wallpaper.h"
 
 // nivel de sinal 0..4 vindo do RSSI real
 static uint8_t wifi_level() { return wifi::level(); }
@@ -33,9 +34,8 @@ static void render(void* gfx) {
   nokia_ui::text_bold(g, tx + nokia_ui::bold_width(g, hhc) + 1, 8, mm);  // +1px afasta HH<->MM
   // ':' +1px pra não encostar nas horas, no vão entre HH e MM
   if (colon) nokia_ui::text_bold(g, tx + nokia_ui::bold_width(g, hh) + 1, 8, ":");
-  // marca do projeto no lugar do nome da operadora: emblema eN + wordmark
-  g.drawXBMP(24, 9, ESPNOKIA_EMBLEM_W, ESPNOKIA_EMBLEM_H, espnokia_emblem_bits);
-  g.drawXBMP(2, 31, ESPNOKIA_LOGO_W, ESPNOKIA_LOGO_H, espnokia_logo_bits);
+  // fundo escolhido pelo usuário (Config > Papel de parede); relógio/sinal ficam por cima
+  wallpaper::draw(g);
   // coluna de sinal na esquerda: icone WiFi + barras do RSSI real.
   // sem rede conectada nao aparece nada, como celular sem chip
   if (wifi::connected()) {
