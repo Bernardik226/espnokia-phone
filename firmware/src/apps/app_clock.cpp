@@ -163,9 +163,9 @@ static void render(void* gfx) {
       char hhc[4] = {hhmm[0], hhmm[1], ':', '\0'};
       char mm[3] = {hhmm[3], hhmm[4], '\0'};
       int x = 42 - (int)g.getStrWidth(hhmm) / 2;
-      g.drawStr(x, 30, hh);
-      g.drawStr(x + (int)g.getStrWidth(hhc), 30, mm);
-      if (colon) g.drawStr(x + (int)g.getStrWidth(hh), 30, ":");
+      g.drawStr(x, 27, hh);
+      g.drawStr(x + (int)g.getStrWidth(hhc), 27, mm);
+      if (colon) g.drawStr(x + (int)g.getStrWidth(hh), 27, ":");
 
       g.setFont(u8g2_font_3310_small);
       if (tem && timeprefs::app_ampm()) {   // marca AM/PM no topo direito (toggle do app)
@@ -176,12 +176,12 @@ static void render(void* gfx) {
       if (left) {  // timer rodando: regressivo discreto sob a hora
         char t[8];
         snprintf(t, sizeof(t), "%02u:%02u", (unsigned)(left / 60), (unsigned)(left % 60));
-        g.drawStr(42 - (int)g.getStrWidth(t) / 2, 40, t);
+        g.drawStr(42 - (int)g.getStrWidth(t) / 2, 37, t);
       } else if (tem && timeprefs::show_date()) {  // data (dia + DD/MM), se ligada
         char d[20];
         snprintf(d, sizeof(d), "%s %02u/%02u",
                  day_name(date_weekday(dt.year, dt.month, dt.day)), dt.day, dt.month);
-        g.drawUTF8(42 - (int)g.getUTF8Width(d) / 2, 40, d);
+        g.drawUTF8(42 - (int)g.getUTF8Width(d) / 2, 37, d);
       }
       nokia_ui::softkey_action(g, tr(STR_OPTIONS), up_held_);   // UP: liga/desliga AM/PM do app
       break;

@@ -33,12 +33,12 @@ static void render(void* gfx) {
     g.setFont(u8g2_font_VCR_OSD_tn);  // digitos grandes, como no app Relogio
     int w = (int)g.getStrWidth(buf);
     int x = 42 - (w + 12) / 2;        // +12 = grau + C a direita
-    g.drawStr(x, 30, buf);
-    g.drawCircle(x + w + 4, 16, 2);   // simbolo de grau (fonte nao tem)
+    g.drawStr(x, 27, buf);
+    g.drawCircle(x + w + 4, 13, 2);   // simbolo de grau (fonte nao tem)
     g.setFont(u8g2_font_3310_small);
-    nokia_ui::text_bold(g, x + w + 8, 23, "C");
+    nokia_ui::text_bold(g, x + w + 8, 20, "C");
     const char* sub = tr(STR_INT_SENSOR);
-    g.drawUTF8(42 - (int)g.getUTF8Width(sub) / 2, 40, sub);
+    g.drawUTF8(42 - (int)g.getUTF8Width(sub) / 2, 37, sub);
   } else {
     g.drawUTF8(2, 24, tr(STR_NO_SENSOR));
   }
