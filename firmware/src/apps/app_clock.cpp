@@ -14,7 +14,8 @@
 // Estilo Clock (Menu 11) do 3310: hora grande no centro. OK abre {Alarme,
 // Timer, Cronômetro}. O alarme usa o slot único do alarme:: (persiste na NVS);
 // o timer (MM:SS) conta por millis e dispara o overlay TEMPO!. O botão UP é a
-// tecla de AÇÃO da tela (bolinha no HUD): no relógio alterna 12/24h, no
+// tecla de AÇÃO da tela (bolinha no HUD): no relógio liga/desliga o AM/PM
+// SÓ do app (independe do formato do sistema em Config>Data e hora), no
 // cronômetro zera.
 enum View : uint8_t { V_CLOCK, V_MENU, V_ALARM, V_TIMER, V_STOPWATCH };
 static View view = V_CLOCK;
@@ -62,7 +63,7 @@ static bool input(Button b, BtnEvent e) {
   switch (view) {
     case V_CLOCK:
       if (b == BTN_OK) { view = V_MENU; cur = 0; return true; }
-      if (b == BTN_UP) { timeprefs::set_fmt24(!timeprefs::fmt24()); return true; }  // ação: 12/24h
+      if (b == BTN_UP) { timeprefs::set_app_ampm(!timeprefs::app_ampm()); return true; }  // ação: AM/PM do app
       return false;  // C nao consumido → shell volta pro menu
     case V_MENU:
       if (b == BTN_UP)   { cur = (cur + 2) % 3; return true; }
@@ -152,7 +153,7 @@ static void render(void* gfx) {
       bool pm = false;
       rtc::DateTime dt;
       bool tem = rtc::now(dt);
-      if (tem) hhmm_format12(dt.hour, dt.min, timeprefs::fmt24(), hhmm, &pm);
+      if (tem) hhmm_format12(dt.hour, dt.min, !timeprefs::app_ampm(), hhmm, &pm);
       else clock_format(millis(), hhmm, &colon);
 
       // HH e MM em posição fixa; ':' só quando aceso -> piscar limpo (nada de
@@ -167,7 +168,7 @@ static void render(void* gfx) {
       if (colon) g.drawStr(x + (int)g.getStrWidth(hh), 30, ":");
 
       g.setFont(u8g2_font_3310_small);
-      if (tem && !timeprefs::fmt24()) {   // marca AM/PM no topo direito
+      if (tem && timeprefs::app_ampm()) {   // marca AM/PM no topo direito (toggle do app)
         const char* ap = pm ? "PM" : "AM";
         g.drawStr(82 - (int)g.getStrWidth(ap), 8, ap);
       }
@@ -182,7 +183,7 @@ static void render(void* gfx) {
                  day_name(date_weekday(dt.year, dt.month, dt.day)), dt.day, dt.month);
         g.drawUTF8(42 - (int)g.getUTF8Width(d) / 2, 40, d);
       }
-      nokia_ui::softkey_action(g, tr(STR_OPTIONS), up_held_);   // UP: alterna 12/24h
+      nokia_ui::softkey_action(g, tr(STR_OPTIONS), up_held_);   // UP: liga/desliga AM/PM do app
       break;
     }
     case V_MENU: {

@@ -171,6 +171,7 @@ static const char* const kStr[STR_COUNT][LANG_COUNT] = {
   /* RINGS_IN    */ {"Toca em", "Rings in", "Suena en", "Dans", "In", "Ajassa"},
   /* SHOW_DATE   */ {"Mostrar data", "Show date", "Mostrar fecha",
                      "Afficher date", "Datum zeigen", "Näytä pvm"},
+  /* AMPM        */ {"AM/PM", "AM/PM", "AM/PM", "AM/PM", "AM/PM", "AM/PM"},
 };
 
 static const char* const kDay[LANG_COUNT][7] = {

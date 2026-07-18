@@ -129,16 +129,18 @@ static bool input(Button b, BtnEvent e) {
       view = V_ROOT; cur = 0;
       return true;
     case V_DATETIME:
-      if (b == BTN_UP)   { cur = (cur + 2) % 3; return true; }  // 3 itens
-      if (b == BTN_DOWN) { cur = (cur + 1) % 3; return true; }
+      if (b == BTN_UP)   { cur = (cur + 3) % 4; return true; }  // 4 itens
+      if (b == BTN_DOWN) { cur = (cur + 1) % 4; return true; }
       if (b == BTN_OK) {
         if (cur == 0) {
           ntp_sync_set(!ntp_sync_);
           if (!ntp_sync_) dt_edit_open();  // desligou o auto → acerta na hora
         } else if (cur == 1) {
           dt_edit_open();
-        } else {
+        } else if (cur == 2) {
           timeprefs::set_show_date(!timeprefs::show_date());  // data no menu inicial
+        } else {
+          timeprefs::set_fmt24(!timeprefs::fmt24());  // formato do sistema: AM/PM(12h) vs 24h
         }
         return true;
       }
@@ -255,14 +257,20 @@ static void render(void* gfx) {
     }
     case V_DATETIME: {
       nokia_ui::text_bold_center(g, 8, tr(STR_DATETIME));
-      const char* items[] = {tr(STR_SYNC), tr(STR_SET_NOW), tr(STR_SHOW_DATE)};
-      for (uint8_t i = 0; i < 3; i++) {
+      const char* items[] = {tr(STR_SYNC), tr(STR_SET_NOW), tr(STR_SHOW_DATE),
+                             tr(STR_AMPM)};
+      const uint8_t n = 4, kVis = 3;
+      uint8_t top = cur >= kVis ? (uint8_t)(cur - kVis + 1) : 0;  // janela rola
+      for (uint8_t i = 0; i < kVis && top + i < n; i++) {
+        uint8_t idx = top + i;
         int y = 11 + i * 9;
-        bool sel = (cur == i);
+        bool sel = (cur == idx);
         if (sel) { g.drawBox(0, y, 84, 9); g.setDrawColor(0); }
-        g.drawUTF8(3, y + 8, items[i]);
-        if (i == 0 || i == 2) {  // checkbox dos toggles (Sincronizar / Mostrar data)
-          bool on = (i == 0) ? ntp_sync_ : timeprefs::show_date();
+        g.drawUTF8(3, y + 8, items[idx]);
+        if (idx != 1) {  // checkbox dos toggles (Sincronizar / Mostrar data / AM/PM); idx 1 = ação
+          bool on = idx == 0 ? ntp_sync_
+                  : idx == 2 ? timeprefs::show_date()
+                             : !timeprefs::fmt24();  // AM/PM marcado = 12h
           g.drawFrame(73, y + 2, 7, 7);
           if (on) {
             g.drawLine(74, y + 5, 75, y + 7);

@@ -66,6 +66,8 @@ enum StrId : uint8_t {
   STR_STOPWATCH, STR_RESET,
   // alarme (quanto falta) e toggle de mostrar a data no menu inicial
   STR_RINGS_IN, STR_SHOW_DATE,
+  // formato 12h/AM-PM do sistema (Config>Data e hora)
+  STR_AMPM,
   STR_COUNT
 };
 
